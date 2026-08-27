@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
     backgroundColor: 'rgba(15, 23, 42, 0.45)', // Nền mờ phía sau
   },
   drawerBody: {

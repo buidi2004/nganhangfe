@@ -285,10 +285,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   backdropOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
   },
   backdropDimmer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
     backgroundColor: 'rgba(31, 4, 19, 0.40)',
   },
   sheetContainer: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   sheetBackdropBase: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
     backgroundColor: 'rgba(255, 255, 255, 0.65)',
   },
   lensHighlightArc: {
@@ -318,9 +318,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   contentWrapper: {
-    flex: 1,
     paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
+    paddingTop: 16,
+    paddingBottom: 28,
   },
   handleBarTouchArea: {
     width: '100%',
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 18,
-    fontFamily: Typography.h4.fontFamily,
+    fontFamily: Typography.heading.fontFamily,
     fontWeight: '800',
     color: '#700F43',
     letterSpacing: 0.3,

@@ -6,6 +6,7 @@ type Variant = keyof typeof Typography;
 
 interface AppTextProps extends TextProps {
   variant?: Variant;
+  children?: React.ReactNode;
 }
 
 export function AppText({ variant = 'body', style, ...rest }: AppTextProps) {

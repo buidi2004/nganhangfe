@@ -1,204 +1,164 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, { useCallback } from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   Platform,
   Text,
-  InteractionManager,
-} from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { ExpoLiquidGlassNativeView } from 'expo-liquid-glass-native';
-import { Typography } from '../theme';
-import HomeScreen from '../screens/HomeScreen';
-import HistoryScreen from '../screens/HistoryScreen';
-import ScanQRScreen from '../screens/ScanQRScreen';
-import PromotionsScreen from '../screens/PromotionsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LiquidGlassView } from "react-native-liquid-glassmorphism";
+import HomeScreen from "../screens/HomeScreen";
+import HistoryScreen from "../screens/HistoryScreen";
+import ScanQRScreen from "../screens/ScanQRScreen";
+import PromotionsScreen from "../screens/PromotionsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 
-// 🌟 Custom Liquid Glass Tab Bar (Đảm bảo 100% không gián đoạn thị giác và an toàn lifecycle)
-function CustomLiquidGlassTabBar({ state, descriptors, navigation }: any) {
-  const [isReady, setIsReady] = useState(false);
-  const isMountedRef = useRef(true);
+const TABS = [
+  { name: "HomeTab", label: "Trang chu", icon: "home-outline", iconFocused: "home", lib: "Ionicons" },
+  { name: "Card", label: "Lich su", icon: "credit-card-multiple-outline", iconFocused: "credit-card-multiple", lib: "MaterialCommunityIcons" },
+  { name: "QR", label: "", icon: "qrcode-scan", iconFocused: "qrcode-scan", lib: "MaterialCommunityIcons", isCenter: true },
+  { name: "Gift", label: "Uu dai", icon: "gift-outline", iconFocused: "gift", lib: "Ionicons" },
+  { name: "More", label: "Ca nhan", icon: "account-outline", iconFocused: "account", lib: "MaterialCommunityIcons" },
+];
 
-  useEffect(() => {
-    isMountedRef.current = true;
+function GlassTabBar({ state, navigation }: { state: any; navigation: any }) {
+  const focusedDescriptor = Object.values(Object.fromEntries(
+    state.routes.map((r: any) => [r.key, r])
+  ))[state.index];
 
-    // 1. Đăng ký lắng nghe sự kiện transitionEnd của React Navigation
-    const unsubscribeTransition = navigation.addListener
-      ? navigation.addListener('transitionEnd', () => {
-          if (isMountedRef.current) {
-            setIsReady(true);
-          }
-        })
-      : null;
-
-    // 2. Kết hợp InteractionManager để kích hoạt ngay sau khi tương tác/animation hoàn tất
-    const interactionTask = InteractionManager.runAfterInteractions(() => {
-      const timer = setTimeout(() => {
-        if (isMountedRef.current) {
-          setIsReady(true);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
-    });
-
-    return () => {
-      isMountedRef.current = false;
-      unsubscribeTransition?.();
-      interactionTask.cancel();
-    };
-  }, [navigation]);
-
-  const focusedRoute = state.routes[state.index];
-  const focusedDescriptor = descriptors[focusedRoute.key];
-  const focusedOptions = focusedDescriptor.options;
-
-  if (focusedOptions.tabBarStyle?.display === 'none') {
-    return null;
-  }
-
-  // Nội dung 5 Icons và Nút Quét QR (Luôn hiển thị và bấm được 100% ngay từ frame đầu tiên)
-  const tabContent = (
-    <View style={styles.tabBarInner}>
-      {state.routes.map((route: any, index: number) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
-
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
-
-        // Nút Quét QR kính màu trung tâm
-        if (route.name === 'QR') {
-          return (
-            <TouchableOpacity
-              key={route.key}
-              style={styles.qrTabButton}
-              onPress={onPress}
-              activeOpacity={0.85}
-            >
-              <View style={styles.qrOuterGlass}>
-                <LinearGradient
-                  colors={['#D2519D', '#700F43']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.qrInnerGradient}
-                >
-                  <MaterialCommunityIcons name="qrcode-scan" size={26} color="#FFFFFF" />
-                </LinearGradient>
-              </View>
-            </TouchableOpacity>
-          );
-        }
-
-        // 4 Tab thông thường
-        let IconComponent: any = Ionicons;
-        let iconName = 'home';
-        let label = options.title || route.name;
-
-        if (route.name === 'HomeTab') {
-          IconComponent = Ionicons;
-          iconName = isFocused ? 'home' : 'home-outline';
-          label = 'Trang chủ';
-        } else if (route.name === 'Card') {
-          IconComponent = MaterialCommunityIcons;
-          iconName = isFocused ? 'credit-card-multiple' : 'credit-card-multiple-outline';
-          label = 'Lịch sử';
-        } else if (route.name === 'Gift') {
-          IconComponent = Ionicons;
-          iconName = isFocused ? 'gift' : 'gift-outline';
-          label = 'Ưu đãi';
-        } else if (route.name === 'More') {
-          IconComponent = MaterialCommunityIcons;
-          iconName = isFocused ? 'account' : 'account-outline';
-          label = 'Cá nhân';
-        }
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={styles.tabItem}
-            onPress={onPress}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconWrapper, isFocused && styles.iconWrapperActive]}>
-              <IconComponent
-                name={iconName}
-                size={22}
-                color={isFocused ? '#700F43' : 'rgba(112, 15, 67, 0.65)'}
-              />
-            </View>
-            <Text
-              style={[
-                styles.tabBarLabel,
-                {
-                  color: isFocused ? '#700F43' : 'rgba(112, 15, 67, 0.65)',
-                  fontWeight: isFocused ? '800' : '600',
-                },
-              ]}
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+  const handlePress = useCallback(
+    (route: any, isFocused: boolean) => {
+      const event = navigation.emit({
+        type: "tabPress",
+        target: route.key,
+        canPreventDefault: true,
+      });
+      if (!isFocused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    },
+    [navigation]
   );
 
-  console.log('[DEBUG_ISREADY] isReady:', isReady);
-
   return (
-    <View pointerEvents="box-none" style={styles.tabBarContainer}>
-      {isReady ? (
-        // 🌟 GIAI ĐOẠN 2: Khi màn hình đã ổn định hoàn toàn -> Dùng Native Liquid Glass
-        <ExpoLiquidGlassNativeView
-          tint="#FFFFFF"
-          surfaceColor="rgba(255, 255, 255, 0.60)"
-          blurRadius={6}
-          lensX={16}
-          lensY={32}
-          cornerRadius={34}
-          useRealtimeCapture={true}
-          style={styles.glassView}
+    <View style={styles.wrapper}>
+      <View style={styles.shadowContainer} pointerEvents="box-none">
+        <LiquidGlassView
+          preset="floatingTabBar"
+          // 1. ĐỘ TRONG SUỐT / ĐỤC CỦA CHẤT KÍNH:
+          // Dùng "regular" nếu muốn kính đục mờ (frosted). Dùng "clear" nếu muốn kính trong vắt.
+          variant="clear"
+
+          // 2. CHỈNH MÀU SẮC VÀ ĐỘ MỜ CỦA LỚP KÍNH:
+          // Thay đổi số cuối cùng (0.12) để chỉnh độ trong suốt. 
+          // Tăng lên (vd: 0.3, 0.5) kính sẽ đặc màu hồng hơn và bớt trong suốt. 
+          // Giảm xuống (vd: 0.05, 0.0) kính sẽ trong suốt hoàn toàn.
+          tintColor="rgba(210,81,157,0.12)"
+
+          // 3. LÀM TỐI NỀN PHÍA SAU KÍNH:
+          // Chỉnh số (0.05) này. Tăng lên 0.2, 0.3 nền đằng sau sẽ tối đen lại giúp kính nổi bật hơn.
+          dim={0.15}
+
+          // 4. BÍ QUYẾT TẠO CHIỀU SÂU SIÊU THỰC TRÊN NỀN TRẮNG PHẲNG (DÀNH RIÊNG CHO ANDROID):
+          grain={0.08} // Thêm hạt nhiễu li ti (film grain) để mặt kính có chất liệu vật lý thay vì phẳng lì.
+          iridescence={0.35} // Tán sắc ánh sáng (cầu vồng) ở viền kính. Tạo độ khối cực kỳ mạnh dù không có nền.
+          ior={2.0} // Chỉ số khúc xạ (Index of Refraction). Tăng lên 2.0 (gần bằng kim cương) để gờ kính bẻ cong gắt hơn.
+          edgeReflectionStrength={1.5} // Kéo mạnh độ phản chiếu ngược ở mép kính.
+          specularSharpness={2} // Thu hẹp điểm bắt sáng (specular hotspot) giúp kính trông như được đánh bóng loáng.
+
+          interactive
+          tilt={true}
+          thickness={15}
+          blurRadius={15}
+          borderRadius={BAR_HEIGHT / 2}
+          onPipelineReady={(e) => console.log("GLASS TIER:", e.nativeEvent.tier)}
+          style={styles.pillContent}
         >
-          {tabContent}
-        </ExpoLiquidGlassNativeView>
-      ) : (
-        // 🌟 GIAI ĐOẠN 1: Trong tích tắc chuyển màn -> Dùng nền BlurView kính mờ tương đương 100%
-        <View style={styles.fallbackGlassView}>
-          <View style={styles.backdropBase} />
-          <BlurView
-            intensity={Platform.OS === 'ios' ? 85 : 95}
-            tint="light"
-            style={StyleSheet.absoluteFill}
-          />
+          {/* Subtle diagonal glass shine overlay to make it look like a physical glass surface */}
           <LinearGradient
-            colors={[
-              'rgba(255, 255, 255, 0.85)',
-              'rgba(253, 242, 248, 0.65)',
-              'rgba(255, 255, 255, 0.90)',
-            ]}
+            colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.1)']}
+            locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
+            pointerEvents="none"
           />
-          {tabContent}
-        </View>
-      )}
+
+          {/* Subtle inner border */}
+          <View style={styles.innerBorder} pointerEvents="none" />
+
+          {/* Tab buttons rendered as children so they are crisp */}
+          <View style={styles.tabRow}>
+            {state.routes.map((route: any, index: number) => {
+              const isFocused = state.index === index;
+              const tabDef = TABS[index] || TABS[0];
+              const IconComp =
+                tabDef.lib === "Ionicons" ? Ionicons : MaterialCommunityIcons;
+              const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
+
+              if (tabDef.isCenter) {
+                return (
+                  <TouchableOpacity
+                    key={route.key}
+                    style={styles.centerBtn}
+                    onPress={() => handlePress(route, isFocused)}
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <LinearGradient
+                      colors={["#D2519D", "#700F43"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.centerCircle}
+                    >
+                      <IconComp name={iconName as any} size={26} color="#FFFFFF" />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
+                <TouchableOpacity
+                  key={route.key}
+                  style={styles.tabItem}
+                  onPress={() => handlePress(route, isFocused)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                >
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      isFocused && styles.iconWrapActive,
+                    ]}
+                  >
+                    <IconComp
+                      name={iconName as any}
+                      size={22}
+                      color={isFocused ? "#D2519D" : "#8E8E93"}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.label,
+                      { color: isFocused ? "#D2519D" : "#8E8E93" },
+                      isFocused && styles.labelFocused,
+                    ]}
+                  >
+                    {tabDef.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </LiquidGlassView>
+      </View>
     </View>
   );
 }
@@ -206,104 +166,105 @@ function CustomLiquidGlassTabBar({ state, descriptors, navigation }: any) {
 export default function MainTabs() {
   return (
     <Tab.Navigator
-      tabBar={(props) => <CustomLiquidGlassTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
+      tabBar={(props) => <GlassTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Trang chủ' }} />
-      <Tab.Screen name="Card" component={HistoryScreen} options={{ title: 'Lịch sử' }} />
-      <Tab.Screen name="QR" component={ScanQRScreen} options={{ tabBarStyle: { display: 'none' } }} />
-      <Tab.Screen name="Gift" component={PromotionsScreen} options={{ title: 'Ưu đãi' }} />
-      <Tab.Screen name="More" component={ProfileScreen} options={{ title: 'Cá nhân' }} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Trang chu" }} />
+      <Tab.Screen name="Card" component={HistoryScreen} options={{ title: "Lich su" }} />
+      <Tab.Screen name="QR" component={ScanQRScreen} options={{ tabBarStyle: { display: "none" } }} />
+      <Tab.Screen name="Gift" component={PromotionsScreen} options={{ title: "Uu dai" }} />
+      <Tab.Screen name="More" component={ProfileScreen} options={{ title: "Ca nhan" }} />
     </Tab.Navigator>
   );
 }
 
+const BAR_HEIGHT = 64;
+const BOTTOM = Platform.OS === "ios" ? 24 : 8;
+
 const styles = StyleSheet.create({
-  // 🌟 ĐIỀU CHỈNH VỊ TRÍ NAVBAR Ở ĐÂY:
-  tabBarContainer: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 16 : 2, 
+  wrapper: {
+    position: "absolute",
+    bottom: BOTTOM,
     left: 16,
     right: 16,
-    height: 68,
-    borderRadius: 34,
+    height: BAR_HEIGHT + 12, // extra for QR button overflow
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
-  glassView: {
-    width: '100%',
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    overflow: 'hidden',
+  shadowContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: BAR_HEIGHT,
+    shadowColor: "#D2519D",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 10,
   },
-  fallbackGlassView: {
-    width: '100%',
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
-    overflow: 'hidden',
-    backgroundColor: 'transparent',
+  pillContent: {
+    height: BAR_HEIGHT,
+    width: "100%",
   },
-  backdropBase: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  innerBorder: {
+    ...StyleSheet.absoluteFill as any,
+    borderRadius: BAR_HEIGHT / 2,
+    borderWidth: 1.2,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderTopWidth: 1.5,
+    borderTopColor: "rgba(255,255,255,0.95)", // Apple's Inner Highlight (bắt sáng cạnh trên)
   },
-  tabBarInner: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+  tabRow: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: BAR_HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
     paddingHorizontal: 6,
   },
   tabItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    height: BAR_HEIGHT,
   },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  iconWrapperActive: {
-    backgroundColor: 'rgba(210, 81, 157, 0.18)',
+  iconWrapActive: {
+    backgroundColor: "rgba(210, 81, 157, 0.12)",
   },
-  tabBarLabel: {
-    fontSize: 10.5,
-    fontFamily: Typography.captionSm.fontFamily,
-    marginTop: 2,
+  label: {
+    fontSize: 10,
+    marginTop: 1,
     letterSpacing: 0.1,
+    fontWeight: "600",
   },
-  qrTabButton: {
-    top: -12,
-    justifyContent: 'center',
-    alignItems: 'center',
+  labelFocused: {
+    fontWeight: "800",
+  },
+  centerBtn: {
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 4,
+    bottom: 6,
+    zIndex: 15,
+    elevation: 15,
+    shadowColor: "transparent",
   },
-  qrOuterGlass: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    padding: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    shadowColor: '#D2519D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  qrInnerGradient: {
-    flex: 1,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
+  centerCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -10,7 +10,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { WalletApi, getAuthToken } from '../services/api';
 import { Alert } from 'react-native';
-
 interface Transaction {
   id: string;
   name: string;
@@ -116,19 +115,23 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Standard Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-            <AppIcon name="arrow-back" size="md" color={Colors.textPrimary} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <AppIcon name="chevron-back" size="md" color={Colors.textPrimary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>Lịch sử giao dịch</AppText>
-        <TouchableOpacity onPress={() => {
-          Alert.alert('Định dạng xuất', 'Chọn định dạng bạn muốn tải về:', [
-            { text: 'PDF', onPress: () => handleExport('pdf') },
-            { text: 'Excel', onPress: () => handleExport('excel') },
-            { text: 'CSV', onPress: () => handleExport('csv') },
-            { text: 'Hủy', style: 'cancel' }
-          ]);
-        }}>
+        <AppText variant="heading" style={styles.headerTitle}>Lịch sử giao dịch</AppText>
+        <TouchableOpacity
+          style={{ padding: 4 }}
+          onPress={() => {
+            Alert.alert('Định dạng xuất', 'Chọn định dạng bạn muốn tải về:', [
+              { text: 'PDF', onPress: () => handleExport('pdf') },
+              { text: 'Excel', onPress: () => handleExport('excel') },
+              { text: 'CSV', onPress: () => handleExport('csv') },
+              { text: 'Hủy', style: 'cancel' }
+            ]);
+          }}
+        >
           <AppIcon name="download-outline" size="md" color={Colors.primary} />
         </TouchableOpacity>
       </View>
@@ -136,7 +139,7 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
       <View style={styles.scrollView}>
         {/* Category filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          {categories.map((cat) => (
+          {categories.map((cat: string) => (
             <TouchableOpacity
               key={cat}
               style={[
@@ -156,7 +159,7 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
         <View style={[styles.listContainer, { flex: 1, marginBottom: 16 }]}>
           <FlatList
             data={transactions}
-            keyExtractor={item => item.id}
+            keyExtractor={(item: Transaction) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 16 }}
             ListEmptyComponent={

@@ -191,6 +191,17 @@ const SERVICES = [
   { id: '5', title: 'Vé Máy Bay', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'plane' },
   { id: '6', title: 'Data Viettel', iconBg: '#581C87', iconColor: '#FFFFFF', icon: 'zap', customLogo: '4G' },
   { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', icon: 'star', isYinYang: true },
+  { id: '9', title: 'Tiền điện', iconBg: '#FEF3C7', iconColor: '#D97706', icon: 'electricity' },
+  { id: '10', title: 'Tiền nước', iconBg: '#E0F2FE', iconColor: '#0284C7', icon: 'water' },
+  { id: '11', title: 'Thẻ cào', iconBg: '#FCE7F3', iconColor: '#BE185D', icon: 'smartphone' },
+  { id: '12', title: 'Mua sắm', iconBg: '#FFEDD5', iconColor: '#C2410C', icon: 'shoppingBag' },
+  { id: '13', title: 'Giải trí', iconBg: '#E0E7FF', iconColor: '#4338CA', icon: 'play' },
+  { id: '14', title: 'Gửi tiết kiệm', iconBg: '#DCFCE7', iconColor: '#15803D', icon: 'piggyBank' },
+  { id: '15', title: 'Vay tiêu dùng', iconBg: '#F3F4F6', iconColor: '#475569', icon: 'wallet' },
+  { id: '16', title: 'Ví điện tử', iconBg: '#FEFCE8', iconColor: '#A16207', icon: 'wallet' },
+  { id: '17', title: 'Phí chung cư', iconBg: '#F1F5F9', iconColor: '#334155', icon: 'home' },
+  { id: '18', title: 'Đóng học phí', iconBg: '#ECFEFF', iconColor: '#0F766E', icon: 'cards' },
+  { id: '19', title: 'Vé xem phim', iconBg: '#FFF1F2', iconColor: '#BE123C', icon: 'ticket' },
   { id: '8', title: 'Xem thêm', iconBg: '#FFFFFF', iconColor: Colors.primary, icon: 'grid', isGrid: true },
 ];
 
@@ -397,6 +408,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      {/* @ts-ignore */}
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* STICKY FLOATING TOP BAR (Chỉ hiện khi cuộn xuống dưới, bo cong sâu bên TRÁI) */}
@@ -454,87 +466,77 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       </Animated.View>
 
-      {/* 3D Header Background with Lotus Pink Aura capsules (Tự động ẩn đi khi kéo cuộn xuống) */}
-      <Animated.View
-        style={[
-          styles.headerBackground,
-          {
-            opacity: headerBgOpacity,
-            transform: [{ translateY: headerBgTranslateY }],
-          },
-        ]}
-      >
+      {/* Background Gradient & Light Flares */}
+      <View style={styles.headerBackground} pointerEvents="none">
         <LinearGradient
           colors={['#E4ACB2', '#D2519D', '#700F43']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        {/* Floating 3D capsule shapes */}
         <View style={styles.capsuleShape1} />
         <View style={styles.capsuleShape2} />
         <View style={styles.auraGlow} />
-      </Animated.View>
+      </View>
 
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {/* Top Navigation Header (Cao ~58px, Logo trái, 3 icon phải gap 16px) */}
-        <View style={styles.headerRow}>
-          {/* Logo MB with Star */}
-          <View style={styles.logoContainer}>
-            <View style={styles.starIconWrapper}>
-              <AppText style={styles.starText}>★</AppText>
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={isBalanceLoading}
+            onRefresh={refreshBalance}
+            tintColor="#D2519D"
+            colors={['#D2519D', '#700F43']}
+          />
+        }
+      >
+        <SafeAreaView edges={['top']}>
+          {/* Row 1: Top Navigation Header (Logo MB bên trái + 3 icon bên phải) */}
+          <View style={styles.headerRow}>
+            {/* Logo MB with Star */}
+            <View style={styles.logoContainer}>
+              <View style={styles.starIconWrapper}>
+                <AppText style={styles.starText}>★</AppText>
+              </View>
+              <AppText style={styles.logoText}>MB</AppText>
             </View>
-            <AppText style={styles.logoText}>MB</AppText>
+            
+            {/* 3 Right Action Icons (Gap: 16px, kích thước 22-24px) */}
+            <View style={styles.headerActions}>
+              {/* Search Icon with mic/dot inside */}
+              <TouchableOpacity style={styles.glassHeaderBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Search')}>
+                <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                  <Circle cx="11" cy="11" r="6.5" stroke="#FFFFFF" strokeWidth="2" />
+                  <Path d="M16 16l4.5 4.5" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                  <Circle cx="11" cy="11" r="1.5" fill="#FDF2F8" />
+                </Svg>
+              </TouchableOpacity>
+
+              {/* Notification Bell */}
+              <TouchableOpacity
+                style={styles.glassHeaderBtn}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('Notifications')}
+              >
+                <AppIcon name="notification" size="sm" color={Colors.white} />
+              </TouchableOpacity>
+
+              {/* Hamburger Menu 3 gạch */}
+              <TouchableOpacity
+                style={styles.glassHeaderBtn}
+                activeOpacity={0.7}
+                onPress={() => setIsSideMenuVisible(true)}
+              >
+                <AppIcon name="menu" size="sm" color={Colors.white} />
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          {/* 3 Right Action Icons (Gap: 16px, kích thước 22-24px) */}
-          <View style={styles.headerActions}>
-            {/* Search Icon with mic/dot inside */}
-            <TouchableOpacity style={styles.glassHeaderBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Search')}>
-              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-                <Circle cx="11" cy="11" r="6.5" stroke="#FFFFFF" strokeWidth="2" />
-                <Path d="M16 16l4.5 4.5" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-                <Circle cx="11" cy="11" r="1.5" fill="#FDF2F8" />
-              </Svg>
-            </TouchableOpacity>
-
-            {/* Notification Bell */}
-            <TouchableOpacity
-              style={styles.glassHeaderBtn}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <AppIcon name="notification" size="sm" color={Colors.white} />
-            </TouchableOpacity>
-
-            {/* Hamburger Menu 3 gạch */}
-            <TouchableOpacity
-              style={styles.glassHeaderBtn}
-              activeOpacity={0.7}
-              onPress={() => setIsSideMenuVisible(true)}
-            >
-              <AppIcon name="menu" size="sm" color={Colors.white} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <Animated.ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={isBalanceLoading}
-              onRefresh={refreshBalance}
-              tintColor="#D2519D"
-              colors={['#D2519D', '#700F43']}
-            />
-          }
-        >
 
           {/* Balance & Avatar Section (Nổi trên header, hỗ trợ vuốt ngang xem thẻ kế bên) */}
           <View style={styles.balanceSection}>
@@ -641,6 +643,7 @@ export default function HomeScreen({ navigation }: any) {
               </ScrollView>
             </View>
           </View>
+        </SafeAreaView>
 
           {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
           <View style={styles.whiteBodyContainer}>
@@ -806,8 +809,6 @@ export default function HomeScreen({ navigation }: any) {
           </View>
 
         </Animated.ScrollView>
-      </SafeAreaView>
-
       {/* Slide-In Side Menu Drawer (Nút 3 gạch chuẩn 1:1 theo ảnh) */}
       <SideMenuDrawer
         visible={isSideMenuVisible}
@@ -974,7 +975,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 0,
   },
   balanceSection: {
     paddingHorizontal: 16,
@@ -1112,7 +1113,7 @@ const styles = StyleSheet.create({
     marginTop: 25,              // 👈 4. VỊ TRÍ ĐẨY LÊN/XUỐNG (Tăng số = kéo khối trắng tụt xuống dưới)
 
     paddingTop: 20,             // 👈 5. Đệm lề bên trong từ mép trên khối trắng đến 4 nút chuyển tiền
-    paddingBottom: 120,         // 👈 6. Đệm lề đáy để cuộn không bị thanh menu đáy che
+    paddingBottom: 100,         // 👈 6. Đệm lề đáy để cuộn không bị thanh menu đáy che
     width: '100%',              // 👈 7. Chiều rộng 100% tràn toàn màn hình
     shadowColor: '#700F43',     // 👈 8. Màu đổ bóng lên nền hồng sen
     shadowOffset: { width: 0, height: -4 }, // 👈 Hướng bóng hắt lên phía trên

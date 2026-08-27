@@ -11,9 +11,11 @@
  * The app currently runs in OFFLINE DEMO MODE (API calls are not wired into screens yet).
  */
 
-// --- ⚠️ IMPORTANT: Change this to your machine's LAN IP when testing on physical device ---
-// Example: export const API_BASE_URL = 'http://192.168.1.100:8080/api/v1';
-export const API_BASE_URL = 'http://192.168.1.3:8080/api/v1';
+// --- ⚠️ IMPORTANT: Chọn đúng URL theo môi trường ---
+// Android Emulator  → 10.0.2.2 là địa chỉ máy host từ trong emulator
+// Physical device   → Dùng LAN IP của máy, ví dụ: http://192.168.1.100:8080/api/v1
+// iOS Simulator     → localhost hoặc 127.0.0.1 hoạt động bình thường
+export const API_BASE_URL = 'http://10.0.2.2:8080/api/v1';
 
 let authToken: string | null = null;
 let refreshToken: string | null = null;
