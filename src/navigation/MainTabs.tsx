@@ -20,7 +20,6 @@ export default function MainTabs() {
       tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{ 
         headerShown: false, 
-        sceneStyle: { paddingBottom: 100 },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: 'transparent',
