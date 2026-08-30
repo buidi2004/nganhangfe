@@ -542,28 +542,6 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.balanceSection}>
             <View style={styles.balanceRow}>
 
-              {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
-              <View style={styles.avatarColumn}>
-                <View style={styles.avatarWrapper}>
-                  <Image source={{ uri: 'https://i.pravatar.cc/150?img=11' }} style={styles.avatar} />
-                  {/* Verified Shield Badge */}
-                  <View style={styles.verifiedShield}>
-                    <AppIcon name="check" size="xs" color={Colors.white} />
-                  </View>
-                </View>
-
-                {/* Badge "Basic": Pill trắng nhỏ dưới avatar, icon giỏ hàng 12px + chữ 11px */}
-                <View style={styles.basicBadge}>
-                  <AppIcon name="shoppingBag" size="xs" color="#475569" />
-                  <AppText style={styles.basicBadgeText}>Basic</AppText>
-                </View>
-                
-                {/* User Name below badge */}
-                <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
-                  {user?.name ? user.name.split(' ').pop() : 'Bạn'}
-                </AppText>
-              </View>
-
               {/* Right Column: Horizontal Swipeable Balance Cards List (Kéo vuốt ngang mượt mà) */}
               <ScrollView
                 horizontal
@@ -641,6 +619,28 @@ export default function HomeScreen({ navigation }: any) {
                   </LinearGradient>
                 </View>
               </ScrollView>
+
+              {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
+              <View style={styles.avatarColumn}>
+                <View style={styles.avatarWrapper}>
+                  <Image source={{ uri: 'https://i.pravatar.cc/150?img=11' }} style={styles.avatar} />
+                  {/* Verified Shield Badge */}
+                  <View style={styles.verifiedShield}>
+                    <AppIcon name="check" size="xs" color={Colors.white} />
+                  </View>
+                </View>
+
+                {/* Badge "Basic": Pill trắng nhỏ dưới avatar, icon giỏ hàng 12px + chữ 11px */}
+                <View style={styles.basicBadge}>
+                  <AppIcon name="shoppingBag" size="xs" color="#475569" />
+                  <AppText style={styles.basicBadgeText}>Basic</AppText>
+                </View>
+                
+                {/* User Name below badge */}
+                <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
+                  {user?.name ? user.name.split(' ').pop() : 'Bạn'}
+                </AppText>
+              </View>
             </View>
           </View>
         </SafeAreaView>
@@ -988,9 +988,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatarColumn: {
+    position: 'absolute',
+    left: 20,
+    top: 0,
+    zIndex: 10,
     alignItems: 'center',
-    marginLeft: 20,       // 👈 Chỉnh khoảng cách cụm Avatar với mép trái màn hình (tăng = sang phải, giảm = sang trái)
-    marginRight: 30,      // 👈 Chỉnh khoảng cách giữa cụm Avatar và thẻ số dư bên phải
   },
   avatarWrapper: {
     position: 'relative',
@@ -1032,10 +1034,12 @@ const styles = StyleSheet.create({
     color: '#475569',     // 👈 Màu sắc chữ (màu xám đậm slate)
   },
   balanceScrollList: {
-    flex: 1,
-    overflow: 'hidden',
+    width: width,
+    marginLeft: -16,
+    overflow: 'visible',
   },
   balanceScrollContent: {
+    paddingLeft: 118, // 16 (parent padding) + 20 (avatar left) + 52 (avatar width) + 30 (gap)
     paddingRight: 16,
   },
   balanceCardWrapper: {
