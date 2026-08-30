@@ -1,6 +1,7 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { ImageBackground } from 'react-native';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -8,7 +9,7 @@ import SetPinScreen from '../screens/SetPinScreen';
 import OtpVerificationScreen from '../screens/OtpVerificationScreen';
 import ForgotPinScreen from '../screens/ForgotPinScreen';
 import HomeScreen from '../screens/HomeScreen';
-import HistoryScreen from '../screens/HistoryScreen';
+
 import ChooseRecipientScreen from '../screens/ChooseRecipientScreen';
 import EnterAmountScreen from '../screens/EnterAmountScreen';
 import ConfirmTransferScreen from '../screens/ConfirmTransferScreen';
@@ -46,13 +47,28 @@ import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import ReferralScreen from '../screens/ReferralScreen';
 import BeneficiariesScreen from '../screens/BeneficiariesScreen';
+import ConfigScreen from '../screens/ConfigScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import MainTabs from './MainTabs';
 
 const Stack = createStackNavigator();
 
+const navTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: 'transparent',
+  },
+};
+
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
+    <ImageBackground 
+      source={require('../assets/images/bg-white-pink-pattern.png')} 
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <NavigationContainer theme={navTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -126,7 +142,12 @@ export default function AppNavigator() {
 
         {/* Search */}
         <Stack.Screen name="Search" component={SearchScreen} />
+
+        {/* Config and Settings */}
+        <Stack.Screen name="Config" component={ConfigScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
-    </NavigationContainer>
+      </NavigationContainer>
+    </ImageBackground>
   );
 }

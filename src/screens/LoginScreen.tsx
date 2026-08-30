@@ -7,6 +7,7 @@ import {
   Dimensions,
   StatusBar,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -108,12 +109,13 @@ export default function LoginScreen({ navigation }: any) {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* 1. TOP HEADER ROW */}
         <View style={styles.topHeader}>
-          {/* Logo MB with Star */}
+          {/* Logo Custom */}
           <View style={styles.logoRow}>
-            <View style={styles.starIconWrapper}>
-              <AppText style={styles.starText}>★</AppText>
-            </View>
-            <AppText style={styles.logoText}>MB</AppText>
+            <Image 
+              source={require('../../assets/icon.png')} 
+              style={styles.customAppLogo} 
+              resizeMode="contain" 
+            />
           </View>
 
           {/* Right Action Icons (Flag 🇻🇳, Bell 🔔, Bee 🐝 Hỗ trợ) */}
@@ -288,7 +290,7 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F0413',
+    backgroundColor: 'transparent',
   },
   safeArea: {
     flex: 1,
@@ -306,24 +308,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  starIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 7,
-    backgroundColor: '#E11D48',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  starText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  logoText: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
+  customAppLogo: {
+    width: 130,
+    height: 130,
+    marginLeft: -35, // Bù trừ viền trong suốt bên trái của ảnh
+    marginVertical: -40, // Ép lại chiều cao thực tế để không đẩy các thành phần khác xuống
   },
   rightHeaderActions: {
     flexDirection: 'column',

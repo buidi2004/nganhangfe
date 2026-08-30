@@ -393,7 +393,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

@@ -105,6 +105,62 @@ function CashbackHeroArt() {
   );
 }
 
+// 3. Voucher Card Component
+function PromoVoucherCard({ imageUri, title, category, percent, expiry }: { imageUri: string; title: string; category: string; percent: string; expiry: string }) {
+  return (
+    <TouchableOpacity style={styles.voucherCard} activeOpacity={0.9}>
+      <View style={styles.voucherTopRow}>
+        <Image source={{ uri: imageUri }} style={styles.voucherImage} />
+        <View style={styles.voucherInfo}>
+          <View style={styles.voucherBrandRow}>
+            <View style={styles.miniMbStar}>
+              <AppText style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '900' }}>★</AppText>
+            </View>
+            <AppText style={styles.voucherCategory}>{category}</AppText>
+            <View style={{ flex: 1 }} />
+            <View style={styles.badge99}>
+              <AppText style={styles.badge99Text}>99+</AppText>
+            </View>
+          </View>
+          <AppText style={styles.voucherTitle} numberOfLines={2}>{title}</AppText>
+        </View>
+      </View>
+      <View style={styles.voucherBottomRow}>
+        <AppText style={styles.voucherExpiry}>{expiry}</AppText>
+        <View style={styles.voucherProgressContainer}>
+          <AppText style={styles.progressLabel}>ĐÃ DÙNG {percent}</AppText>
+          <View style={styles.progressBarTrack}>
+            <View style={[styles.progressBarFill, { width: percent as any }]} />
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// 4. Advertisement Banner Component
+function AdBannerCard() {
+  return (
+    <TouchableOpacity style={styles.adBannerCard} activeOpacity={0.95}>
+      <Image 
+        source={{ uri: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&auto=format&fit=crop&q=80' }} 
+        style={styles.adBannerImage} 
+      />
+      <LinearGradient
+        colors={['transparent', 'rgba(112, 15, 67, 0.9)']}
+        style={styles.adBannerOverlay}
+      />
+      <View style={styles.adBannerTextContainer}>
+        <View style={styles.adBadge}>
+          <AppText style={styles.adBadgeText}>TÀI TRỢ</AppText>
+        </View>
+        <AppText style={styles.adBannerTitle}>Đón Siêu Sale Cuối Tuần</AppText>
+        <AppText style={styles.adBannerDesc}>Nhập mã SIEUSALE giảm ngay 50K cho đơn từ 200K</AppText>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function PromotionsScreen({ navigation }: any) {
   const [isSideMenuVisible, setIsSideMenuVisible] = useState(false);
   const [isPromoModalVisible, setIsPromoModalVisible] = useState(true);
@@ -238,48 +294,37 @@ export default function PromotionsScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Privilege Voucher Card */}
-        <TouchableOpacity style={styles.voucherCard} activeOpacity={0.9}>
-          <View style={styles.voucherTopRow}>
-            {/* Left Promo Image Banner */}
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80' }}
-              style={styles.voucherImage}
-            />
-
-            {/* Middle & Right Details */}
-            <View style={styles.voucherInfo}>
-              <View style={styles.voucherBrandRow}>
-                <View style={styles.miniMbStar}>
-                  <AppText style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '900' }}>★</AppText>
-                </View>
-                <AppText style={styles.voucherCategory}>Thẻ</AppText>
-
-                <View style={{ flex: 1 }} />
-
-                <View style={styles.badge99}>
-                  <AppText style={styles.badge99Text}>99+</AppText>
-                </View>
-              </View>
-
-              <AppText style={styles.voucherTitle} numberOfLines={2}>
-                Giảm 20% phí trả góp
-              </AppText>
-            </View>
-          </View>
-
-          {/* Bottom Progress & Expiry Row */}
-          <View style={styles.voucherBottomRow}>
-            <AppText style={styles.voucherExpiry}>HSD: 31/08/2026</AppText>
-
-            <View style={styles.voucherProgressContainer}>
-              <AppText style={styles.progressLabel}>ĐÃ DÙNG 99%</AppText>
-              <View style={styles.progressBarTrack}>
-                <View style={styles.progressBarFill} />
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
+        {/* Privilege Voucher Cards */}
+        <View style={{ gap: 12 }}>
+          <PromoVoucherCard 
+            imageUri="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80"
+            title="Giảm 20% phí trả góp thẻ tín dụng"
+            category="Thẻ"
+            percent="99%"
+            expiry="HSD: 31/08/2026"
+          />
+          <PromoVoucherCard 
+            imageUri="https://images.unsplash.com/photo-1555529733-0e670560f7e1?w=300&auto=format&fit=crop&q=80"
+            title="Tặng ngay 100K khi mua bảo hiểm"
+            category="Bảo hiểm"
+            percent="45%"
+            expiry="HSD: 15/09/2026"
+          />
+          <PromoVoucherCard 
+            imageUri="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&auto=format&fit=crop&q=80"
+            title="Giảm 50% vé máy bay nội địa"
+            category="Du lịch"
+            percent="80%"
+            expiry="HSD: 30/10/2026"
+          />
+          <PromoVoucherCard 
+            imageUri="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&auto=format&fit=crop&q=80"
+            title="Cashback 5% khi thanh toán QR"
+            category="Thanh toán"
+            percent="15%"
+            expiry="HSD: 31/12/2026"
+          />
+        </View>
 
         {/* 5. SECTION: ƯU ĐÃI (HOT DEAL BANNER) */}
         <View style={[styles.sectionHeader, { marginTop: 24 }]}>
@@ -302,6 +347,18 @@ export default function PromotionsScreen({ navigation }: any) {
             <AppText style={styles.hotDealWordDeal}>DEAL</AppText>
           </View>
         </TouchableOpacity>
+
+        {/* 6. SECTION: QUẢNG CÁO TÀI TRỢ */}
+        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+          <AppText style={styles.sectionTitle}>Chương trình đối tác</AppText>
+        </View>
+        
+        {/* Ads Cards */}
+        <View style={{ gap: 16 }}>
+          <AdBannerCard />
+          <AdBannerCard />
+        </View>
+
       </ScrollView>
 
       {/* 6. POPUP QUẢNG CÁO CASHBACK PLUS */}
@@ -485,7 +542,7 @@ export default function PromotionsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   headerContainer: {
     paddingBottom: 14,
@@ -798,6 +855,60 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 4,
+  },
+  adBannerCard: {
+    height: 160,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#F1F5F9',
+    position: 'relative',
+    shadowColor: '#D2519D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  adBannerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  adBannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  adBannerTextContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+  },
+  adBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  adBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  adBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  adBannerDesc: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 13,
+    fontWeight: '500',
   },
   hotDealCenterBox: {
     position: 'absolute',

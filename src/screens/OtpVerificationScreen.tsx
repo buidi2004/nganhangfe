@@ -181,7 +181,7 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     justifyContent: 'space-between',
   },
   header: {

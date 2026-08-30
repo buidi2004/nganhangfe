@@ -1,27 +1,37 @@
 import React from 'react';
-import { View, StyleSheet, Platform, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AnimatedGradientQRIcon from './icons/AnimatedGradientQRIcon';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-const BAR_HEIGHT = 64;
-const BOTTOM = Platform.OS === 'ios' ? 24 : 16;
+// ==========================================
+// THÔNG SỐ BẠN CÓ THỂ TỰ DO CHỈNH SỬA Ở ĐÂY:
+// ==========================================
+const BAR_HEIGHT = 75; // Chiều cao của thanh
+const BOTTOM = 30;     // Khoảng cách cách mép dưới màn hình
+
+// ĐỘ BO CONG 4 GÓC (Chỉnh thoải mái, code sẽ tự động đồng bộ mọi lớp!):
+const R_TOP_LEFT = 16;     // Góc trên - bên trái
+const R_TOP_RIGHT = 16;    // Góc trên - bên phải
+const R_BOTTOM_LEFT = 16;  // Góc dưới - bên trái
+const R_BOTTOM_RIGHT = 16; // Góc dưới - bên phải
+// ==========================================
 
 const TABS = [
-  { name: 'HomeTab', label: 'Trang chu', icon: 'home-outline', iconFocused: 'home', lib: 'Ionicons' },
-  { name: 'Card', label: 'Lich su', icon: 'credit-card-multiple-outline', iconFocused: 'credit-card-multiple', lib: 'MaterialCommunityIcons' },
+  { name: 'HomeTab', label: 'Trang chủ', icon: 'home-outline', iconFocused: 'home', lib: 'Ionicons' },
+  { name: 'Card', label: 'Thẻ', icon: 'credit-card-multiple-outline', iconFocused: 'credit-card-multiple', lib: 'MaterialCommunityIcons' },
   { name: 'QR', label: '', icon: 'qrcode-scan', iconFocused: 'qrcode-scan', lib: 'MaterialCommunityIcons', isCenter: true },
-  { name: 'Gift', label: 'Uu dai', icon: 'gift-outline', iconFocused: 'gift', lib: 'Ionicons' },
-  { name: 'More', label: 'Ca nhan', icon: 'account-outline', iconFocused: 'account', lib: 'MaterialCommunityIcons' },
+  { name: 'Gift', label: 'Ưu đãi', icon: 'gift-outline', iconFocused: 'gift', lib: 'Ionicons' },
+  { name: 'More', label: 'Cá nhân', icon: 'account-outline', iconFocused: 'account', lib: 'MaterialCommunityIcons' },
 ];
 
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
   const tabElements = state.routes.map((route, index) => {
-    const { options } = descriptors[route.key];
     const isFocused = state.index === index;
     const tabDef = TABS.find((t) => t.name === route.name);
-    
+
     if (!tabDef) return null;
 
     const onPress = () => {
@@ -38,7 +48,7 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
 
     const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
     const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
-    const color = isFocused ? '#FFF' : 'rgba(255, 255, 255, 0.7)';
+    const color = isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)';
 
     if (tabDef.isCenter) {
       return (
@@ -48,14 +58,12 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
           onPress={onPress}
           style={styles.centerBtn}
         >
-          <LinearGradient
-            colors={['#D2519D', '#B3307D']}
-            style={styles.centerCircle}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <IconComponent name={iconName as any} size={26} color="#FFF" />
-          </LinearGradient>
+          <View style={styles.centerCircle}>
+            <AnimatedGradientQRIcon 
+              size={50} 
+              borderRadius={14} // Khớp với borderRadius 16 trừ đi 2px viền
+            />
+          </View>
         </TouchableOpacity>
       );
     }
@@ -68,7 +76,12 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
         style={styles.tabItem}
       >
         <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
-          <IconComponent name={iconName as any} size={22} color={color} />
+          <IconComponent
+            name={iconName as any}
+            size={25}
+            color={color}
+            style={isFocused ? styles.iconShadow : undefined}
+          />
         </View>
         <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
           {tabDef.label}
@@ -77,37 +90,40 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
     );
   });
 
-  const content = (
-    <>
-      {Platform.OS === 'ios' && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.65)' }]} />
-      )}
-      <View style={styles.innerBorder} />
-      <View style={styles.tabRow}>
-        {tabElements}
-      </View>
-    </>
-  );
+  // Gộp 4 góc lại thành 1 object để tái sử dụng, đảm bảo không bao giờ bị lệch!
+  const radiusStyles = {
+    borderTopLeftRadius: R_TOP_LEFT,
+    borderTopRightRadius: R_TOP_RIGHT,
+    borderBottomLeftRadius: R_BOTTOM_LEFT,
+    borderBottomRightRadius: R_BOTTOM_RIGHT,
+  };
 
   return (
     <View style={styles.wrapper}>
-      {/* Shadow Container */}
-      <View style={styles.shadowContainer} />
+      {/* 1. Lớp đổ bóng chuyên dụng cho Android (Tách rời để không bị lỗi elevation) */}
+      <View style={[styles.shadowContainer, radiusStyles]} />
 
-      <View style={[styles.pillContent, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}>
-        {Platform.OS === 'ios' ? (
-          <BlurView 
-            intensity={50} 
-            tint="light" 
+      {/* 2. Lớp chứa nội dung (Cắt gọt hiển thị theo đúng 4 góc bo cong) */}
+      <View style={[styles.pillContent, radiusStyles]}>
+
+        {/* Nền Kính Mờ (Glassmorphism) hoạt động mượt trên Android */}
+        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill}>
+          <LinearGradient
+            colors={['rgba(210, 81, 157, 0.85)', 'rgba(163, 27, 107, 0.92)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
-          >
-            {content}
-          </BlurView>
-        ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.96)' }]}>
-            {content}
+          />
+
+          {/* Viền nổi 3D */}
+          <View style={[styles.innerBorder, radiusStyles]} />
+
+          {/* Các nút bấm */}
+          <View style={styles.tabRow}>
+            {tabElements}
           </View>
-        )}
+        </BlurView>
+
       </View>
     </View>
   );
@@ -119,7 +135,7 @@ const styles = StyleSheet.create({
     bottom: BOTTOM,
     left: 16,
     right: 16,
-    height: BAR_HEIGHT + 12,
+    height: BAR_HEIGHT + 12, // Dư ra 12px để nhường chỗ cho nút QR lồi lên
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -129,17 +145,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: BAR_HEIGHT,
-    borderRadius: BAR_HEIGHT / 2,
-    backgroundColor: Platform.OS === 'android' ? 'rgba(210, 81, 157, 0.3)' : 'transparent', // minimal background for android shadow
-    shadowColor: '#D2519D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 10,
+    backgroundColor: 'rgba(210, 81, 157, 0.4)', // Nền ảo để tạo bóng mượt trên Android
+    elevation: 12, // Đổ bóng cho Android
   },
   pillContent: {
     height: BAR_HEIGHT,
     width: '100%',
+    overflow: 'hidden', // Quan trọng: Cắt mọi thứ thừa ra ngoài 4 góc bo cong!
   },
   innerBorder: {
     position: 'absolute',
@@ -147,11 +159,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: BAR_HEIGHT / 2,
-    borderWidth: 1.2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     borderTopWidth: 1.5,
-    borderTopColor: 'rgba(255,255,255,0.7)',
+    borderTopColor: 'rgba(255, 255, 255, 0.4)',
   },
   tabRow: {
     position: 'absolute',
@@ -171,19 +182,23 @@ const styles = StyleSheet.create({
     height: BAR_HEIGHT,
   },
   iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(210, 81, 157, 0.12)',
+    // Không dùng nền tròn nữa, bóng sẽ được bám sát hình khối icon
+  },
+  iconShadow: {
+    textShadowColor: 'rgba(255, 255, 255, 1)', // Glow phát sáng màu trắng bám sát Icon
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   label: {
     fontSize: 10,
-    marginTop: 1,
-    letterSpacing: 0.1,
+    marginTop: 2,
     fontWeight: '600',
   },
   labelFocused: {
@@ -193,16 +208,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    bottom: 6,
     zIndex: 15,
-    elevation: 15,
-    shadowColor: 'transparent',
+    elevation: 8, // Nút QR có bóng riêng
   },
   centerCircle: {
     width: 54,
     height: 54,
-    borderRadius: 27,
+    borderRadius: 16, // Hình vuông bo cong nhẹ thay vì tròn vo
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    overflow: 'hidden',
   },
 });

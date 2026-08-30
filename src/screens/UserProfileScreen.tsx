@@ -227,7 +227,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

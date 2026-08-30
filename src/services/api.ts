@@ -15,7 +15,7 @@
 // Android Emulator  → 10.0.2.2 là địa chỉ máy host từ trong emulator
 // Physical device   → Dùng LAN IP của máy, ví dụ: http://192.168.1.100:8080/api/v1
 // iOS Simulator     → localhost hoặc 127.0.0.1 hoạt động bình thường
-export const API_BASE_URL = 'http://10.0.2.2:8080/api/v1';
+export const API_BASE_URL = 'http://203.145.46.200:8080/api/v1';
 
 let authToken: string | null = null;
 let refreshToken: string | null = null;

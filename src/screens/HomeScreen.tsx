@@ -23,6 +23,7 @@ import { SideMenuDrawer } from '../components/SideMenuDrawer';
 import { useApp } from '../context/AppContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
+import AISearchIcon from '../components/icons/AISearchIcon';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -193,18 +194,201 @@ const SERVICES = [
   { id: '6', title: 'Data Viettel', iconBg: '#581C87', iconColor: '#FFFFFF', icon: 'zap', customLogo: '4G' },
   { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', icon: 'star', isYinYang: true },
   { id: '9', title: 'Tiền điện', iconBg: '#FEF3C7', iconColor: '#D97706', icon: 'electricity' },
-  { id: '10', title: 'Tiền nước', iconBg: '#E0F2FE', iconColor: '#0284C7', icon: 'water' },
-  { id: '11', title: 'Thẻ cào', iconBg: '#FCE7F3', iconColor: '#BE185D', icon: 'smartphone' },
-  { id: '12', title: 'Mua sắm', iconBg: '#FFEDD5', iconColor: '#C2410C', icon: 'shoppingBag' },
-  { id: '13', title: 'Giải trí', iconBg: '#E0E7FF', iconColor: '#4338CA', icon: 'play' },
-  { id: '14', title: 'Gửi tiết kiệm', iconBg: '#DCFCE7', iconColor: '#15803D', icon: 'piggyBank' },
-  { id: '15', title: 'Vay tiêu dùng', iconBg: '#F3F4F6', iconColor: '#475569', icon: 'wallet' },
-  { id: '16', title: 'Ví điện tử', iconBg: '#FEFCE8', iconColor: '#A16207', icon: 'wallet' },
-  { id: '17', title: 'Phí chung cư', iconBg: '#F1F5F9', iconColor: '#334155', icon: 'home' },
-  { id: '18', title: 'Đóng học phí', iconBg: '#ECFEFF', iconColor: '#0F766E', icon: 'cards' },
-  { id: '19', title: 'Vé xem phim', iconBg: '#FFF1F2', iconColor: '#BE123C', icon: 'ticket' },
-  { id: '8', title: 'Xem thêm', iconBg: '#FFFFFF', iconColor: Colors.primary, icon: 'grid', isGrid: true },
 ];
+
+// --- ANIMATED SEARCH BUTTON ---
+const AnimatedSearchButton = ({ onPress }: { onPress: () => void }) => {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isActive = true;
+
+    const runAnimation = () => {
+      if (!isActive) return;
+      // Randomize speed: fast (1000ms) or slow/soft (3000ms)
+      const duration = Math.random() > 0.5 ? 1000 : 3000; 
+      // Occasional delay: wait 1 to 4 seconds before next spin
+      const delay = Math.random() * 3000 + 1000; 
+
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: duration,
+          useNativeDriver: true,
+        })
+      ]).start(({ finished }) => {
+        if (finished && isActive) {
+          rotateAnim.setValue(0);
+          runAnimation(); // Loop continuously
+        }
+      });
+    };
+
+    runAnimation();
+
+    return () => {
+      isActive = false;
+      rotateAnim.stopAnimation();
+    };
+  }, []);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <TouchableOpacity style={styles.glassHeaderBtn} activeOpacity={0.7} onPress={onPress}>
+      {/* Lớp viền chạy (Running sweeping border) */}
+      <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate: spin }] }]}>
+        <Svg width={36} height={36} viewBox="0 0 36 36">
+          <Circle 
+            cx="18" cy="18" r="17" 
+            stroke="#FFFFFF" 
+            strokeWidth="2" 
+            strokeLinecap="round"
+            strokeDasharray="20 100" // Độ dài của vạch chạy
+            fill="none" 
+          />
+        </Svg>
+      </Animated.View>
+
+      {/* Icon kính lúp AI */}
+      <AISearchIcon size={26} color="#FFFFFF" />
+    </TouchableOpacity>
+  );
+};
+
+// 7. Giải pháp 3: Gói (Memoize) thành phần renderItem để chống lag
+const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; index: number; scrollX: Animated.Value }) => {
+  const inputRange = [
+    (index - 1) * SNAP_INTERVAL,
+    index * SNAP_INTERVAL,
+    (index + 1) * SNAP_INTERVAL,
+  ];
+  
+  // Thu nhỏ đáng kể thẻ 2 bên (còn 82%) và làm mờ nhiều hơn (còn 40%)
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.82, 1.0, 0.82], 
+    extrapolate: 'clamp',
+  });
+
+  // Bù đắp khoảng trống do bị thu nhỏ: thẻ trái dịch sang phải, thẻ phải dịch sang trái
+  const SHIFT_AMOUNT = ITEM_WIDTH * 0.09; // 9% mỗi bên bị dư ra do scale 0.82
+  const translateX = scrollX.interpolate({
+    inputRange,
+    outputRange: [-SHIFT_AMOUNT, 0, SHIFT_AMOUNT],
+    extrapolate: 'clamp',
+  });
+
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.5, 1.0, 0.5], // Tăng nhẹ độ sáng 2 bên lên 50% cho dễ nhìn
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.bannerItemWrapper,
+        {
+          width: ITEM_WIDTH,
+          transform: [{ scale }, { translateX }],
+          opacity,
+          marginHorizontal: ITEM_GAP / 2, // Đồng bộ khoảng cách 2 bên chuẩn 8px
+        },
+      ]}
+    >
+      <View style={styles.bannerItem}>
+        <LinearGradient
+          colors={[item.colorStart, item.colorEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.bannerBackground}
+        >
+          {/* Top Row: Mini Brand Logo (20px) + Livestream / Promo Badge */}
+          <View style={styles.bannerTopRow}>
+            <View style={styles.bannerBrandLogo}>
+              <View style={styles.miniStar}>
+                <AppText style={styles.miniStarText}>★</AppText>
+              </View>
+              <AppText style={styles.bannerBrandText}>{item.brand}</AppText>
+            </View>
+
+            {item.badge && (
+              <View style={styles.bannerBadge}>
+                <AppIcon name="play" size="xs" color={Colors.white} />
+                <AppText style={styles.bannerBadgeText}>{item.badge}</AppText>
+              </View>
+            )}
+          </View>
+
+          {/* 2-line 3D Banner Title */}
+          <View style={styles.bannerTextContent}>
+            {item.titleYellow && (
+              <View style={styles.title3DBoxYellow}>
+                <AppText style={styles.bannerTitleYellow}>{item.titleYellow}</AppText>
+              </View>
+            )}
+            {item.titleRed && (
+              <View style={styles.title3DBoxRed}>
+                <AppText style={styles.bannerTitleRed}>{item.titleRed}</AppText>
+              </View>
+            )}
+            <AppText style={styles.bannerSubtitle} numberOfLines={1}>{item.subtitle}</AppText>
+          </View>
+
+          {/* Floating Confetti / Voucher Tags */}
+          {item.tags && item.tags.map((tag: any, tIdx: number) => (
+            <View
+              key={tIdx}
+              style={[
+                styles.floatingTag,
+                {
+                  top: tag.top,
+                  right: tag.right,
+                  backgroundColor: tag.color,
+                  transform: [{ rotate: tag.rotate }],
+                },
+              ]}
+            >
+              <AppText style={[styles.floatingTagText, { color: tag.textColor }]}>
+                {tag.text}
+              </AppText>
+            </View>
+          ))}
+
+          {/* Mascot Graphic at Right Bottom */}
+          {item.showCarMascot && (
+            <View style={styles.mascotBleedContainer}>
+              <View style={styles.carMascotWrapper}>
+                {/* Bee mascot on yellow car */}
+                <View style={styles.beeHead}>
+                  <AppText style={{ fontSize: 24 }}>🐝</AppText>
+                  <View style={styles.flagIcon}>
+                    <AppText style={{ fontSize: 10 }}>🇻🇳</AppText>
+                  </View>
+                </View>
+                <View style={styles.yellowCar}>
+                  <AppText style={{ fontSize: 26 }}>🚗</AppText>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Bottom CTA Pill Button */}
+          {item.cta && (
+            <TouchableOpacity style={styles.ctaPill} activeOpacity={0.8}>
+              <AppText style={styles.ctaPillText}>{item.cta}</AppText>
+            </TouchableOpacity>
+          )}
+        </LinearGradient>
+      </View>
+    </Animated.View>
+  );
+});
 
 export default function HomeScreen({ navigation }: any) {
   const { user, wallet, refreshBalance, isBalanceLoading } = useApp();
@@ -216,6 +400,14 @@ export default function HomeScreen({ navigation }: any) {
   const flatListRef = useRef<FlatList>(null);
   const isUserInteracting = useRef(false);
   const currentIndexRef = useRef(INITIAL_CAROUSEL_INDEX);
+
+  // Lưu trữ Animated.event vào useRef để KHÔNG BỊ TẠO LẠI mỗi lần render, giúp useNativeDriver: true chạy mượt mà trên Android
+  const handleScroll = useRef(
+    Animated.event(
+      [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+      { useNativeDriver: true }
+    )
+  ).current;
 
   // Hiệu ứng xuất hiện thanh nổi "Dán chuyển tiền AI" khi kéo cuộn xuống dưới
   const stickyHeaderOpacity = scrollY.interpolate({
@@ -289,123 +481,9 @@ export default function HomeScreen({ navigation }: any) {
     return () => clearInterval(timer);
   }, []);
 
-  const renderBannerItem = ({ item, index }: { item: any; index: number }) => {
-    const inputRange = [
-      (index - 1) * SNAP_INTERVAL,
-      index * SNAP_INTERVAL,
-      (index + 1) * SNAP_INTERVAL,
-    ];
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.86, 1.0, 0.86], // Thẻ giữa to hơn chuẩn 1.0, 2 thẻ bên thu nhỏ 0.86
-      extrapolate: 'clamp',
-    });
-    const opacity = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.65, 1.0, 0.65], // Thẻ bên mờ nhẹ 65% để làm nổi bật thẻ giữa
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View
-        style={[
-          styles.bannerItemWrapper,
-          {
-            width: ITEM_WIDTH,
-            transform: [{ scale }],
-            opacity,
-            marginHorizontal: ITEM_GAP / 2, // Đồng bộ khoảng cách 2 bên chuẩn 8px
-          },
-        ]}
-      >
-        <View style={styles.bannerItem}>
-          <LinearGradient
-            colors={[item.colorStart, item.colorEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.bannerBackground}
-          >
-            {/* Top Row: Mini Brand Logo (20px) + Livestream / Promo Badge */}
-            <View style={styles.bannerTopRow}>
-              <View style={styles.bannerBrandLogo}>
-                <View style={styles.miniStar}>
-                  <AppText style={styles.miniStarText}>★</AppText>
-                </View>
-                <AppText style={styles.bannerBrandText}>{item.brand}</AppText>
-              </View>
-
-              {item.badge && (
-                <View style={styles.bannerBadge}>
-                  <AppIcon name="play" size="xs" color={Colors.white} />
-                  <AppText style={styles.bannerBadgeText}>{item.badge}</AppText>
-                </View>
-              )}
-            </View>
-
-            {/* 2-line 3D Banner Title */}
-            <View style={styles.bannerTextContent}>
-              {item.titleYellow && (
-                <View style={styles.title3DBoxYellow}>
-                  <AppText style={styles.bannerTitleYellow}>{item.titleYellow}</AppText>
-                </View>
-              )}
-              {item.titleRed && (
-                <View style={styles.title3DBoxRed}>
-                  <AppText style={styles.bannerTitleRed}>{item.titleRed}</AppText>
-                </View>
-              )}
-              <AppText style={styles.bannerSubtitle} numberOfLines={1}>{item.subtitle}</AppText>
-            </View>
-
-            {/* Floating Confetti / Voucher Tags */}
-            {item.tags && item.tags.map((tag: any, tIdx: number) => (
-              <View
-                key={tIdx}
-                style={[
-                  styles.floatingTag,
-                  {
-                    top: tag.top,
-                    right: tag.right,
-                    backgroundColor: tag.color,
-                    transform: [{ rotate: tag.rotate }],
-                  },
-                ]}
-              >
-                <AppText style={[styles.floatingTagText, { color: tag.textColor }]}>
-                  {tag.text}
-                </AppText>
-              </View>
-            ))}
-
-            {/* Mascot Graphic at Right Bottom */}
-            {item.showCarMascot && (
-              <View style={styles.mascotBleedContainer}>
-                <View style={styles.carMascotWrapper}>
-                  {/* Bee mascot on yellow car */}
-                  <View style={styles.beeHead}>
-                    <AppText style={{ fontSize: 24 }}>🐝</AppText>
-                    <View style={styles.flagIcon}>
-                      <AppText style={{ fontSize: 10 }}>🇻🇳</AppText>
-                    </View>
-                  </View>
-                  <View style={styles.yellowCar}>
-                    <AppText style={{ fontSize: 26 }}>🚗</AppText>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Bottom CTA Pill Button */}
-            {item.cta && (
-              <TouchableOpacity style={styles.ctaPill} activeOpacity={0.8}>
-                <AppText style={styles.ctaPillText}>{item.cta}</AppText>
-              </TouchableOpacity>
-            )}
-          </LinearGradient>
-        </View>
-      </Animated.View>
-    );
-  };
+  const renderBannerItem = useCallback(({ item, index }: { item: any; index: number }) => {
+    return <MemoizedBannerItem item={item} index={index} scrollX={scrollX} />;
+  }, [scrollX]);
 
   return (
     <View style={styles.container}>
@@ -424,9 +502,9 @@ export default function HomeScreen({ navigation }: any) {
         pointerEvents="box-none"
       >
         <View style={styles.stickyHeaderWrapper}>
-          <BlurView intensity={70} tint="light" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <LinearGradient
-            colors={['rgba(228, 172, 178, 0.65)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.85)']}
+            colors={['rgba(228, 172, 178, 0.98)', 'rgba(210, 81, 157, 0.96)', 'rgba(112, 15, 67, 0.98)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -442,7 +520,10 @@ export default function HomeScreen({ navigation }: any) {
                 activeOpacity={0.85}
                 onPress={() => navigation.navigate('Search')}
               >
-                <AppText style={styles.stickySearchText}>Dán chuyển tiền AI</AppText>
+                <View style={styles.stickySearchPillInner}>
+                  <AppText style={styles.stickySearchText}>Dán chuyển tiền AI</AppText>
+                  <AISearchIcon size={18} color="#64748B" />
+                </View>
               </TouchableOpacity>
 
               {/* 2. Cụm Icon: Chuông 🔔 + 3 Gạch ☰ */}
@@ -479,6 +560,23 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.capsuleShape1} />
         <View style={styles.capsuleShape2} />
         <View style={styles.auraGlow} />
+        
+        {/* Thêm các đường nét trang trí uốn lượn (Waves & Rings) */}
+        <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+          {/* Đường cong mềm mại */}
+          <Path d="M-50 150 Q 150 50 400 180 T 600 100" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" fill="none" />
+          <Path d="M-50 165 Q 200 -20 450 200 T 600 120" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
+          <Path d="M-20 280 C 150 200, 250 350, 500 220" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
+          <Path d="M0 320 C 200 380, 300 250, 500 280" stroke="rgba(255,255,255,0.03)" strokeWidth="3" fill="none" />
+          
+          {/* Vòng tròn đồng tâm */}
+          <Circle cx="85%" cy="25%" r="140" stroke="rgba(255,255,255,0.03)" strokeWidth="1" fill="none" strokeDasharray="4 6" />
+          <Circle cx="85%" cy="25%" r="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" fill="none" />
+          <Circle cx="85%" cy="25%" r="80" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none" />
+          
+          <Circle cx="10%" cy="60%" r="200" stroke="rgba(255,255,255,0.02)" strokeWidth="4" fill="none" />
+          <Circle cx="10%" cy="60%" r="150" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
+        </Svg>
       </View>
 
       <Animated.ScrollView
@@ -501,24 +599,19 @@ export default function HomeScreen({ navigation }: any) {
         <SafeAreaView edges={['top']}>
           {/* Row 1: Top Navigation Header (Logo MB bên trái + 3 icon bên phải) */}
           <View style={styles.headerRow}>
-            {/* Logo MB with Star */}
+            {/* Logo Custom */}
             <View style={styles.logoContainer}>
-              <View style={styles.starIconWrapper}>
-                <AppText style={styles.starText}>★</AppText>
-              </View>
-              <AppText style={styles.logoText}>MB</AppText>
+              <Image 
+                source={require('../../assets/icon.png')} 
+                style={styles.customAppLogo} 
+                resizeMode="contain" 
+              />
             </View>
 
             {/* 3 Right Action Icons (Gap: 16px, kích thước 22-24px) */}
             <View style={styles.headerActions}>
-              {/* Search Icon with mic/dot inside */}
-              <TouchableOpacity style={styles.glassHeaderBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Search')}>
-                <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-                  <Circle cx="11" cy="11" r="6.5" stroke="#FFFFFF" strokeWidth="2" />
-                  <Path d="M16 16l4.5 4.5" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-                  <Circle cx="11" cy="11" r="1.5" fill="#FDF2F8" />
-                </Svg>
-              </TouchableOpacity>
+              {/* Search Icon with Animated Sweeping Border */}
+              <AnimatedSearchButton onPress={() => navigation.navigate('Search')} />
 
               {/* Notification Bell */}
               <TouchableOpacity
@@ -753,10 +846,7 @@ export default function HomeScreen({ navigation }: any) {
                   setActiveIndex(normalizedIdx);
                 }
               }}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                { useNativeDriver: true }
-              )}
+              onScroll={handleScroll}
               scrollEventThrottle={16}
               renderItem={renderBannerItem}
             />
@@ -806,6 +896,41 @@ export default function HomeScreen({ navigation }: any) {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* Horizontal Mini Ads Banner Section */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalAdsContainer}
+            >
+              <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#FCE7F3' }]} activeOpacity={0.85}>
+                <Image source={{ uri: 'https://images.unsplash.com/photo-1557821552-171051530dcb?w=400&q=80' }} style={styles.miniAdImage} />
+                <LinearGradient colors={['transparent', 'rgba(112, 15, 67, 0.85)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.miniAdOverlay}>
+                  <AppText style={styles.miniAdTitle}>Hoàn tiền 50%</AppText>
+                  <AppText style={styles.miniAdSubtitle}>Thanh toán quét mã QR</AppText>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#E0F2FE' }]} activeOpacity={0.85}>
+                <Image source={{ uri: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&q=80' }} style={styles.miniAdImage} />
+                <LinearGradient colors={['transparent', 'rgba(2, 132, 199, 0.85)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.miniAdOverlay}>
+                  <AppText style={styles.miniAdTitle}>Săn Sale Đậm</AppText>
+                  <AppText style={styles.miniAdSubtitle}>Giảm liền tay 100K</AppText>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#FEF3C7' }]} activeOpacity={0.85}>
+                <Image source={{ uri: 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=400&q=80' }} style={styles.miniAdImage} />
+                <LinearGradient colors={['transparent', 'rgba(217, 119, 6, 0.85)']} style={StyleSheet.absoluteFill} />
+                <View style={styles.miniAdOverlay}>
+                  <AppText style={styles.miniAdTitle}>Mở Thẻ Tín Dụng</AppText>
+                  <AppText style={styles.miniAdSubtitle}>Miễn phí thường niên trọn đời</AppText>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
+
           </View>
         </View>
 
@@ -827,11 +952,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 99,
-    shadowColor: '#700F43',
+    shadowColor: '#030303ff',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.5,
     shadowRadius: 10,
-    elevation: 12,
+    elevation: 15,
   },
   stickyHeaderWrapper: {
     overflow: 'hidden',
@@ -854,7 +979,7 @@ const styles = StyleSheet.create({
   stickyHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 20, // Khoảng cách đệm tạo khoảng thở cho góc cong lớn bên trái
+    paddingLeft: 20,
     paddingRight: 16,
     paddingTop: Platform.OS === 'android' ? 6 : 2,
     paddingBottom: 16,
@@ -863,7 +988,7 @@ const styles = StyleSheet.create({
   stickySearchPill: {
     flex: 1,
     height: 38,
-    marginLeft: 6, // Thu gọn lùi lại sang phải một chút đồng bộ với độ cong
+    marginLeft: 6,
     backgroundColor: '#FFFFFF',
     borderRadius: 19,
     justifyContent: 'center',
@@ -873,6 +998,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  stickySearchPillInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   stickySearchText: {
     fontSize: 13.5,
@@ -887,7 +1017,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   headerBackground: {
     position: 'absolute',
@@ -932,20 +1062,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  starIconWrapper: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  starText: {
-    color: '#EF4444', // Red star logo
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  logoText: {
-    color: Colors.white,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+  customAppLogo: {
+    width: 130,
+    height: 130,
+    marginLeft: -35,
+    marginVertical: -40,
   },
   headerBeeCenter: {
     alignItems: 'center',
@@ -1405,11 +1526,51 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   serviceTitle: {
-    textAlign: 'center',
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#334155',
-    lineHeight: 15,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  horizontalAdsContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+    gap: 12,
+  },
+  miniAdBanner: {
+    width: 250,
+    height: 120,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  miniAdImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  miniAdOverlay: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    padding: 12,
+  },
+  miniAdTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  miniAdSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontWeight: '500',
   },
   calendarCardContent: {
     flex: 1,

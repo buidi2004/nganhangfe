@@ -213,7 +213,7 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

@@ -270,7 +270,7 @@ export default function QRMyScreen({ navigation }: QRMyScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   headerGradient: {
     flexDirection: 'row',

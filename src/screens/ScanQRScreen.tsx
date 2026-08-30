@@ -298,7 +298,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B1329',
+    backgroundColor: 'transparent',
   },
   safeArea: {
     flex: 1,

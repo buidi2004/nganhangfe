@@ -240,7 +240,7 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingHorizontal: 20,

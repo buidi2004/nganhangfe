@@ -1,7 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/HomeScreen";
-import HistoryScreen from "../screens/HistoryScreen";
+import CardsScreen from "../screens/CardsScreen";
 import ScanQRScreen from "../screens/ScanQRScreen";
 import PromotionsScreen from "../screens/PromotionsScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -29,7 +29,7 @@ export default function MainTabs() {
       }}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Trang chu" }} />
-      <Tab.Screen name="Card" component={HistoryScreen} options={{ title: "Lich su" }} />
+      <Tab.Screen name="Card" component={CardsScreen} options={{ title: "The" }} />
       <Tab.Screen name="QR" component={ScanQRScreen} options={{ tabBarStyle: { display: "none" } }} />
       <Tab.Screen name="Gift" component={PromotionsScreen} options={{ title: "Uu dai" }} />
       <Tab.Screen name="More" component={ProfileScreen} options={{ title: "Ca nhan" }} />

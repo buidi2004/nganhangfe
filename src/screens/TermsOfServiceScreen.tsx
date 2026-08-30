@@ -173,7 +173,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

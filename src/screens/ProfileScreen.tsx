@@ -49,7 +49,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         {/* Menu List with Real Vector Icons */}
         <View style={styles.menuList}>
           {/* Item 1: Cấu hình */}
-          <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.menuRow} activeOpacity={0.7} onPress={() => navigation.navigate('Config')}>
             <View style={styles.menuLeft}>
               <MaterialCommunityIcons name="view-grid-plus-outline" size={24} color={Colors.primary} />
               <AppText style={styles.menuTitle}>Cấu hình</AppText>
@@ -58,7 +58,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           </TouchableOpacity>
 
           {/* Item 2: Cài đặt with NEW badge */}
-          <TouchableOpacity style={styles.menuRow} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.menuRow} activeOpacity={0.7} onPress={() => navigation.navigate('Settings')}>
             <View style={styles.menuLeft}>
               <Ionicons name="settings-outline" size={24} color={Colors.primary} />
               <AppText style={styles.menuTitle}>Cài đặt</AppText>
@@ -142,7 +142,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   content: {
     flexGrow: 1,
