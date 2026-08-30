@@ -19,76 +19,82 @@ const TABS = [
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View style={styles.wrapper}>
-      {/* Shadow */}
-      <View style={styles.shadowContainer}>
-        <View style={[styles.pillContent, { backgroundColor: '#D2519D', borderRadius: BAR_HEIGHT / 2 }]} />
-      </View>
+      {/* Shadow Container - Must have backgroundColor and borderRadius for Android elevation to work properly,
+          but since we want glassmorphism, we make it transparent or semi-transparent.
+          Actually, drawing a solid shadow behind a transparent blur view will show the shadow through the blur.
+          To fix the rectangular box, we apply borderRadius directly to the shadow container. */}
+      <View style={styles.shadowContainer} />
 
-      <BlurView intensity={30} tint="light" style={[styles.pillContent, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}>
-        <View style={styles.innerBorder} />
-        
-        <View style={styles.tabRow}>
-          {state.routes.map((route, index) => {
-            const { options } = descriptors[route.key];
-            const isFocused = state.index === index;
-            const tabDef = TABS.find((t) => t.name === route.name);
-            
-            if (!tabDef) return null;
+      {/* Wrapping BlurView in a View with overflow hidden fixes the Android rectangular artifact */}
+      <View style={[styles.pillContent, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}>
+        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill}>
+          {/* A semi-transparent overlay to give it the pink glass look */}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.65)' }]} />
+          <View style={styles.innerBorder} />
+          
+          <View style={styles.tabRow}>
+            {state.routes.map((route, index) => {
+              const { options } = descriptors[route.key];
+              const isFocused = state.index === index;
+              const tabDef = TABS.find((t) => t.name === route.name);
+              
+              if (!tabDef) return null;
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
+              const onPress = () => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
 
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name, route.params);
+                }
+              };
+
+              const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+              const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
+              const color = isFocused ? '#FFF' : 'rgba(255, 255, 255, 0.7)'; // Adjusted for better contrast on pink
+
+              if (tabDef.isCenter) {
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    activeOpacity={0.8}
+                    onPress={onPress}
+                    style={styles.centerBtn}
+                  >
+                    <LinearGradient
+                      colors={['#D2519D', '#B3307D']}
+                      style={styles.centerCircle}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <IconComponent name={iconName as any} size={26} color="#FFF" />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
               }
-            };
 
-            const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-            const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
-            const color = isFocused ? '#D2519D' : '#666';
-
-            if (tabDef.isCenter) {
               return (
                 <TouchableOpacity
                   key={index}
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                   onPress={onPress}
-                  style={styles.centerBtn}
+                  style={styles.tabItem}
                 >
-                  <LinearGradient
-                    colors={['#D2519D', '#B3307D']}
-                    style={styles.centerCircle}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <IconComponent name={iconName as any} size={26} color="#FFF" />
-                  </LinearGradient>
+                  <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
+                    <IconComponent name={iconName as any} size={22} color={color} />
+                  </View>
+                  <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
+                    {tabDef.label}
+                  </Text>
                 </TouchableOpacity>
               );
-            }
-
-            return (
-              <TouchableOpacity
-                key={index}
-                activeOpacity={0.7}
-                onPress={onPress}
-                style={styles.tabItem}
-              >
-                <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
-                  <IconComponent name={iconName as any} size={22} color={color} />
-                </View>
-                <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
-                  {tabDef.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </BlurView>
+            })}
+          </View>
+        </BlurView>
+      </View>
     </View>
   );
 }
@@ -109,6 +115,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: BAR_HEIGHT,
+    borderRadius: BAR_HEIGHT / 2,
+    backgroundColor: Platform.OS === 'android' ? 'rgba(210, 81, 157, 0.3)' : 'transparent', // minimal background for android shadow
     shadowColor: '#D2519D',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
@@ -129,7 +137,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: 'rgba(255,255,255,0.2)',
     borderTopWidth: 1.5,
-    borderTopColor: 'rgba(255,255,255,0.95)',
+    borderTopColor: 'rgba(255,255,255,0.7)',
   },
   tabRow: {
     position: 'absolute',
