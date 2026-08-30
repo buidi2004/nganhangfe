@@ -224,8 +224,8 @@ export default function HomeScreen({ navigation }: any) {
   });
 
   const stickyHeaderTranslateY = scrollY.interpolate({
-    inputRange: [40, 85],
-    outputRange: [-25, 0],
+    inputRange: [39, 40, 85],
+    outputRange: [-500, -25, 0],
     extrapolate: 'clamp',
   });
 
@@ -506,7 +506,7 @@ export default function HomeScreen({ navigation }: any) {
               </View>
               <AppText style={styles.logoText}>MB</AppText>
             </View>
-            
+
             {/* 3 Right Action Icons (Gap: 16px, kích thước 22-24px) */}
             <View style={styles.headerActions}>
               {/* Search Icon with mic/dot inside */}
@@ -566,7 +566,7 @@ export default function HomeScreen({ navigation }: any) {
                     <AppIcon name="shoppingBag" size="xs" color="#475569" />
                     <AppText style={styles.basicBadgeText}>Basic</AppText>
                   </View>
-                  
+
                   {/* User Name below badge */}
                   <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
                     {user?.name ? user.name.split(' ').pop() : 'Bạn'}
@@ -595,7 +595,7 @@ export default function HomeScreen({ navigation }: any) {
                     {/* Dòng 2: Số dư lớn + đơn vị "VND" */}
                     <View style={styles.amountRow}>
                       <AppText style={styles.amountNumber}>
-                        {balanceVisible 
+                        {balanceVisible
                           ? (wallet?.balance?.toLocaleString('vi-VN') || '0')
                           : '*** ***'}
                       </AppText>
@@ -644,170 +644,170 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         </SafeAreaView>
 
-          {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
-          <View style={styles.whiteBodyContainer}>
-            {/* 4 Quick Actions Row */}
-            <View style={styles.quickActionsRow}>
-              {QUICK_ACTIONS.map((item, index) => {
-                const IconComp = item.component;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.actionItem}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      if (item.id === '1') navigation.navigate('Transfer');
-                      else if (item.id === '2') navigation.navigate('PhoneRecharge');
-                      else if (item.id === '3') navigation.navigate('Deposit');
-                      else if (item.id === '4') navigation.navigate('Deposit');
-                    }}
-                  >
-                    {/* Icon Container with relative position for the badge */}
-                    <View style={styles.actionIconContainer}>
-                      <View style={styles.actionIconBg}>
-                        <IconComp size={28} color="#D2519D" />
-                      </View>
+        {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
+        <View style={styles.whiteBodyContainer}>
+          {/* 4 Quick Actions Row */}
+          <View style={styles.quickActionsRow}>
+            {QUICK_ACTIONS.map((item, index) => {
+              const IconComp = item.component;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.actionItem}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (item.id === '1') navigation.navigate('Transfer');
+                    else if (item.id === '2') navigation.navigate('PhoneRecharge');
+                    else if (item.id === '3') navigation.navigate('Deposit');
+                    else if (item.id === '4') navigation.navigate('Deposit');
+                  }}
+                >
+                  {/* Icon Container with relative position for the badge */}
+                  <View style={styles.actionIconContainer}>
+                    <View style={styles.actionIconBg}>
+                      <IconComp size={28} color="#D2519D" />
+                    </View>
 
-                      {/* Badges positioned at top: -8, right: -10 */}
-                      {item.badge && (
-                        <View
+                    {/* Badges positioned at top: -8, right: -10 */}
+                    {item.badge && (
+                      <View
+                        style={[
+                          styles.badge,
+                          item.id === '4' ? styles.badgeNhuGio : styles.badgeTaiLoc,
+                        ]}
+                      >
+                        <AppText
                           style={[
-                            styles.badge,
-                            item.id === '4' ? styles.badgeNhuGio : styles.badgeTaiLoc,
+                            styles.badgeText,
+                            item.id === '4' ? styles.badgeTextNhuGio : styles.badgeTextTaiLoc,
                           ]}
                         >
-                          <AppText
-                            style={[
-                              styles.badgeText,
-                              item.id === '4' ? styles.badgeTextNhuGio : styles.badgeTextTaiLoc,
-                            ]}
-                          >
-                            {item.badge}
-                          </AppText>
-                        </View>
-                      )}
-                    </View>
-
-                    {/* Text below icon */}
-                    <AppText style={styles.actionTitle} numberOfLines={2}>
-                      {item.title}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Center Red Round Chevrons Down Expand Button */}
-            <View style={styles.expandButtonWrapper}>
-              <TouchableOpacity style={styles.expandButton} activeOpacity={0.8}>
-                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M7 8l5 5 5-5M7 14l5 5 5-5"
-                    stroke="#FFFFFF"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </TouchableOpacity>
-            </View>
-
-            {/* Banner Carousel (6 Banners chạy vòng lặp vô tận không đứt gãy) */}
-            <View style={styles.carouselContainer}>
-              <Animated.FlatList
-                ref={flatListRef}
-                data={CAROUSEL_DATA}
-                keyExtractor={(item: any) => item.uniqueId}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={SNAP_INTERVAL}
-                decelerationRate="fast"
-                bounces={true}
-                getItemLayout={(_, index) => ({
-                  length: SNAP_INTERVAL,
-                  offset: SNAP_INTERVAL * index,
-                  index,
-                })}
-                contentContainerStyle={{
-                  paddingHorizontal: SIDE_SPACER - ITEM_GAP / 2,
-                }}
-                onScrollBeginDrag={() => { isUserInteracting.current = true; }}
-                onScrollEndDrag={() => { isUserInteracting.current = false; }}
-                onMomentumScrollEnd={(e) => {
-                  const rawIdx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
-                  currentIndexRef.current = rawIdx;
-                  setActiveIndex(rawIdx);
-                  isUserInteracting.current = false;
-
-                  // Tự động căn vị trí về giữa dải lặp nếu người dùng vuốt về quá gần mép
-                  if (rawIdx < BASE_CAROUSEL_DATA.length * 2 || rawIdx >= TOTAL_CAROUSEL_ITEMS - BASE_CAROUSEL_DATA.length * 2) {
-                    const normalizedIdx = (rawIdx % BASE_CAROUSEL_DATA.length) + BASE_CAROUSEL_DATA.length * 5;
-                    flatListRef.current?.scrollToOffset({
-                      offset: normalizedIdx * SNAP_INTERVAL,
-                      animated: false,
-                    });
-                    scrollX.setValue(normalizedIdx * SNAP_INTERVAL);
-                    currentIndexRef.current = normalizedIdx;
-                    setActiveIndex(normalizedIdx);
-                  }
-                }}
-                onScroll={Animated.event(
-                  [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                  { useNativeDriver: true }
-                )}
-                scrollEventThrottle={16}
-                renderItem={renderBannerItem}
-              />
-            </View>
-
-            {/* Services Section "Mua sắm - Giải trí - Đầu tư" */}
-            <View style={styles.servicesSection}>
-              <AppText style={styles.sectionTitle}>Mua sắm - Giải trí - Đầu tư</AppText>
-              <View style={styles.servicesGrid}>
-                {SERVICES.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.serviceItem}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      if (item.id === '3' || item.id === '6') {
-                        navigation.navigate('PhoneRecharge');
-                      } else {
-                        navigation.navigate('BillPayment');
-                      }
-                    }}
-                  >
-                    <View style={[styles.serviceIconBg, { backgroundColor: item.iconBg }]}>
-                      {item.multiLogo ? (
-                        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                          <AppText style={{ fontSize: 8, fontWeight: '900', color: '#0284C7', letterSpacing: -0.2 }}>vinaphone</AppText>
-                          <AppText style={{ fontSize: 8, fontWeight: '900', color: '#EA580C', letterSpacing: -0.2 }}>mobifone</AppText>
-                        </View>
-                      ) : item.customLogo ? (
-                        <AppText style={[styles.customLogoText, { color: item.iconColor }]}>
-                          {item.customLogo}
+                          {item.badge}
                         </AppText>
-                      ) : item.isYinYang ? (
-                        <AppText style={{ fontSize: 22 }}>☯</AppText>
-                      ) : (
-                        <AppIcon name={item.icon as any} size="md" color={item.iconColor} />
-                      )}
-                      {item.badgeText && (
-                        <View style={styles.serviceItemBadge}>
-                          <AppText style={styles.serviceItemBadgeText}>{item.badgeText}</AppText>
-                        </View>
-                      )}
-                    </View>
-                    <AppText style={styles.serviceTitle} numberOfLines={2}>
-                      {item.title}
-                    </AppText>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Text below icon */}
+                  <AppText style={styles.actionTitle} numberOfLines={2}>
+                    {item.title}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-        </Animated.ScrollView>
+          {/* Center Red Round Chevrons Down Expand Button */}
+          <View style={styles.expandButtonWrapper}>
+            <TouchableOpacity style={styles.expandButton} activeOpacity={0.8}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M7 8l5 5 5-5M7 14l5 5 5-5"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </TouchableOpacity>
+          </View>
+
+          {/* Banner Carousel (6 Banners chạy vòng lặp vô tận không đứt gãy) */}
+          <View style={styles.carouselContainer}>
+            <Animated.FlatList
+              ref={flatListRef}
+              data={CAROUSEL_DATA}
+              keyExtractor={(item: any) => item.uniqueId}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={SNAP_INTERVAL}
+              decelerationRate="fast"
+              bounces={true}
+              getItemLayout={(_, index) => ({
+                length: SNAP_INTERVAL,
+                offset: SNAP_INTERVAL * index,
+                index,
+              })}
+              contentContainerStyle={{
+                paddingHorizontal: SIDE_SPACER - ITEM_GAP / 2,
+              }}
+              onScrollBeginDrag={() => { isUserInteracting.current = true; }}
+              onScrollEndDrag={() => { isUserInteracting.current = false; }}
+              onMomentumScrollEnd={(e) => {
+                const rawIdx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
+                currentIndexRef.current = rawIdx;
+                setActiveIndex(rawIdx);
+                isUserInteracting.current = false;
+
+                // Tự động căn vị trí về giữa dải lặp nếu người dùng vuốt về quá gần mép
+                if (rawIdx < BASE_CAROUSEL_DATA.length * 2 || rawIdx >= TOTAL_CAROUSEL_ITEMS - BASE_CAROUSEL_DATA.length * 2) {
+                  const normalizedIdx = (rawIdx % BASE_CAROUSEL_DATA.length) + BASE_CAROUSEL_DATA.length * 5;
+                  flatListRef.current?.scrollToOffset({
+                    offset: normalizedIdx * SNAP_INTERVAL,
+                    animated: false,
+                  });
+                  scrollX.setValue(normalizedIdx * SNAP_INTERVAL);
+                  currentIndexRef.current = normalizedIdx;
+                  setActiveIndex(normalizedIdx);
+                }
+              }}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                { useNativeDriver: true }
+              )}
+              scrollEventThrottle={16}
+              renderItem={renderBannerItem}
+            />
+          </View>
+
+          {/* Services Section "Mua sắm - Giải trí - Đầu tư" */}
+          <View style={styles.servicesSection}>
+            <AppText style={styles.sectionTitle}>Mua sắm - Giải trí - Đầu tư</AppText>
+            <View style={styles.servicesGrid}>
+              {SERVICES.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.serviceItem}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (item.id === '3' || item.id === '6') {
+                      navigation.navigate('PhoneRecharge');
+                    } else {
+                      navigation.navigate('BillPayment');
+                    }
+                  }}
+                >
+                  <View style={[styles.serviceIconBg, { backgroundColor: item.iconBg }]}>
+                    {item.multiLogo ? (
+                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <AppText style={{ fontSize: 8, fontWeight: '900', color: '#0284C7', letterSpacing: -0.2 }}>vinaphone</AppText>
+                        <AppText style={{ fontSize: 8, fontWeight: '900', color: '#EA580C', letterSpacing: -0.2 }}>mobifone</AppText>
+                      </View>
+                    ) : item.customLogo ? (
+                      <AppText style={[styles.customLogoText, { color: item.iconColor }]}>
+                        {item.customLogo}
+                      </AppText>
+                    ) : item.isYinYang ? (
+                      <AppText style={{ fontSize: 22 }}>☯</AppText>
+                    ) : (
+                      <AppIcon name={item.icon as any} size="md" color={item.iconColor} />
+                    )}
+                    {item.badgeText && (
+                      <View style={styles.serviceItemBadge}>
+                        <AppText style={styles.serviceItemBadgeText}>{item.badgeText}</AppText>
+                      </View>
+                    )}
+                  </View>
+                  <AppText style={styles.serviceTitle} numberOfLines={2}>
+                    {item.title}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+      </Animated.ScrollView>
       {/* Slide-In Side Menu Drawer (Nút 3 gạch chuẩn 1:1 theo ảnh) */}
       <SideMenuDrawer
         visible={isSideMenuVisible}
@@ -987,8 +987,8 @@ const styles = StyleSheet.create({
   },
   avatarColumn: {
     alignItems: 'center',
-    marginLeft: 16,
-    marginRight: 30, 
+    marginLeft: 34,
+    marginRight: 30,
   },
   avatarWrapper: {
     position: 'relative',
