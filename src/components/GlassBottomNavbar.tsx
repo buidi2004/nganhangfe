@@ -17,86 +17,97 @@ const TABS = [
 ];
 
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const tabElements = state.routes.map((route, index) => {
+    const { options } = descriptors[route.key];
+    const isFocused = state.index === index;
+    const tabDef = TABS.find((t) => t.name === route.name);
+    
+    if (!tabDef) return null;
+
+    const onPress = () => {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+
+      if (!isFocused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    };
+
+    const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+    const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
+    const color = isFocused ? '#FFF' : 'rgba(255, 255, 255, 0.7)';
+
+    if (tabDef.isCenter) {
+      return (
+        <TouchableOpacity
+          key={index}
+          activeOpacity={0.8}
+          onPress={onPress}
+          style={styles.centerBtn}
+        >
+          <LinearGradient
+            colors={['#D2519D', '#B3307D']}
+            style={styles.centerCircle}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <IconComponent name={iconName as any} size={26} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        key={index}
+        activeOpacity={0.7}
+        onPress={onPress}
+        style={styles.tabItem}
+      >
+        <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
+          <IconComponent name={iconName as any} size={22} color={color} />
+        </View>
+        <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
+          {tabDef.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  });
+
+  const content = (
+    <>
+      {Platform.OS === 'ios' && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.65)' }]} />
+      )}
+      <View style={styles.innerBorder} />
+      <View style={styles.tabRow}>
+        {tabElements}
+      </View>
+    </>
+  );
+
   return (
     <View style={styles.wrapper}>
-      {/* Shadow Container - Must have backgroundColor and borderRadius for Android elevation to work properly,
-          but since we want glassmorphism, we make it transparent or semi-transparent.
-          Actually, drawing a solid shadow behind a transparent blur view will show the shadow through the blur.
-          To fix the rectangular box, we apply borderRadius directly to the shadow container. */}
+      {/* Shadow Container */}
       <View style={styles.shadowContainer} />
 
-      <View style={styles.pillContent}>
-        <BlurView 
-          intensity={50} 
-          tint="light" 
-          style={[StyleSheet.absoluteFill, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}
-        >
-          {/* A semi-transparent overlay to give it the pink glass look */}
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.65)' }]} />
-          <View style={styles.innerBorder} />
-
-          <View style={styles.tabRow}>
-            {state.routes.map((route, index) => {
-              const { options } = descriptors[route.key];
-              const isFocused = state.index === index;
-              const tabDef = TABS.find((t) => t.name === route.name);
-
-              if (!tabDef) return null;
-
-              const onPress = () => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name, route.params);
-                }
-              };
-
-              const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-              const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
-              const color = isFocused ? '#FFF' : 'rgba(255, 255, 255, 0.7)'; // Adjusted for better contrast on pink
-
-              if (tabDef.isCenter) {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    activeOpacity={0.8}
-                    onPress={onPress}
-                    style={styles.centerBtn}
-                  >
-                    <LinearGradient
-                      colors={['#D2519D', '#B3307D']}
-                      style={styles.centerCircle}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <IconComponent name={iconName as any} size={26} color="#FFF" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-                );
-              }
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  activeOpacity={0.7}
-                  onPress={onPress}
-                  style={styles.tabItem}
-                >
-                  <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
-                    <IconComponent name={iconName as any} size={22} color={color} />
-                  </View>
-                  <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
-                    {tabDef.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+      <View style={[styles.pillContent, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}>
+        {Platform.OS === 'ios' ? (
+          <BlurView 
+            intensity={50} 
+            tint="light" 
+            style={StyleSheet.absoluteFill}
+          >
+            {content}
+          </BlurView>
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.96)' }]}>
+            {content}
           </View>
-        </BlurView>
+        )}
       </View>
     </View>
   );

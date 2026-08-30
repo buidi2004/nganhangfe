@@ -18,7 +18,16 @@ export default function MainTabs() {
   return (
     <Tab.Navigator
       tabBar={(props) => <GlassTabBar {...props} />}
-      screenOptions={{ headerShown: false, sceneStyle: { paddingBottom: 100 } }}
+      screenOptions={{ 
+        headerShown: false, 
+        sceneStyle: { paddingBottom: 100 },
+        tabBarStyle: {
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+        }
+      }}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Trang chu" }} />
       <Tab.Screen name="Card" component={HistoryScreen} options={{ title: "Lich su" }} />
