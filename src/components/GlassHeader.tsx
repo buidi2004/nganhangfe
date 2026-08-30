@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { StyleSheet, TouchableOpacity, View, Dimensions, Platform } from 'react-native';
-import { LiquidGlassView } from 'react-native-liquid-glassmorphism';
+import { BlurView } from 'expo-blur';
 import { AppText } from './typography/AppText';
 import { AppIcon } from './icons/AppIcon';
 
@@ -14,7 +14,7 @@ interface GlassHeaderProps {
 
 export function GlassHeader({ title, onBack, rightIcon, onRightPress, hasNotification }: GlassHeaderProps) {
   return (
-    <LiquidGlassView preset="navigationBar" interactive style={styles.header}>
+    <BlurView intensity={60} tint="light" style={styles.header}>
       {onBack ? (
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.leftIcon}>
           <AppIcon name="arrow-back" size="md" color="#FFF" />
@@ -39,7 +39,7 @@ export function GlassHeader({ title, onBack, rightIcon, onRightPress, hasNotific
       ) : (
         <View style={styles.rightSpacer} />
       )}
-    </LiquidGlassView>
+    </BlurView>
   );
 }
 
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 100,
+    overflow: 'hidden',
   },
   title: {
     color: '#FFF',

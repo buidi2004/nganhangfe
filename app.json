@@ -26,7 +26,6 @@
     "plugins": [
       "expo-splash-screen",
       "expo-font",
-      "react-native-liquid-glassmorphism",
       [
         "expo-build-properties",
         {
