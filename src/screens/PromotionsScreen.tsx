@@ -17,6 +17,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { SideMenuDrawer } from '../components/SideMenuDrawer';
 import { AppIcon } from '../components/icons/AppIcon';
+import { BlurView } from 'expo-blur';
 
 const { width } = Dimensions.get('window');
 
@@ -114,8 +115,9 @@ export default function PromotionsScreen({ navigation }: any) {
 
       {/* 1. TOP CURVED LOTUS PINK HEADER */}
       <View style={styles.headerContainer}>
+        <BlurView intensity={70} tint="light" style={StyleSheet.absoluteFill} />
         <LinearGradient
-          colors={['#E4ACB2', '#D2519D', '#700F43']}
+          colors={['rgba(228, 172, 178, 0.65)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.85)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -489,9 +491,11 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomLeftRadius: 40,
     overflow: 'hidden',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
     shadowColor: '#700F43',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 8,
   },

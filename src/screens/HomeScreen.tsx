@@ -22,6 +22,7 @@ import { AppText } from '../components/typography/AppText';
 import { SideMenuDrawer } from '../components/SideMenuDrawer';
 import { useApp } from '../context/AppContext';
 import { useFocusEffect } from '@react-navigation/native';
+import { BlurView } from 'expo-blur';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -423,8 +424,9 @@ export default function HomeScreen({ navigation }: any) {
         pointerEvents="box-none"
       >
         <View style={styles.stickyHeaderWrapper}>
+          <BlurView intensity={70} tint="light" style={StyleSheet.absoluteFill} />
           <LinearGradient
-            colors={['#E4ACB2', '#D2519D', '#700F43']}
+            colors={['rgba(228, 172, 178, 0.65)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.85)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -832,11 +834,17 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   stickyHeaderWrapper: {
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 40, 
     overflow: 'hidden',
-    borderBottomLeftRadius: 48, // Tăng độ bo cong sâu mềm mại góc dưới bên TRÁI
-    borderBottomRightRadius: 0,
-    borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(255, 255, 255, 0.35)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#700F43',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
   },
   stickyLeftAura: {
     position: 'absolute',
