@@ -22,7 +22,6 @@ import { AppText } from '../components/typography/AppText';
 import { SideMenuDrawer } from '../components/SideMenuDrawer';
 import { useApp } from '../context/AppContext';
 import { useFocusEffect } from '@react-navigation/native';
-import MaskedView from '@react-native-masked-view/masked-view';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -543,49 +542,36 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.balanceSection}>
             <View style={styles.balanceRow}>
 
-              {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
-              <View style={styles.avatarColumn}>
-                <View style={styles.avatarWrapper}>
-                  <Image source={{ uri: 'https://i.pravatar.cc/150?img=11' }} style={styles.avatar} />
-                  {/* Verified Shield Badge */}
-                  <View style={styles.verifiedShield}>
-                    <AppIcon name="check" size="xs" color={Colors.white} />
-                  </View>
-                </View>
-
-                {/* Badge "Basic": Pill trắng nhỏ dưới avatar, icon giỏ hàng 12px + chữ 11px */}
-                <View style={styles.basicBadge}>
-                  <AppIcon name="shoppingBag" size="xs" color="#475569" />
-                  <AppText style={styles.basicBadgeText}>Basic</AppText>
-                </View>
-                
-                {/* User Name below badge */}
-                <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
-                  {user?.name ? user.name.split(' ').pop() : 'Bạn'}
-                </AppText>
-              </View>
-
-              {/* Right Column: Horizontal Swipeable Balance Cards List (Kéo vuốt ngang mượt mà) */}
-              <MaskedView
-                style={{ flex: 1, alignSelf: 'stretch' }}
-                maskElement={
-                  <LinearGradient
-                    colors={['transparent', 'black', 'black']}
-                    locations={[0, 0.1, 1]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ flex: 1 }}
-                  />
-                }
+              {/* Horizontal Swipeable Balance Cards List + Avatar (Cuộn toàn cụm) */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToInterval={BALANCE_SNAP_INTERVAL}
+                contentContainerStyle={styles.balanceScrollContent}
+                style={styles.balanceScrollList}
               >
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  decelerationRate="fast"
-                  snapToInterval={BALANCE_SNAP_INTERVAL}
-                  contentContainerStyle={styles.balanceScrollContent}
-                  style={styles.balanceScrollList}
-                >
+                {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
+                <View style={styles.avatarColumn}>
+                  <View style={styles.avatarWrapper}>
+                    <Image source={{ uri: 'https://i.pravatar.cc/150?img=11' }} style={styles.avatar} />
+                    {/* Verified Shield Badge */}
+                    <View style={styles.verifiedShield}>
+                      <AppIcon name="check" size="xs" color={Colors.white} />
+                    </View>
+                  </View>
+
+                  {/* Badge "Basic": Pill trắng nhỏ dưới avatar, icon giỏ hàng 12px + chữ 11px */}
+                  <View style={styles.basicBadge}>
+                    <AppIcon name="shoppingBag" size="xs" color="#475569" />
+                    <AppText style={styles.basicBadgeText}>Basic</AppText>
+                  </View>
+                  
+                  {/* User Name below badge */}
+                  <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
+                    {user?.name ? user.name.split(' ').pop() : 'Bạn'}
+                  </AppText>
+                </View>
                 {/* CARD 1: Tổng số dư VND (Tone Hồng Sen Đậm) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH, marginRight: BALANCE_CARD_GAP }]}>
                   <LinearGradient
@@ -654,10 +640,9 @@ export default function HomeScreen({ navigation }: any) {
                   </LinearGradient>
                 </View>
               </ScrollView>
-            </MaskedView>
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
 
           {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
           <View style={styles.whiteBodyContainer}>
@@ -992,7 +977,6 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   balanceSection: {
-    paddingHorizontal: 16,
     marginTop: 8,
     zIndex: 2,
   },
@@ -1003,8 +987,8 @@ const styles = StyleSheet.create({
   },
   avatarColumn: {
     alignItems: 'center',
-    marginLeft: 20,
-    marginRight: 8, // Giảm khoảng cách để mask hoạt động sát avatar
+    marginLeft: 16,
+    marginRight: 30, 
   },
   avatarWrapper: {
     position: 'relative',
