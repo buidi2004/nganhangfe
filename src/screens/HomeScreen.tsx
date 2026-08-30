@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   },
   balanceScrollList: {
     flex: 1,
-    overflow: 'visible',
+    overflow: 'hidden',
   },
   balanceScrollContent: {
     paddingRight: 16,
