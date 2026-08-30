@@ -16,6 +16,7 @@ import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop } from 'react-na
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { SideMenuDrawer } from '../components/SideMenuDrawer';
+import { AppIcon } from '../components/icons/AppIcon';
 
 const { width } = Dimensions.get('window');
 
@@ -122,41 +123,31 @@ export default function PromotionsScreen({ navigation }: any) {
 
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
-            {/* Logo MB with Star */}
-            <View style={styles.logoContainer}>
-              <View style={styles.starIconWrapper}>
-                <AppText style={styles.starText}>★</AppText>
-              </View>
-              <AppText style={styles.logoText}>MB</AppText>
-            </View>
+            {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc */}
+            <TouchableOpacity
+              style={styles.searchPill}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Search')}
+            >
+              <AppText style={styles.searchText}>Dán chuyển tiền AI</AppText>
+            </TouchableOpacity>
 
-            {/* Center Mascot Bee Avatar */}
-            <View style={styles.beeAvatarContainer}>
-              <View style={styles.beeAvatarCircle}>
-                <AppText style={{ fontSize: 24 }}>🐝</AppText>
-              </View>
-            </View>
-
-            {/* 3 Right Action Icons (Real Vector Icons) */}
+            {/* 2. Cụm Icon: Chuông 🔔 + 3 Gạch ☰ */}
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Search')}>
-                <Ionicons name="sparkles-outline" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-
               <TouchableOpacity
-                style={styles.headerIconBtn}
+                style={styles.glassHeaderBtn}
                 activeOpacity={0.7}
                 onPress={() => navigation.navigate('Notifications')}
               >
-                <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
+                <AppIcon name="notification" size="sm" color={Colors.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.headerIconBtn}
+                style={styles.glassHeaderBtn}
                 activeOpacity={0.7}
                 onPress={() => setIsSideMenuVisible(true)}
               >
-                <Ionicons name="menu-outline" size={24} color="#FFFFFF" />
+                <AppIcon name="menu" size="sm" color={Colors.white} />
               </TouchableOpacity>
             </View>
           </View>
@@ -496,7 +487,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     paddingBottom: 14,
-    borderBottomLeftRadius: 36,
+    borderBottomLeftRadius: 40,
     overflow: 'hidden',
     shadowColor: '#700F43',
     shadowOffset: { width: 0, height: 4 },
@@ -512,58 +503,39 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 6,
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  starIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 7,
-    backgroundColor: '#E11D48',
+  searchPill: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginRight: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  starText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  logoText: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  beeAvatarContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  beeAvatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  searchText: {
+    color: '#475569',
+    fontSize: 14,
+    fontWeight: '700',
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  headerIconBtn: {
+  glassHeaderBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   scrollContent: {
     paddingHorizontal: 16,
