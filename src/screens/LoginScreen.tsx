@@ -16,6 +16,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -53,16 +54,35 @@ function Floating3DCapsules() {
 export default function LoginScreen({ navigation }: any) {
   const { login, isLoading, lastError, clearError } = useApp();
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('0839888823');
+  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  React.useEffect(() => {
+    const loadSavedPhone = async () => {
+      try {
+        const savedPhone = await AsyncStorage.getItem('SAVED_PHONE');
+        if (savedPhone) {
+          setPhone(savedPhone);
+        }
+      } catch (e) {
+        console.warn('Failed to load phone from storage', e);
+      }
+    };
+    loadSavedPhone();
+  }, []);
 
   const handleLogin = async () => {
     if (!password) {
       Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu');
       return;
     }
+    if (!phone) {
+      Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
+      return;
+    }
     try {
       await login(phone, password);
+      await AsyncStorage.setItem('SAVED_PHONE', phone);
       navigation.navigate('MainTabs');
     } catch (e: any) {
       Alert.alert('Đăng nhập thất bại', lastError || e.message);
