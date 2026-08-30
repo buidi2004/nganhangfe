@@ -25,19 +25,22 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
           To fix the rectangular box, we apply borderRadius directly to the shadow container. */}
       <View style={styles.shadowContainer} />
 
-      {/* Wrapping BlurView in a View with overflow hidden fixes the Android rectangular artifact */}
-      <View style={[styles.pillContent, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}>
-        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill}>
+      <View style={styles.pillContent}>
+        <BlurView 
+          intensity={50} 
+          tint="light" 
+          style={[StyleSheet.absoluteFill, { borderRadius: BAR_HEIGHT / 2, overflow: 'hidden' }]}
+        >
           {/* A semi-transparent overlay to give it the pink glass look */}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(210, 81, 157, 0.65)' }]} />
           <View style={styles.innerBorder} />
-          
+
           <View style={styles.tabRow}>
             {state.routes.map((route, index) => {
               const { options } = descriptors[route.key];
               const isFocused = state.index === index;
               const tabDef = TABS.find((t) => t.name === route.name);
-              
+
               if (!tabDef) return null;
 
               const onPress = () => {
