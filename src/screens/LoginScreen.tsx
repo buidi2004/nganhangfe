@@ -296,7 +296,7 @@ export default function LoginScreen({ navigation }: any) {
                 <View style={{ marginBottom: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View style={{ flex: 1, paddingRight: 10 }}>
                     <AppText style={styles.greetingText}>Xin chào,</AppText>
-                    <AppText style={[styles.userNameLine1, { fontSize: 36, lineHeight: 42 }]} numberOfLines={2} adjustsFontSizeToFit>{savedName || phone}</AppText>
+                    <AppText style={[styles.userNameLine1, { fontSize: 36, lineHeight: 42 }]} numberOfLines={2} adjustsFontSizeToFit>{savedName}</AppText>
                   </View>
                   
                   {/* Fingerprint Button floating to the right */}
