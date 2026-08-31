@@ -44,12 +44,12 @@ const FAN_SPREAD_DEG = 150; // total angle from leftmost to rightmost petal
 const SCATTER_DISTANCE = 60; // px petals start out shifted away from resting spot
 const SCATTER_ROT_DEG = 34; // extra rotation petals start with, alternating in/out
 
-const PETAL_DURATION_MS = 680; // fixed, exact duration of one petal's fly-in
-const STAGGER_MS = 55; // small vs. duration → petals overlap into one wave
+const PETAL_DURATION_MS = 1300; // fixed, exact duration of one petal's fly-in (increased for a slower, majestic bloom)
+const STAGGER_MS = 110; // small vs. duration → petals overlap into one wave
 const SCALE_OVERSHOOT = 0.85; // 0 = no bloom, ~1.7 = very bouncy; kept gentle
 
-const CROSSFADE_OVERLAP_MS = 180; // crossfade starts this much BEFORE petals fully settle
-const CROSSFADE_MS = 520;
+const CROSSFADE_OVERLAP_MS = 250; // crossfade starts this much BEFORE petals fully settle
+const CROSSFADE_MS = 800;
 
 // viewBox is a fixed 260x260 square; petals pivot from this base point,
 // roughly where all the real logo's petals converge.
