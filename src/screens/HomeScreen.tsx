@@ -711,12 +711,21 @@ export default function HomeScreen({ navigation }: any) {
                     {user?.name ? user.name.split(' ').pop() : 'Bạn'}
                   </AppText>
                 </View>
-                {/* CARD 1: Tổng số dư VND (Tone Hồng Sen Đậm) */}
+                {/* CARD 1: Tổng số dư VND (Kính mờ) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH, marginRight: BALANCE_CARD_GAP }]}>
-                  <LinearGradient
-                    colors={['rgba(228, 172, 178, 0.95)', 'rgba(210, 81, 157, 0.95)', 'rgba(112, 15, 67, 0.98)']}
-                    style={styles.balanceCard}
-                  >
+                  <View style={styles.balanceCard}>
+                    <LiquidGlassView 
+                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]} 
+                      tintColor="rgba(255, 255, 255, 0.1)"
+                      thickness={1.5}
+                      refraction={true}
+                      ior={1.8}
+                      specular={true}
+                    />
+                    <LinearGradient
+                      colors={['rgba(228, 172, 178, 0.35)', 'rgba(210, 81, 157, 0.45)', 'rgba(112, 15, 67, 0.6)']}
+                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                    />
                     {/* Dòng 1: Label "Tổng số dư VND" + chevron > + icon con mắt */}
                     <View style={styles.balanceHeader}>
                       <AppText style={styles.balanceTitle}>Tổng số dư VND</AppText>
@@ -750,15 +759,24 @@ export default function HomeScreen({ navigation }: any) {
                       <AppText style={styles.profitText}>LỊCH SỬ GIAO DỊCH</AppText>
                       <AppIcon name="chevronRight" size="xs" color="#FDF2F8" />
                     </TouchableOpacity>
-                  </LinearGradient>
+                  </View>
                 </View>
 
-                {/* CARD 2: Thẻ MB Visa (Tone Hồng Sen Sẫm) */}
+                {/* CARD 2: Thẻ MB Visa (Kính mờ) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH }]}>
-                  <LinearGradient
-                    colors={['rgba(210, 81, 157, 0.95)', 'rgba(157, 23, 100, 0.95)', 'rgba(80, 7, 43, 0.98)']}
-                    style={styles.balanceCard}
-                  >
+                  <View style={styles.balanceCard}>
+                    <LiquidGlassView 
+                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]} 
+                      tintColor="rgba(255, 255, 255, 0.1)"
+                      thickness={1.5}
+                      refraction={true}
+                      ior={1.8}
+                      specular={true}
+                    />
+                    <LinearGradient
+                      colors={['rgba(210, 81, 157, 0.4)', 'rgba(157, 23, 100, 0.5)', 'rgba(80, 7, 43, 0.65)']}
+                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                    />
                     {/* Dòng 1: Label "Thẻ MB Hi Visa" + chevron > + icon thẻ */}
                     <View style={styles.balanceHeader}>
                       <AppText style={styles.balanceTitle}>Thẻ MB Hi Visa</AppText>
@@ -780,7 +798,7 @@ export default function HomeScreen({ navigation }: any) {
                       <AppText style={styles.profitText}>QUẢN LÝ THẺ & HẠN MỨC</AppText>
                       <AppIcon name="chevronRight" size="xs" color="#FDF2F8" />
                     </TouchableOpacity>
-                  </LinearGradient>
+                  </View>
                 </View>
               </ScrollView>
             </View>
