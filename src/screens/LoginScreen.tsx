@@ -19,7 +19,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert, ImageBackground } from 'react-native';
-import { saveCredentials, getCredentials, hasSavedCredentials, getSavedCredentialsInfo, clearCredentials, checkBiometricSupport } from '../services/secureStore';
+import { saveCredentials, getCredentials, getSavedCredentialsInfo, clearCredentials, checkBiometricSupport } from '../services/secureStore';
 import { WalletApi } from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -132,7 +132,8 @@ export default function LoginScreen({ navigation }: any) {
       
       // Nếu đăng nhập thành công thủ công, hỏi xem có muốn lưu vân tay không (nếu chưa lưu)
       const isBiometricSupported = await checkBiometricSupport();
-      const hasSaved = await hasSavedCredentials();
+      const savedInfo = await getSavedCredentialsInfo();
+      const hasSaved = !!savedInfo;
       
       if (isBiometricSupported && !hasSaved) {
         Alert.alert(
