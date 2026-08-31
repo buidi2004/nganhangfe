@@ -297,11 +297,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (infoRes.data?.walletId) {
           realWalletId = infoRes.data.walletId;
         }
-        if (infoRes.data?.maskedName) {
-          realName = infoRes.data.maskedName;
+        
+        // Fetch unmasked name from /users/me
+        try {
+          const meRes = await WalletApi.getMe();
+          if (meRes.data?.fullName) {
+            realName = meRes.data.fullName;
+          }
+        } catch (meErr) {
+          console.warn('Failed to fetch unmasked name:', meErr);
         }
       } catch (e) {
-        console.warn('Failed to fetch real walletId/name on login:', e);
+        console.warn('Failed to fetch real walletId on login:', e);
       }
 
       const profile: UserProfile = {

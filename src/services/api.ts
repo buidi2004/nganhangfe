@@ -302,6 +302,9 @@ export const WalletApi = {
   getMyQrCode: () =>
     request<{ qrData: string; fullQrPayload: string }>('/users/me/qrcode'),
 
+  getMe: () =>
+    request<{ userId: string; fullName: string; email: string; dob: string; avatarUrl: string; kycStatus: string }>('/users/me'),
+
   // --- Notifications ---
   getNotifications: (page = 0, size = 20, type?: string) => {
     const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
