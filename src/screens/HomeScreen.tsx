@@ -187,16 +187,16 @@ const CAROUSEL_DATA = Array.from({ length: LOOP_MULTIPLIER }).flatMap((_, loopId
 const TOTAL_CAROUSEL_ITEMS = CAROUSEL_DATA.length;
 const INITIAL_CAROUSEL_INDEX = BASE_CAROUSEL_DATA.length * 5; // Bắt đầu ở giữa dải lặp
 
-// Grid 8 services matching exact screenshot
+// Grid 8 services matching exact screenshot using real brand logos
 const SERVICES = [
   { id: '1', title: 'Vua Xổ Số', iconBg: '#FFF1F2', iconColor: '#E11D48', icon: 'ticket', badgeText: '9' },
-  { id: '2', title: 'Vé số\nVietlott', iconBg: '#EF4444', iconColor: '#FFFFFF', icon: 'tag', customLogo: 'SMS' },
-  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#F0FDF4', iconColor: '#059669', icon: 'wifi', multiLogo: true },
+  { id: '2', title: 'Vé số\nVietlott', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_Vietlott.png' },
+  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Vinaphone_logo.png/320px-Vinaphone_logo.png', secondImageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Mobifone_logo.png/320px-Mobifone_logo.png' },
   { id: '4', title: 'Vé Máy Bay\nSố', iconBg: '#06B6D4', iconColor: '#FDE047', icon: 'plane' },
   { id: '5', title: 'Vé Máy Bay', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'plane' },
-  { id: '6', title: 'Data Viettel', iconBg: '#581C87', iconColor: '#FFFFFF', icon: 'zap', customLogo: '4G' },
-  { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', icon: 'star', isYinYang: true },
-  { id: '9', title: 'Tiền điện', iconBg: '#FEF3C7', iconColor: '#D97706', icon: 'electricity' },
+  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_Viettel_2021.svg/512px-Logo_Viettel_2021.svg.png' },
+  { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', isYinYang: true },
+  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_EVN.svg/200px-Logo_EVN.svg.png' },
 ];
 
 // --- ANIMATED SEARCH BUTTON ---
@@ -932,17 +932,17 @@ export default function HomeScreen({ navigation }: any) {
                   }}
                 >
                   <View style={[styles.serviceIconBg, { backgroundColor: item.iconBg }]}>
-                    {item.multiLogo ? (
-                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <AppText style={{ fontSize: 8, fontWeight: '900', color: '#0284C7', letterSpacing: -0.2 }}>vinaphone</AppText>
-                        <AppText style={{ fontSize: 8, fontWeight: '900', color: '#EA580C', letterSpacing: -0.2 }}>mobifone</AppText>
-                      </View>
-                    ) : item.customLogo ? (
-                      <AppText style={[styles.customLogoText, { color: item.iconColor }]}>
-                        {item.customLogo}
-                      </AppText>
+                    {item.imageUri ? (
+                      item.secondImageUri ? (
+                        <View style={{ alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <Image source={{ uri: item.imageUri }} style={{ width: 40, height: 12 }} resizeMode="contain" />
+                          <Image source={{ uri: item.secondImageUri }} style={{ width: 40, height: 12 }} resizeMode="contain" />
+                        </View>
+                      ) : (
+                        <Image source={{ uri: item.imageUri }} style={{ width: 38, height: 38 }} resizeMode="contain" />
+                      )
                     ) : item.isYinYang ? (
-                      <AppText style={{ fontSize: 22 }}>☯</AppText>
+                      <AppText style={{ fontSize: 24 }}>☯</AppText>
                     ) : (
                       <AppIcon name={item.icon as any} size="md" color={item.iconColor} />
                     )}
