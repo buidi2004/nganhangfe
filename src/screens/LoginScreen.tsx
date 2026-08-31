@@ -63,6 +63,7 @@ export default function LoginScreen({ navigation }: any) {
   const [isRemembered, setIsRemembered] = useState(false);
   const [hasBiometricsEnabled, setHasBiometricsEnabled] = useState(false);
   const passwordRef = React.useRef<TextInput>(null);
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   React.useEffect(() => {
     checkInitialState();
@@ -250,8 +251,10 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={{ height: 40 }} />
 
@@ -308,7 +311,10 @@ export default function LoginScreen({ navigation }: any) {
                         onChangeText={setPhone}
                         keyboardType="numeric"
                         returnKeyType="next"
-                        onSubmitEditing={() => passwordRef.current?.focus()}
+                        onSubmitEditing={() => {
+                          passwordRef.current?.focus();
+                          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+                        }}
                         blurOnSubmit={false}
                       />
                     </View>
@@ -326,6 +332,7 @@ export default function LoginScreen({ navigation }: any) {
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
+                    onFocus={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)}
                     returnKeyType="done"
                     onSubmitEditing={handleLogin}
                   />
