@@ -208,9 +208,9 @@ const AnimatedSearchButton = ({ onPress }: { onPress: () => void }) => {
     const runAnimation = () => {
       if (!isActive) return;
       // Randomize speed: fast (1000ms) or slow/soft (3000ms)
-      const duration = Math.random() > 0.5 ? 1000 : 3000; 
+      const duration = Math.random() > 0.5 ? 1000 : 3000;
       // Occasional delay: wait 1 to 4 seconds before next spin
-      const delay = Math.random() * 3000 + 1000; 
+      const delay = Math.random() * 3000 + 1000;
 
       Animated.sequence([
         Animated.delay(delay),
@@ -245,13 +245,13 @@ const AnimatedSearchButton = ({ onPress }: { onPress: () => void }) => {
       {/* Lớp viền chạy (Running sweeping border) */}
       <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate: spin }] }]}>
         <Svg width={36} height={36} viewBox="0 0 36 36">
-          <Circle 
-            cx="18" cy="18" r="17" 
-            stroke="#FFFFFF" 
-            strokeWidth="2" 
+          <Circle
+            cx="18" cy="18" r="17"
+            stroke="#FFFFFF"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeDasharray="20 100" // Độ dài của vạch chạy
-            fill="none" 
+            fill="none"
           />
         </Svg>
       </Animated.View>
@@ -269,11 +269,11 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
     index * SNAP_INTERVAL,
     (index + 1) * SNAP_INTERVAL,
   ];
-  
+
   // Thu nhỏ đáng kể thẻ 2 bên (còn 82%) và làm mờ nhiều hơn (còn 40%)
   const scale = scrollX.interpolate({
     inputRange,
-    outputRange: [0.82, 1.0, 0.82], 
+    outputRange: [0.82, 1.0, 0.82],
     extrapolate: 'clamp',
   });
 
@@ -418,7 +418,7 @@ export default function HomeScreen({ navigation }: any) {
     const listenerId = scrollY.addListener(({ value }) => {
       const diff = value - lastScrollY.current;
       scrollOffset.current += diff;
-      
+
       // Reset gia tốc nếu đổi chiều cuộn
       if (diff > 0 && scrollOffset.current < 0) scrollOffset.current = 0;
       if (diff < 0 && scrollOffset.current > 0) scrollOffset.current = 0;
@@ -429,7 +429,7 @@ export default function HomeScreen({ navigation }: any) {
       } else if (scrollOffset.current < -25 || value <= 100) {
         showNavBar();
       }
-      
+
       lastScrollY.current = value;
     });
     return () => {
@@ -535,15 +535,20 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.stickyHeaderWrapper}>
           <LiquidGlassView 
             style={StyleSheet.absoluteFill} 
-            // BẠN CÓ THỂ CHỈNH SỬA MÀU SẮC Ở DÒNG tintColor BÊN DƯỚI:
-            // Tăng hệ số cuối cùng (0.55 -> 0.7) để hồng đậm hơn, hoặc đổi mã màu RGB
-            tintColor="rgba(228, 172, 178, 0.55)" // Màu hồng nhạt (sáng hơn)
-            thickness={1.8} // Tăng hiệu ứng thấu kính cạnh
-            refraction={true} // Bật hiện tượng khúc xạ thực
-            ior={1.8} // Chiết suất cao để ánh sáng bẻ cong mạnh hơn
-            iridescence={0.5} // Tán sắc màu (Chromatic aberration)
-            rim={true} // Bật viền Fresnel
+            tintColor="rgba(255, 255, 255, 0.1)" // Để màu trong để lộ gradient bên trên
+            thickness={1.8} // Giữ nguyên độ sâu thấu kính
+            refraction={true} // Vẫn giữ khúc xạ
+            ior={1.8} // Giữ chiết suất
+            iridescence={0.15} // ĐÃ GIẢM TÁN SẮC MÀU
+            rim={true} // Viền Fresnel
             specular={true} // Độ bóng ánh sáng
+          />
+          {/* DẢI MÀU (GRADIENT) HỒNG ĐẬM HƠN PHỦ LÊN KÍNH */}
+          <LinearGradient
+            colors={['rgba(228, 172, 178, 0.6)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.9)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
           />
           {/* Vùng phát quang uốn lượn kính mờ ở góc dưới bên trái */}
           <View style={styles.stickyLeftAura} />
@@ -605,12 +610,12 @@ export default function HomeScreen({ navigation }: any) {
             <Path d="M-50 165 Q 200 -20 450 200 T 600 120" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
             <Path d="M-20 280 C 150 200, 250 350, 500 220" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
             <Path d="M0 320 C 200 380, 300 250, 500 280" stroke="rgba(255,255,255,0.03)" strokeWidth="3" fill="none" />
-            
+
             {/* Vòng tròn đồng tâm */}
             <Circle cx="85%" cy="25%" r="140" stroke="rgba(255,255,255,0.03)" strokeWidth="1" fill="none" strokeDasharray="4 6" />
             <Circle cx="85%" cy="25%" r="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" fill="none" />
             <Circle cx="85%" cy="25%" r="80" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none" />
-            
+
             <Circle cx="10%" cy="60%" r="200" stroke="rgba(255,255,255,0.02)" strokeWidth="4" fill="none" />
             <Circle cx="10%" cy="60%" r="150" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
           </Svg>
@@ -639,10 +644,10 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.headerRow}>
             {/* Logo Custom */}
             <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../assets/icon.png')} 
-                style={styles.customAppLogo} 
-                resizeMode="contain" 
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.customAppLogo}
+                resizeMode="contain"
               />
             </View>
 
@@ -736,8 +741,8 @@ export default function HomeScreen({ navigation }: any) {
                     </View>
 
                     {/* Dòng 3: Link Lịch sử giao dịch */}
-                    <TouchableOpacity 
-                      style={styles.profitStrip} 
+                    <TouchableOpacity
+                      style={styles.profitStrip}
                       activeOpacity={0.8}
                       onPress={() => navigation.navigate('TransactionHistory')}
                     >
@@ -940,8 +945,8 @@ export default function HomeScreen({ navigation }: any) {
             </View>
 
             {/* Horizontal Mini Ads Banner Section */}
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalAdsContainer}
             >
@@ -1000,7 +1005,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 2, // Thu nhỏ vào 2px để không bị khúc xạ
     left: 2,   // Thu nhỏ vào 2px bên trái (chỗ góc bo)
-    right: 0,  
+    right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.25)', // Màu xám đen nền để Android tính toán bóng đổ
     borderBottomLeftRadius: 46, // 48 - 2
     shadowColor: '#000000',
