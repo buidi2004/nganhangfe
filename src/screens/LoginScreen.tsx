@@ -311,6 +311,7 @@ export default function LoginScreen({ navigation }: any) {
                         onChangeText={setPhone}
                         keyboardType="numeric"
                         returnKeyType="next"
+                        onFocus={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)}
                         onSubmitEditing={() => {
                           passwordRef.current?.focus();
                           setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
