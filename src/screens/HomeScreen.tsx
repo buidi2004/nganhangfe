@@ -789,7 +789,7 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
         <ImageBackground 
-          source={require('../../assets/images/bg-white-pink-pattern.png')}
+          source={require('../assets/images/bg-white-pink-pattern.png')}
           style={styles.whiteBodyContainer}
           imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
         >
