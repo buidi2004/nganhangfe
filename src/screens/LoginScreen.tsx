@@ -8,6 +8,8 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -60,6 +62,7 @@ export default function LoginScreen({ navigation }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const [isRemembered, setIsRemembered] = useState(false);
   const [hasBiometricsEnabled, setHasBiometricsEnabled] = useState(false);
+  const passwordRef = React.useRef<TextInput>(null);
 
   React.useEffect(() => {
     checkInitialState();
@@ -207,7 +210,11 @@ export default function LoginScreen({ navigation }: any) {
         <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
       )}
 
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* 1. TOP HEADER ROW */}
         <View style={styles.topHeader}>
           {/* Logo Custom */}
@@ -300,6 +307,9 @@ export default function LoginScreen({ navigation }: any) {
                         value={phone}
                         onChangeText={setPhone}
                         keyboardType="numeric"
+                        returnKeyType="next"
+                        onSubmitEditing={() => passwordRef.current?.focus()}
+                        blurOnSubmit={false}
                       />
                     </View>
                   </>
@@ -309,12 +319,15 @@ export default function LoginScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Ionicons name="lock-closed-outline" size={20} color="#700F43" style={styles.inputIcon} />
                   <TextInput
+                    ref={passwordRef}
                     style={styles.input}
                     placeholder="Nhập mật khẩu"
                     placeholderTextColor="#94A3B8"
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
                     <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#64748B" />
@@ -413,6 +426,7 @@ export default function LoginScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
