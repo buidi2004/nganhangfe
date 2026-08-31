@@ -16,8 +16,9 @@ import Svg, { Rect, G, Defs, LinearGradient as SvgLinearGradient, Stop, Path } f
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
-import { ActivityIndicator, Alert } from 'react-native';
+import { ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { saveCredentials, getCredentials, hasSavedCredentials, clearCredentials, checkBiometricSupport } from '../services/secureStore';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
@@ -53,7 +54,7 @@ function Floating3DCapsules() {
 }
 
 export default function LoginScreen({ navigation }: any) {
-  const { login, isLoading, lastError, clearError } = useApp();
+  const { login, isLoading, lastError, clearError, customBackgroundUri, setCustomBackgroundUri } = useApp();
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -144,20 +145,67 @@ export default function LoginScreen({ navigation }: any) {
     }
   };
 
+  const handlePickBackground = async () => {
+    Alert.alert('Thay đổi ảnh nền', 'Bạn muốn làm gì?', [
+      {
+        text: 'Về mặc định',
+        onPress: () => {
+          setCustomBackgroundUri(null);
+        }
+      },
+      {
+        text: 'Chọn ảnh từ máy',
+        onPress: async () => {
+          let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (permissionResult.granted === false) {
+            Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập thư viện ảnh để thay đổi hình nền.');
+            return;
+          }
+          let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [9, 16],
+            quality: 0.8,
+          });
+
+          if (!result.canceled && result.assets && result.assets.length > 0) {
+            setCustomBackgroundUri(result.assets[0].uri);
+          }
+        }
+      },
+      {
+        text: 'Hủy',
+        style: 'cancel'
+      }
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1F0413" translucent />
+      {/* BACKGROUND */}
+      {customBackgroundUri ? (
+        <ImageBackground 
+          source={{ uri: customBackgroundUri }} 
+          style={StyleSheet.absoluteFill} 
+          resizeMode="cover"
+        />
+      ) : (
+        <>
+          <LinearGradient
+            colors={['#1F0413', '#700F43', '#3B0724']}
+            start={{ x: 0.1, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Floating3DCapsules />
+        </>
+      )}
 
-      {/* 3D LOTUS PINK & PLUM GRADIENT BACKGROUND */}
-      <LinearGradient
-        colors={['#1F0413', '#700F43', '#3B0724']}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* 3D FLOATING CAPSULES ATMOSPHERE */}
-      <Floating3DCapsules />
+      {/* TẠO LỚP OVERLAY ĐỂ CHỮ VẪN ĐỌC ĐƯỢC NẾU ẢNH QUÁ SÁNG */}
+      {customBackgroundUri && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
+      )}
 
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* 1. TOP HEADER ROW */}
@@ -347,7 +395,7 @@ export default function LoginScreen({ navigation }: any) {
             <TouchableOpacity
               style={styles.bottomActionItem}
               activeOpacity={0.8}
-              onPress={() => {}}
+              onPress={handlePickBackground}
             >
               <View style={styles.iconWithBadgeWrap}>
                 <Ionicons name="images-outline" size={24} color="#E4ACB2" />
@@ -578,12 +626,13 @@ const styles = StyleSheet.create({
   bottomActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 16,
     marginBottom: 14,
   },
   bottomActionItem: {
+    flex: 1,
     alignItems: 'center',
     gap: 6,
   },
