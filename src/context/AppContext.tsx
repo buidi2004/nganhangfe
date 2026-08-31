@@ -232,6 +232,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 isUnread: true,
                 type: msg.type,
               }, ...prev]);
+              
+              // Bắn luôn thông báo Push Notification Native ra ngoài màn hình
+              Notifications.scheduleNotificationAsync({
+                content: {
+                  title: msg.type === 'DEBIT' ? '📤 Biến động số dư' : '📥 Tiền vào tài khoản',
+                  body: msg.message,
+                  sound: true,
+                },
+                trigger: null, // trigger null means show immediately
+              });
             }
           });
         },
