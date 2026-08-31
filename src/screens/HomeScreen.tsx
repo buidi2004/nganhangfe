@@ -535,13 +535,13 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.stickyHeaderWrapper}>
           <LiquidGlassView 
             style={StyleSheet.absoluteFill} 
-          />
-          {/* Lớp phủ gradient hồng từ nhạt đến đậm (bán trong suốt để thấy kính) */}
-          <LinearGradient
-            colors={['rgba(228, 172, 178, 0.3)', 'rgba(210, 81, 157, 0.5)', 'rgba(112, 15, 67, 0.7)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
+            tintColor="rgba(210, 81, 157, 0.35)" // 1 màu hồng mờ duy nhất
+            thickness={1.8} // Tăng hiệu ứng thấu kính cạnh
+            refraction={true} // Bật hiện tượng khúc xạ thực
+            ior={1.8} // Chiết suất cao để ánh sáng bẻ cong mạnh hơn
+            iridescence={0.5} // Tán sắc màu (Chromatic aberration)
+            rim={true} // Bật viền Fresnel
+            specular={true} // Độ bóng ánh sáng
           />
           {/* Vùng phát quang uốn lượn kính mờ ở góc dưới bên trái */}
           <View style={styles.stickyLeftAura} />
