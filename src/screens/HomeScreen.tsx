@@ -529,6 +529,9 @@ export default function HomeScreen({ navigation }: any) {
         ]}
         pointerEvents="box-none"
       >
+        {/* Lớp đổ bóng ảo (cách điệu) nằm dưới kính, thu nhỏ một chút để không lẹm viền khúc xạ */}
+        <View style={styles.stickyHeaderShadow} />
+
         <View style={styles.stickyHeaderWrapper}>
           <LiquidGlassView 
             style={StyleSheet.absoluteFill} 
@@ -989,18 +992,27 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 99,
-    shadowColor: '#030303ff',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
+  },
+  stickyHeaderShadow: {
+    position: 'absolute',
+    top: 0,
+    bottom: 2, // Thu nhỏ vào 2px để không bị khúc xạ
+    left: 2,   // Thu nhỏ vào 2px bên trái (chỗ góc bo)
+    right: 0,  
+    backgroundColor: 'rgba(0, 0, 0, 0.25)', // Màu xám đen nền để Android tính toán bóng đổ
+    borderBottomLeftRadius: 46, // 48 - 2
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
     shadowRadius: 10,
-    elevation: 15,
+    elevation: 16, // Đổ bóng mạnh
   },
   stickyHeaderWrapper: {
     overflow: 'hidden',
     borderBottomLeftRadius: 48,
     borderBottomRightRadius: 0,
     borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(255, 255, 255, 0.35)',
+    borderBottomColor: 'rgba(0, 0, 0, 0.2)', // Viền đen mờ tạo cảm giác 3D tách biệt
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.3)',
   },
