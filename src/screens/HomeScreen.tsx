@@ -780,7 +780,7 @@ export default function HomeScreen({ navigation }: any) {
                     {/* Dòng 2: Hạn mức / Số dư thẻ */}
                     <View style={styles.amountRow}>
                       <AppText style={styles.amountNumber}>
-                        {balanceVisible ? '50,000,000' : '*** ***'}
+                        {balanceVisible ? '0' : '*** ***'}
                       </AppText>
                       <AppText style={styles.amountCurrency}> VND</AppText>
                     </View>
