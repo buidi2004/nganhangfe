@@ -6,7 +6,7 @@ import {
   StatusBar,
   ScrollView,
   Dimensions,
-  ImageBackground,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,7 +17,6 @@ import Animated, {
   withTiming,
   withRepeat,
   withSequence,
-  withSpring,
   Easing,
 } from 'react-native-reanimated';
 import { AppText } from '../components/typography/AppText';
@@ -29,9 +28,38 @@ interface LotteryScreenProps {
 const { width } = Dimensions.get('window');
 
 const LOTTERY_TYPES = [
-  { id: '1', name: 'Mega 6/45', jackpot: '12.450.000.000 đ', nextDraw: 'Hôm nay, 18:00', color: '#E11D48' },
-  { id: '2', name: 'Power 6/55', jackpot: '105.800.000.000 đ', nextDraw: 'Ngày mai, 18:00', color: '#D97706' },
-  { id: '3', name: 'Max 3D', jackpot: '1.000.000.000 đ', nextDraw: 'Hôm nay, 18:00', color: '#059669' },
+  { 
+    id: '1', 
+    name: 'Mega 6/45', 
+    jackpot: '12.450.000.000 đ', 
+    nextDraw: 'Hôm nay, 18:00', 
+    color: '#E11D48',
+    logoText: 'MEGA',
+    logoColor: '#E11D48'
+  },
+  { 
+    id: '2', 
+    name: 'Power 6/55', 
+    jackpot: '105.800.000.000 đ', 
+    nextDraw: 'Ngày mai, 18:00', 
+    color: '#D97706',
+    logoText: 'POWER',
+    logoColor: '#D97706'
+  },
+  { 
+    id: '3', 
+    name: 'Max 3D', 
+    jackpot: '1.000.000.000 đ', 
+    nextDraw: 'Hôm nay, 18:00', 
+    color: '#059669',
+    logoText: 'MAX 3D',
+    logoColor: '#059669'
+  },
+];
+
+const LATEST_RESULTS = [
+  { id: '1', name: 'Power 6/55', date: 'Kỳ quay #01124 - 15/10/2024', numbers: ['05', '12', '24', '33', '41', '50', '52'], color: '#D97706' },
+  { id: '2', name: 'Mega 6/45', date: 'Kỳ quay #01089 - 14/10/2024', numbers: ['08', '14', '22', '31', '39', '44'], color: '#E11D48' },
 ];
 
 export default function LotteryScreen({ navigation }: LotteryScreenProps) {
@@ -43,7 +71,6 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
   const glowOpacity = useSharedValue(0.5);
 
   useEffect(() => {
-    // Pulse animation for the generate button
     scaleAnim.value = withRepeat(
       withSequence(
         withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
@@ -67,14 +94,12 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
     if (isSpinning) return;
     setIsSpinning(true);
     
-    // Quick random updates to simulate spinning
     let counter = 0;
     const interval = setInterval(() => {
       setLuckyNumbers(Array.from({ length: 6 }, () => Math.floor(Math.random() * 45) + 1));
       counter++;
       if (counter > 15) {
         clearInterval(interval);
-        // Final numbers (1 to 45 unique)
         let nums: number[] = [];
         while(nums.length < 6){
             var r = Math.floor(Math.random() * 45) + 1;
@@ -189,8 +214,8 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
                 
                 <View style={styles.lotteryCardTop}>
                   <View style={styles.lotteryNameRow}>
-                    <View style={[styles.lotteryIconBg, { backgroundColor: lottery.color + '20' }]}>
-                      <MaterialCommunityIcons name="ticket" size={20} color={lottery.color} />
+                    <View style={[styles.lotteryBrandBadge, { borderColor: lottery.color }]}>
+                      <AppText style={[styles.lotteryBrandText, { color: lottery.color }]}>{lottery.logoText}</AppText>
                     </View>
                     <AppText style={styles.lotteryName}>{lottery.name}</AppText>
                   </View>
@@ -209,6 +234,29 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* LATEST RESULTS SECTION */}
+          <View style={[styles.sectionContainer, { marginTop: 16 }]}>
+            <AppText style={styles.sectionTitle}>Kết quả quay số gần nhất</AppText>
+            
+            {LATEST_RESULTS.map((result) => (
+              <View key={result.id} style={styles.resultCard}>
+                <View style={styles.resultHeader}>
+                  <AppText style={styles.resultName}>{result.name}</AppText>
+                  <AppText style={styles.resultDate}>{result.date}</AppText>
+                </View>
+                
+                <View style={styles.resultNumbersRow}>
+                  {result.numbers.map((num, idx) => (
+                    <View key={idx} style={[styles.resultBall, idx === result.numbers.length - 1 && result.id === '1' ? { backgroundColor: '#E11D48' } : {}]}>
+                      <AppText style={[styles.resultBallText, idx === result.numbers.length - 1 && result.id === '1' ? { color: '#FFFFFF' } : {}]}>{num}</AppText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+          
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -375,12 +423,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  lotteryIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  lotteryBrandBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  lotteryBrandText: {
+    fontSize: 12,
+    fontWeight: '900',
   },
   lotteryName: {
     fontSize: 18,
@@ -417,5 +470,53 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  resultCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  resultName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  resultDate: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  resultNumbersRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  resultBall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  resultBallText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
   },
 });
