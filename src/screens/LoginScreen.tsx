@@ -17,11 +17,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert } from 'react-native';
-// Polyfill AsyncStorage for Expo Go demo
-const AsyncStorage = {
-  getItem: async (key: string) => (global as any).SAVED_PHONE || null,
-  setItem: async (key: string, value: string) => { (global as any).SAVED_PHONE = value; }
-};
+import { saveCredentials, getCredentials, hasSavedCredentials, clearCredentials, checkBiometricSupport } from '../services/secureStore';
 
 const { width } = Dimensions.get('window');
 
@@ -62,21 +58,43 @@ export default function LoginScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isRemembered, setIsRemembered] = useState(false);
+  const [hasBiometricsEnabled, setHasBiometricsEnabled] = useState(false);
 
   React.useEffect(() => {
-    const loadSavedPhone = async () => {
-      try {
-        const savedPhone = await AsyncStorage.getItem('SAVED_PHONE');
-        if (savedPhone) {
-          setPhone(savedPhone);
-          setIsRemembered(true);
-        }
-      } catch (e) {
-        console.warn('Failed to load phone from storage', e);
-      }
-    };
-    loadSavedPhone();
+    checkInitialState();
   }, []);
+
+  const checkInitialState = async () => {
+    try {
+      const hasSaved = await hasSavedCredentials();
+      if (hasSaved) {
+        setIsRemembered(true);
+        setHasBiometricsEnabled(true);
+        // Tự động gọi vân tay nếu đã lưu
+        handleBiometricLogin();
+      }
+    } catch (e) {
+      console.warn('Failed to load credentials state', e);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    const credentials = await getCredentials('Đăng nhập bằng Vân tay/FaceID');
+    if (credentials && credentials.phone && credentials.password) {
+      setPhone(credentials.phone);
+      try {
+        await login(credentials.phone, credentials.password);
+        navigation.navigate('MainTabs');
+      } catch (e: any) {
+        Alert.alert('Đăng nhập thất bại', lastError || e.message);
+        clearError();
+      }
+    } else if (credentials && credentials.phone) {
+      setPhone(credentials.phone);
+      setIsRemembered(true);
+      // Nếu chỉ có phone mà không có pass, yêu cầu nhập pass
+    }
+  };
 
   const handleLogin = async () => {
     if (!password) {
@@ -89,8 +107,37 @@ export default function LoginScreen({ navigation }: any) {
     }
     try {
       await login(phone, password);
-      await AsyncStorage.setItem('SAVED_PHONE', phone);
-      navigation.navigate('MainTabs');
+      
+      // Nếu đăng nhập thành công thủ công, hỏi xem có muốn lưu vân tay không (nếu chưa lưu)
+      const isBiometricSupported = await checkBiometricSupport();
+      const hasSaved = await hasSavedCredentials();
+      
+      if (isBiometricSupported && !hasSaved) {
+        Alert.alert(
+          'Đăng nhập nhanh',
+          'Bạn có muốn sử dụng Vân tay/FaceID cho những lần đăng nhập sau không?',
+          [
+            {
+              text: 'Không',
+              style: 'cancel',
+              onPress: () => navigation.navigate('MainTabs')
+            },
+            {
+              text: 'Đồng ý',
+              onPress: async () => {
+                await saveCredentials({ phone, password });
+                navigation.navigate('MainTabs');
+              }
+            }
+          ]
+        );
+      } else {
+        if (!hasSaved) {
+          // Chỉ lưu tạm sđt vào secure store nếu không có vân tay
+          await saveCredentials({ phone });
+        }
+        navigation.navigate('MainTabs');
+      }
     } catch (e: any) {
       Alert.alert('Đăng nhập thất bại', lastError || e.message);
       clearError();
@@ -168,13 +215,15 @@ export default function LoginScreen({ navigation }: any) {
                 <MaterialCommunityIcons name="shield-check" size={32} color="#10B981" />
 
                 {/* Fingerprint Button */}
-                <TouchableOpacity
-                  style={styles.biometricBtn}
-                  activeOpacity={0.8}
-                  onPress={() => navigation.navigate('MainTabs')}
-                >
-                  <MaterialCommunityIcons name="fingerprint" size={32} color="#F472B6" />
-                </TouchableOpacity>
+                {hasBiometricsEnabled && (
+                  <TouchableOpacity
+                    style={styles.biometricBtn}
+                    activeOpacity={0.8}
+                    onPress={handleBiometricLogin}
+                  >
+                    <MaterialCommunityIcons name="fingerprint" size={32} color="#F472B6" />
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Greeting & Name */}
@@ -228,8 +277,10 @@ export default function LoginScreen({ navigation }: any) {
               {/* Links Row */}
               <View style={styles.linksRow}>
                 {isRemembered ? (
-                  <TouchableOpacity activeOpacity={0.7} onPress={() => {
+                  <TouchableOpacity activeOpacity={0.7} onPress={async () => {
+                    await clearCredentials();
                     setIsRemembered(false);
+                    setHasBiometricsEnabled(false);
                     setPhone('');
                     setPassword('');
                   }}>

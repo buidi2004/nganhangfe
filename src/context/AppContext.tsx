@@ -9,6 +9,7 @@ import { WalletApi, setAuthTokens, getAuthToken, API_BASE_URL } from '../service
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { clearCredentials } from '../services/secureStore';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -373,6 +374,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ── logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try { await WalletApi.logout(); } catch {}
+    try { await clearCredentials(); } catch {}
     stomp.current.disconnect();
     setAuthTokens(null);
     setUser(null);
