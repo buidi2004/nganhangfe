@@ -933,16 +933,7 @@ export default function HomeScreen({ navigation }: any) {
                   }}
                 >
                   <View style={[styles.serviceIconBg, { backgroundColor: item.iconBg }]}>
-                    {item.imageUri ? (
-                      item.secondImageUri ? (
-                        <View style={{ alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                          <Image source={{ uri: item.imageUri }} style={{ width: 40, height: 12 }} resizeMode="contain" />
-                          <Image source={{ uri: item.secondImageUri }} style={{ width: 40, height: 12 }} resizeMode="contain" />
-                        </View>
-                      ) : (
-                        <Image source={{ uri: item.imageUri }} style={{ width: 38, height: 38 }} resizeMode="contain" />
-                      )
-                    ) : item.isYinYang ? (
+                    {item.isYinYang ? (
                       <AppText style={{ fontSize: 24 }}>☯</AppText>
                     ) : (
                       <AppIcon name={item.icon as any} size="md" color={item.iconColor} />
