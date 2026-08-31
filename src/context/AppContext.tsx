@@ -67,6 +67,7 @@ export interface UserProfile {
   phoneNumber: string;
   name: string;
   walletId: string;
+  avatarUri?: string;
 }
 
 export interface AppNotification {
@@ -99,6 +100,7 @@ interface AppContextValue {
   clearError: () => void;
   customBackgroundUri: string | null;
   setCustomBackgroundUri: (uri: string | null) => void;
+  updateAvatar: (uri: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -459,6 +461,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => () => stomp.current.disconnect(), []);
 
+  const updateAvatar = (uri: string) => {
+    if (user) {
+      setUser({ ...user, avatarUri: uri });
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       user, isLoggedIn: !!user, isLoading,
@@ -472,6 +480,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearError: () => setLastError(null),
       customBackgroundUri,
       setCustomBackgroundUri: updateCustomBackground,
+      updateAvatar,
     }}>
       {children}
     </AppContext.Provider>

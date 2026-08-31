@@ -100,7 +100,7 @@ export function SideMenuDrawer({ visible, onClose, navigation }: SideMenuDrawerP
             >
               <View style={styles.avatarWrapper}>
                 <Image
-                  source={{ uri: 'https://i.pravatar.cc/150?img=11' }}
+                  source={user?.avatarUri ? { uri: user.avatarUri } : { uri: 'https://i.pravatar.cc/150?img=11' }}
                   style={styles.avatar}
                 />
                 <View style={styles.verifiedBadge}>

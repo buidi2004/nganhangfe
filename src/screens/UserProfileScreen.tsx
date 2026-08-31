@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
@@ -23,9 +24,34 @@ interface UserProfileScreenProps {
 }
 
 export default function UserProfileScreen({ navigation }: UserProfileScreenProps) {
-  const { user } = useApp();
-  const handleEditAvatar = () => {
-    Alert.alert('Cập nhật ảnh đại diện', 'Chọn ảnh từ thư viện hoặc chụp ảnh mới.');
+  const { user, updateAvatar } = useApp();
+
+  // Use avatar from AppContext, fallback to default if not set
+  const avatarSource = user?.avatarUri
+    ? { uri: user.avatarUri }
+    : { uri: 'https://i.pravatar.cc/300?img=11' };
+
+  const handleEditAvatar = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Lỗi', 'Cần cấp quyền truy cập ảnh để đổi ảnh đại diện.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        updateAvatar(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể mở thư viện ảnh');
+    }
   };
 
   return (
@@ -62,7 +88,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
           {/* Avatar with Edit Pencil */}
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
+              source={{ uri: avatarUri }}
               style={styles.avatarImage}
             />
             <TouchableOpacity

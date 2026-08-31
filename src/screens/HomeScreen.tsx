@@ -692,7 +692,10 @@ export default function HomeScreen({ navigation }: any) {
                 {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
                 <View style={styles.avatarColumn}>
                   <View style={styles.avatarWrapper}>
-                    <Image source={{ uri: 'https://i.pravatar.cc/150?img=11' }} style={styles.avatar} />
+                    <Image 
+                      source={user?.avatarUri ? { uri: user.avatarUri } : { uri: 'https://i.pravatar.cc/150?img=11' }} 
+                      style={styles.avatar} 
+                    />
                     {/* Verified Shield Badge */}
                     <View style={styles.verifiedShield}>
                       <AppIcon name="check" size="xs" color={Colors.white} />
