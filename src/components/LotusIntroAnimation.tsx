@@ -122,7 +122,12 @@ function PetalShape({
 
     return {
       opacity: 0.05 + 0.95 * pos,
-      transform: `translate(${originX}, ${originY}) rotate(${angle}) scale(${scale})`,
+      transform: [
+        { translateX: originX },
+        { translateY: originY },
+        { rotate: `${angle}deg` },
+        { scale: scale }
+      ],
     } as any;
   });
 
