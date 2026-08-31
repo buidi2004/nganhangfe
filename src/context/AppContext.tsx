@@ -291,19 +291,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setAuthTokens(d.token || d.accessToken, d.refreshToken);
 
       let realWalletId = phone;
+      let realName = phone;
       try {
         const infoRes = await WalletApi.getRecipientInfo(undefined, phone);
         if (infoRes.data?.walletId) {
           realWalletId = infoRes.data.walletId;
         }
+        if (infoRes.data?.maskedName) {
+          realName = infoRes.data.maskedName;
+        }
       } catch (e) {
-        console.warn('Failed to fetch real walletId on login:', e);
+        console.warn('Failed to fetch real walletId/name on login:', e);
       }
 
       const profile: UserProfile = {
         userId: d.userId || phone,
         phoneNumber: phone,
-        name: d.fullName || phone,
+        name: d.fullName || realName,
         walletId: realWalletId,
       };
       setUser(profile);
