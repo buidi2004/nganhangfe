@@ -154,11 +154,11 @@ const styles = StyleSheet.create({
   },
   shadowContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: BAR_HEIGHT,
-    backgroundColor: 'rgba(210, 81, 157, 0.4)', // Nền ảo để tạo bóng mượt trên Android
+    bottom: 4, // Thu vào 4px so với đáy kính
+    left: 4,   // Thu vào 4px so với viền trái
+    right: 4,  // Thu vào 4px so với viền phải
+    height: BAR_HEIGHT - 8, // Giảm chiều cao 8px (trên 4px, dưới 4px)
+    backgroundColor: 'rgba(0, 0, 0, 0.15)', // Đổi sang xám/đen trong suốt để không bị viền hồng
     elevation: 12, // Đổ bóng cho Android
   },
   pillContent: {
