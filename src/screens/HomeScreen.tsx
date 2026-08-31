@@ -187,16 +187,15 @@ const CAROUSEL_DATA = Array.from({ length: LOOP_MULTIPLIER }).flatMap((_, loopId
 const TOTAL_CAROUSEL_ITEMS = CAROUSEL_DATA.length;
 const INITIAL_CAROUSEL_INDEX = BASE_CAROUSEL_DATA.length * 5; // Bắt đầu ở giữa dải lặp
 
-// Grid 8 services matching exact screenshot using real brand logos
 const SERVICES = [
   { id: '1', title: 'Vua Xổ Số', iconBg: '#FFF1F2', iconColor: '#E11D48', icon: 'ticket', badgeText: '9' },
-  { id: '2', title: 'Vé số\nVietlott', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_Vietlott.png' },
-  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Vinaphone_logo.png/320px-Vinaphone_logo.png', secondImageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Mobifone_logo.png/320px-Mobifone_logo.png' },
+  { id: '2', title: 'Vé số\nVietlott', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'ticket' },
+  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'cellular' },
   { id: '4', title: 'Vé Máy Bay\nSố', iconBg: '#06B6D4', iconColor: '#FDE047', icon: 'plane' },
   { id: '5', title: 'Vé Máy Bay', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'plane' },
-  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_Viettel_2021.svg/512px-Logo_Viettel_2021.svg.png' },
+  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'cellular' },
   { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', isYinYang: true },
-  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_EVN.svg/200px-Logo_EVN.svg.png' },
+  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', iconColor: '#D97706', icon: 'flash' },
 ];
 
 // --- ANIMATED SEARCH BUTTON ---
