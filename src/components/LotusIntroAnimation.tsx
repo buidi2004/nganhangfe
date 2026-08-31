@@ -39,7 +39,7 @@ import Animated, {
 const AnimatedG = Animated.createAnimatedComponent(G);
 
 // ---------- Tunables ----------------------------------------------------
-const PETAL_COUNT = 7; // odd number so there's a true center petal
+const PETAL_COUNT: number = 7; // odd number so there's a true center petal
 const FAN_SPREAD_DEG = 150; // total angle from leftmost to rightmost petal
 const SCATTER_DISTANCE = 60; // px petals start out shifted away from resting spot
 const SCATTER_ROT_DEG = 34; // extra rotation petals start with, alternating in/out
