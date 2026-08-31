@@ -7,6 +7,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -209,6 +210,9 @@ export default function RegisterScreen({ navigation }: any) {
             Đã có tài khoản? <AppText style={{ color: '#700F43', fontWeight: '800' }}>Đăng nhập ngay</AppText>
           </AppText>
         </TouchableOpacity>
+
+        {/* DUMMY SPACER ĐỂ KÉO DÀI MÀN HÌNH GIÚP TRƯỢT LÊN KHỎI BÀN PHÍM */}
+        <View style={{ height: Platform.OS === 'ios' ? 40 : 250 }} />
       </ScrollView>
     </SafeAreaView>
   );

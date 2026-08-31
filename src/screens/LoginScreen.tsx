@@ -387,6 +387,8 @@ export default function LoginScreen({ navigation }: any) {
               )}
             </TouchableOpacity>
           </View>
+          {/* DUMMY SPACER ĐỂ KÉO DÀI MÀN HÌNH GIÚP TRƯỢT LÊN KHỎI BÀN PHÍM */}
+          <View style={{ height: Platform.OS === 'ios' ? 40 : 250 }} />
         </ScrollView>
 
         {/* 3. BOTTOM 3 ACTION ITEMS (REAL VECTOR ICONS) */}
