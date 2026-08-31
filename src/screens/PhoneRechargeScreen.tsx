@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,9 +10,10 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 
@@ -68,10 +69,28 @@ const DATA_PACKAGES = [
 ];
 
 export default function PhoneRechargeScreen({ navigation }: PhoneRechargeScreenProps) {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const insets = useSafeAreaInsets();
+  const [phoneNumber, setPhoneNumber] = useState('0987654321'); // Default value for preview
   const [activeTab, setActiveTab] = useState<'topup' | 'data'>('topup');
   const [selectedDenomId, setSelectedDenomId] = useState<string>('5');
   const [selectedDataId, setSelectedDataId] = useState<string>('d1');
+
+  // Animation values
+  const tabIndicatorOffset = useSharedValue(0);
+
+  useEffect(() => {
+    tabIndicatorOffset.value = withSpring(activeTab === 'topup' ? 0 : 1, {
+      damping: 20,
+      stiffness: 150,
+    });
+  }, [activeTab]);
+
+  const animatedIndicatorStyle = useAnimatedStyle(() => {
+    const tabWidth = (width - 32) / 2; // container width divided by 2
+    return {
+      transform: [{ translateX: tabIndicatorOffset.value * tabWidth }],
+    };
+  });
 
   const selectedDenom = DENOMINATIONS.find((d) => d.id === selectedDenomId);
   const selectedData = DATA_PACKAGES.find((d) => d.id === selectedDataId);
@@ -95,203 +114,229 @@ export default function PhoneRechargeScreen({ navigation }: PhoneRechargeScreenP
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={['#FCE7F3', '#FFFFFF', '#FFFFFF']}
+        locations={[0, 0.3, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      {/* TOP HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        {/* TOP HEADER */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={24} color="#700F43" />
+          </TouchableOpacity>
+
+          <AppText style={styles.headerTitle}>Nạp điện thoại & 3G/4G</AppText>
+
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.navigate('Home')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="home-outline" size={22} color="#700F43" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
-        </TouchableOpacity>
+          {/* PHONE NUMBER INPUT CARD */}
+          <View style={styles.phoneInputCard}>
+            <AppText style={styles.inputCardLabel}>Số điện thoại nhận tiền</AppText>
 
-        <AppText style={styles.headerTitle}>Nạp tiền điện thoại</AppText>
+            <View style={styles.phoneInputRow}>
+              <TextInput
+                style={styles.phoneInput}
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                placeholder="Nhập số điện thoại"
+                placeholderTextColor="#94A3B8"
+              />
 
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.navigate('Home')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
-        </TouchableOpacity>
-      </View>
+              {phoneNumber.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setPhoneNumber('')}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={{ marginRight: 10 }}
+                >
+                  <Ionicons name="close-circle" size={20} color="#CBD5E1" />
+                </TouchableOpacity>
+              )}
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* PHONE NUMBER INPUT CARD */}
-        <View style={styles.phoneInputCard}>
-          <AppText style={styles.inputCardLabel}>Số điện thoại nhận tiền</AppText>
-
-          <View style={styles.phoneInputRow}>
-            <TextInput
-              style={styles.phoneInput}
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              placeholder="Nhập số điện thoại"
-              placeholderTextColor="#94A3B8"
-            />
-
-            {phoneNumber.length > 0 && (
               <TouchableOpacity
-                onPress={() => setPhoneNumber('')}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={{ marginRight: 10 }}
+                activeOpacity={0.7}
+                style={styles.contactBtn}
+                onPress={() => Alert.alert('Danh bạ', 'Mở danh bạ điện thoại')}
               >
-                <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                <MaterialCommunityIcons name="book-account-outline" size={22} color="#D2519D" />
               </TouchableOpacity>
-            )}
+            </View>
+
+            {/* Viettel Badge */}
+            <View style={styles.networkBadgeRow}>
+              <View style={styles.networkBadgeInner}>
+                <View style={styles.networkDot} />
+                <AppText style={styles.networkText}>Nhà mạng: Viettel (Trả trước)</AppText>
+              </View>
+            </View>
+          </View>
+
+          {/* 2 TABS WITH ANIMATION */}
+          <View style={styles.tabsContainer}>
+            {/* Animated Indicator */}
+            <Animated.View style={[styles.tabIndicator, animatedIndicatorStyle]} />
+            
+            <TouchableOpacity
+              style={styles.tabItem}
+              onPress={() => setActiveTab('topup')}
+              activeOpacity={0.8}
+            >
+              <AppText style={[styles.tabText, activeTab === 'topup' && styles.tabTextActive]}>
+                Nạp tiền ĐT
+              </AppText>
+            </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => Alert.alert('Danh bạ', 'Mở danh bạ điện thoại')}
+              style={styles.tabItem}
+              onPress={() => setActiveTab('data')}
+              activeOpacity={0.8}
             >
-              <MaterialCommunityIcons name="book-account-outline" size={26} color="#700F43" />
+              <AppText style={[styles.tabText, activeTab === 'data' && styles.tabTextActive]}>
+                Gói cước Data 4G/5G
+              </AppText>
             </TouchableOpacity>
           </View>
 
-          {/* Viettel Badge */}
-          <View style={styles.networkBadgeRow}>
-            <View style={styles.networkDot} />
-            <AppText style={styles.networkText}>Nhà mạng: Viettel (Trả trước)</AppText>
-          </View>
-        </View>
+          {/* TAB 1: MỆNH GIÁ NẠP TIỀN */}
+          {activeTab === 'topup' && (
+            <View style={styles.sectionContainer}>
+              <AppText style={styles.sectionHeading}>Chọn mệnh giá nạp</AppText>
 
-        {/* 2 TABS (NẠP ĐIỆN THOẠI | MUA DATA 4G/5G) */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'topup' && styles.tabItemActive]}
-            onPress={() => setActiveTab('topup')}
-            activeOpacity={0.8}
-          >
-            <AppText style={[styles.tabText, activeTab === 'topup' && styles.tabTextActive]}>
-              Nạp tiền ĐT
-            </AppText>
-            {activeTab === 'topup' && <View style={styles.tabActiveBar} />}
-          </TouchableOpacity>
+              <View style={styles.denomGrid}>
+                {DENOMINATIONS.map((denom) => {
+                  const isSelected = denom.id === selectedDenomId;
+                  return (
+                    <TouchableOpacity
+                      key={denom.id}
+                      style={[styles.denomCard, isSelected && styles.denomCardSelected]}
+                      activeOpacity={0.9}
+                      onPress={() => setSelectedDenomId(denom.id)}
+                    >
+                      {/* Discount badge */}
+                      <View style={styles.discountBadge}>
+                        <AppText style={styles.discountText}>{denom.discount}</AppText>
+                      </View>
 
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'data' && styles.tabItemActive]}
-            onPress={() => setActiveTab('data')}
-            activeOpacity={0.8}
-          >
-            <AppText style={[styles.tabText, activeTab === 'data' && styles.tabTextActive]}>
-              Gói cước Data 4G/5G
-            </AppText>
-            {activeTab === 'data' && <View style={styles.tabActiveBar} />}
-          </TouchableOpacity>
-        </View>
+                      {isSelected && (
+                        <View style={styles.checkIcon}>
+                          <Ionicons name="checkmark-circle" size={14} color="#D2519D" />
+                        </View>
+                      )}
 
-        {/* TAB 1: MỆNH GIÁ NẠP TIỀN */}
-        {activeTab === 'topup' && (
-          <View style={styles.sectionContainer}>
-            <AppText style={styles.sectionHeading}>Chọn mệnh giá nạp</AppText>
+                      <AppText style={[styles.denomAmountText, isSelected && styles.denomAmountTextSelected]}>
+                        {denom.amount}
+                      </AppText>
 
-            <View style={styles.denomGrid}>
-              {DENOMINATIONS.map((denom) => {
-                const isSelected = denom.id === selectedDenomId;
+                      <AppText style={[styles.denomPriceText, isSelected && styles.denomPriceTextSelected]}>
+                        Giá: {denom.price}
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* TAB 2: GÓI CƯỚC DATA */}
+          {activeTab === 'data' && (
+            <View style={styles.sectionContainer}>
+              <AppText style={styles.sectionHeading}>Gói Data đề xuất cho bạn</AppText>
+
+              {DATA_PACKAGES.map((pkg) => {
+                const isSelected = pkg.id === selectedDataId;
                 return (
                   <TouchableOpacity
-                    key={denom.id}
-                    style={[styles.denomCard, isSelected && styles.denomCardSelected]}
-                    activeOpacity={0.8}
-                    onPress={() => setSelectedDenomId(denom.id)}
+                    key={pkg.id}
+                    style={[styles.dataCard, isSelected && styles.dataCardSelected]}
+                    activeOpacity={0.9}
+                    onPress={() => setSelectedDataId(pkg.id)}
                   >
-                    {/* Discount badge */}
-                    <View style={styles.discountBadge}>
-                      <AppText style={styles.discountText}>{denom.discount}</AppText>
+                    <View style={styles.dataCardLeft}>
+                      <View style={[styles.providerIconWrap, isSelected && { borderColor: '#FCE7F3', backgroundColor: '#FFF1F2' }]}>
+                        {pkg.providerIcon}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.dataNameRow}>
+                          <AppText style={styles.dataPkgName}>{pkg.name}</AppText>
+                          <View style={styles.durationBadge}>
+                            <AppText style={styles.durationText}>{pkg.duration}</AppText>
+                          </View>
+                        </View>
+                        <AppText style={styles.dataDescText}>{pkg.description}</AppText>
+                      </View>
                     </View>
 
-                    <AppText style={[styles.denomAmountText, isSelected && styles.denomAmountTextSelected]}>
-                      {denom.amount}
-                    </AppText>
-
-                    <AppText style={[styles.denomPriceText, isSelected && styles.denomPriceTextSelected]}>
-                      Giá: {denom.price}
-                    </AppText>
+                    <View style={styles.dataCardRight}>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={18} color="#D2519D" style={{ marginBottom: 4 }} />
+                      )}
+                      <AppText style={styles.dataAmountBig}>{pkg.dataAmount}</AppText>
+                      <AppText style={styles.dataPriceText}>{pkg.price}</AppText>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
+          )}
+        </ScrollView>
+
+        {/* FOOTER CTA */}
+        <View style={styles.bottomFooter}>
+          <View style={styles.footerPriceRow}>
+            <AppText style={styles.footerPriceLabel}>Tổng thanh toán:</AppText>
+            <AppText style={styles.footerPriceValue}>
+              {activeTab === 'topup' ? selectedDenom?.price : selectedData?.price}
+            </AppText>
           </View>
-        )}
 
-        {/* TAB 2: GÓI CƯỚC DATA */}
-        {activeTab === 'data' && (
-          <View style={styles.sectionContainer}>
-            <AppText style={styles.sectionHeading}>Gói Data đề xuất cho bạn</AppText>
-
-            {DATA_PACKAGES.map((pkg) => {
-              const isSelected = pkg.id === selectedDataId;
-              return (
-                <TouchableOpacity
-                  key={pkg.id}
-                  style={[styles.dataCard, isSelected && styles.dataCardSelected]}
-                  activeOpacity={0.8}
-                  onPress={() => setSelectedDataId(pkg.id)}
-                >
-                  <View style={styles.dataCardLeft}>
-                    <View style={styles.providerIconWrap}>
-                      {pkg.providerIcon}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.dataNameRow}>
-                        <AppText style={styles.dataPkgName}>{pkg.name}</AppText>
-                        <View style={styles.durationBadge}>
-                          <AppText style={styles.durationText}>{pkg.duration}</AppText>
-                        </View>
-                      </View>
-                      <AppText style={styles.dataDescText}>{pkg.description}</AppText>
-                    </View>
-                  </View>
-
-                  <View style={styles.dataCardRight}>
-                    <AppText style={styles.dataAmountBig}>{pkg.dataAmount}</AppText>
-                    <AppText style={styles.dataPriceText}>{pkg.price}</AppText>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
-
-      {/* FOOTER CTA */}
-      <View style={styles.bottomFooter}>
-        <View style={styles.footerPriceRow}>
-          <AppText style={styles.footerPriceLabel}>Tổng thanh toán:</AppText>
-          <AppText style={styles.footerPriceValue}>
-            {activeTab === 'topup' ? selectedDenom?.price : selectedData?.price}
-          </AppText>
+          <TouchableOpacity
+            style={styles.continueButton}
+            activeOpacity={0.9}
+            onPress={handleContinue}
+          >
+            <LinearGradient
+              colors={['#D2519D', '#700F43']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <AppText style={styles.continueButtonText}>Tiếp tục</AppText>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.continueButton}
-          activeOpacity={0.9}
-          onPress={handleContinue}
-        >
-          <LinearGradient
-            colors={['#D2519D', '#700F43']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <AppText style={styles.continueButtonText}>Tiếp tục</AppText>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -299,14 +344,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    backgroundColor: 'transparent',
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -318,24 +362,24 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 120,
   },
   phoneInputCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(226, 232, 240, 0.6)',
     shadowColor: '#700F43',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-    marginBottom: 16,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    marginBottom: 20,
   },
   inputCardLabel: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '700',
     color: '#64748B',
     marginBottom: 8,
@@ -344,20 +388,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#D2519D',
-    paddingBottom: 8,
-    marginBottom: 10,
+    borderBottomColor: '#FCE7F3',
+    paddingBottom: 10,
+    marginBottom: 12,
   },
   phoneInput: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+  },
+  contactBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FDF2F8',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   networkBadgeRow: {
     flexDirection: 'row',
+  },
+  networkBadgeInner: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     gap: 6,
   },
   networkDot: {
@@ -367,53 +426,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   networkText: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
   },
   tabsContainer: {
     flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 20,
+    position: 'relative',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    left: 4,
+    width: (width - 32 - 8) / 2, // Container width - padding
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
-    overflow: 'hidden',
+    borderRadius: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabItem: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    position: 'relative',
-  },
-  tabItemActive: {
-    backgroundColor: '#FDF2F8',
+    zIndex: 1,
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#64748B',
   },
   tabTextActive: {
     fontWeight: '800',
-    color: '#700F43',
-  },
-  tabActiveBar: {
-    position: 'absolute',
-    bottom: 0,
-    width: '60%',
-    height: 3,
-    backgroundColor: '#700F43',
-    borderRadius: 1.5,
+    color: '#D2519D',
   },
   sectionContainer: {
     marginBottom: 16,
   },
   sectionHeading: {
-    fontSize: 15.5,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   denomGrid: {
     flexDirection: 'row',
@@ -423,32 +484,41 @@ const styles = StyleSheet.create({
   denomCard: {
     width: GRID_ITEM_WIDTH,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    paddingVertical: 14,
+    borderColor: '#F1F5F9',
+    paddingVertical: 16,
     paddingHorizontal: 8,
     alignItems: 'center',
     position: 'relative',
-    shadowColor: '#700F43',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.02,
     shadowRadius: 4,
     elevation: 1,
   },
   denomCardSelected: {
     borderColor: '#D2519D',
     backgroundColor: '#FDF2F8',
+    shadowColor: '#D2519D',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  checkIcon: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
   },
   discountBadge: {
     position: 'absolute',
     top: 0,
     right: 0,
     backgroundColor: '#E11D48',
-    borderTopRightRadius: 12,
-    borderBottomLeftRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    borderTopRightRadius: 14,
+    borderBottomLeftRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   discountText: {
     color: '#FFFFFF',
@@ -456,8 +526,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   denomAmountText: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '900',
     color: '#0F172A',
     marginBottom: 4,
   },
@@ -470,28 +540,31 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   denomPriceTextSelected: {
-    color: '#700F43',
+    color: '#D2519D',
     fontWeight: '700',
   },
   dataCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#F1F5F9',
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
-    shadowColor: '#700F43',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
   },
   dataCardSelected: {
     borderColor: '#D2519D',
     backgroundColor: '#FDF2F8',
+    shadowColor: '#D2519D',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
   dataCardLeft: {
     flexDirection: 'row',
@@ -500,9 +573,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   providerIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -512,43 +585,43 @@ const styles = StyleSheet.create({
   dataNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
+    gap: 8,
+    marginBottom: 4,
   },
   dataPkgName: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '900',
     color: '#0F172A',
   },
   durationBadge: {
     backgroundColor: '#F1F5F9',
     borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   durationText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#475569',
   },
   dataDescText: {
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#64748B',
-    lineHeight: 16,
+    lineHeight: 18,
   },
   dataCardRight: {
     alignItems: 'flex-end',
     marginLeft: 8,
   },
   dataAmountBig: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '900',
-    color: '#700F43',
-    marginBottom: 2,
+    color: '#D2519D',
+    marginBottom: 4,
   },
   dataPriceText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
     color: '#0F172A',
   },
   bottomFooter: {
@@ -557,45 +630,53 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 10,
   },
   footerPriceRow: {
     flex: 1,
   },
   footerPriceLabel: {
-    fontSize: 12.5,
+    fontSize: 13,
     color: '#64748B',
-    fontWeight: '600',
+    fontWeight: '700',
+    marginBottom: 2,
   },
   footerPriceValue: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '900',
     color: '#700F43',
   },
   continueButton: {
     flex: 1.2,
-    height: 48,
-    borderRadius: 24,
+    height: 52,
+    borderRadius: 26,
     overflow: 'hidden',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#D2519D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
   continueButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
   },
 });
+
