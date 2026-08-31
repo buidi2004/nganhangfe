@@ -212,7 +212,7 @@ export default function LoginScreen({ navigation }: any) {
 
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* 1. TOP HEADER ROW */}
