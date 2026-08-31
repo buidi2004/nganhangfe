@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   luckyCardTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FDE047',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -355,8 +355,11 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#700F43',
+    includeFontPadding: false,
+    lineHeight: 20,
+    textAlignVertical: 'center',
   },
   generateBtnContainer: {
     position: 'relative',
@@ -386,7 +389,7 @@ const styles = StyleSheet.create({
   generateBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   sectionContainer: {
@@ -394,7 +397,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 16,
   },
@@ -433,11 +436,11 @@ const styles = StyleSheet.create({
   },
   lotteryBrandText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   lotteryName: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   nextDrawText: {
@@ -459,7 +462,7 @@ const styles = StyleSheet.create({
   },
   jackpotAmount: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   buyBtn: {
     paddingHorizontal: 20,
@@ -469,7 +472,7 @@ const styles = StyleSheet.create({
   buyBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   resultCard: {
     backgroundColor: '#FFFFFF',
@@ -492,7 +495,7 @@ const styles = StyleSheet.create({
   },
   resultName: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#0F172A',
   },
   resultDate: {
@@ -516,7 +519,7 @@ const styles = StyleSheet.create({
   },
   resultBallText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#0F172A',
   },
 });
