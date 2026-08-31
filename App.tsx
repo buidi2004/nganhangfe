@@ -17,23 +17,22 @@ export default function App() {
     await SplashScreen.hideAsync().catch(console.warn);
   }, []);
 
-  if (!introDone) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
-        <LotusIntroAnimation
-          logoSource={require('./assets/sen-hong-logo.png')}
-          onReady={handleIntroReady}
-          onFinish={() => setIntroDone(true)}
-        />
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaProvider>
-      <AppProvider>
-        <AppNavigator />
-      </AppProvider>
-    </SafeAreaProvider>
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <SafeAreaProvider>
+        <AppProvider>
+          <AppNavigator />
+        </AppProvider>
+      </SafeAreaProvider>
+
+      {!introDone && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', zIndex: 9999, elevation: 9999 }]}>
+          <LotusIntroAnimation
+            logoSource={require('./assets/sen-hong-logo.png')}
+            onReady={handleIntroReady}
+            onFinish={() => setIntroDone(true)}
+          />
+        </View>
+      )}
+    </View>
   );
-}
