@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   Image,
+  ImageBackground,
   TouchableOpacity,
   ScrollView,
   StatusBar,
@@ -787,7 +788,11 @@ export default function HomeScreen({ navigation }: any) {
         </SafeAreaView>
 
         {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
-        <View style={styles.whiteBodyContainer}>
+        <ImageBackground 
+          source={require('../../assets/images/bg-white-pink-pattern.png')}
+          style={styles.whiteBodyContainer}
+          imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+        >
           {/* 4 Quick Actions Row */}
           <View style={styles.quickActionsRow}>
             {QUICK_ACTIONS.map((item, index) => {
@@ -979,7 +984,7 @@ export default function HomeScreen({ navigation }: any) {
             </ScrollView>
 
           </View>
-        </View>
+        </ImageBackground>
 
       </Animated.ScrollView>
       {/* Slide-In Side Menu Drawer (Nút 3 gạch chuẩn 1:1 theo ảnh) */}
@@ -1282,7 +1287,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   whiteBodyContainer: {
-    backgroundColor: '#FFFFFF',  // 👈 1. Màu nền khối thân app (màu trắng)
+    // backgroundColor: '#FFFFFF',  // Đã thay thế bằng ImageBackground
+
     borderTopLeftRadius: 22,    // 👈 2. Độ bo cong góc trên-trái
     borderTopRightRadius: 22,   // 👈 3. Độ bo cong góc trên-phải
 
