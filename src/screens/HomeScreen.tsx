@@ -722,10 +722,6 @@ export default function HomeScreen({ navigation }: any) {
                       ior={1.8}
                       specular={true}
                     />
-                    <LinearGradient
-                      colors={['rgba(228, 172, 178, 0.35)', 'rgba(210, 81, 157, 0.45)', 'rgba(112, 15, 67, 0.6)']}
-                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
-                    />
                     {/* Dòng 1: Label "Tổng số dư VND" + chevron > + icon con mắt */}
                     <View style={styles.balanceHeader}>
                       <AppText style={styles.balanceTitle}>Tổng số dư VND</AppText>
@@ -772,10 +768,6 @@ export default function HomeScreen({ navigation }: any) {
                       refraction={true}
                       ior={1.8}
                       specular={true}
-                    />
-                    <LinearGradient
-                      colors={['rgba(210, 81, 157, 0.4)', 'rgba(157, 23, 100, 0.5)', 'rgba(80, 7, 43, 0.65)']}
-                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
                     />
                     {/* Dòng 1: Label "Thẻ MB Hi Visa" + chevron > + icon thẻ */}
                     <View style={styles.balanceHeader}>
