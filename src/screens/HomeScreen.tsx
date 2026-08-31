@@ -20,7 +20,7 @@ import Svg, { Path, Circle, Rect, Defs, LinearGradient as SvgGradient, Stop } fr
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Shadows, Typography, Radius } from '../theme';
 import { AppText } from '../components/typography/AppText';
-import { SideMenuDrawer } from '../components/SideMenuDrawer';
+import { GlassBottomNavbar } from '../components/GlassBottomNavbar';
 import { useApp } from '../context/AppContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -395,7 +395,6 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
 export default function HomeScreen({ navigation }: any) {
   const { user, wallet, refreshBalance, isBalanceLoading, customBackgroundUri } = useApp();
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const [isSideMenuVisible, setIsSideMenuVisible] = useState(false); // Modal menu 3 gạch
   const [activeIndex, setActiveIndex] = useState(INITIAL_CAROUSEL_INDEX);
   const scrollX = useRef(new Animated.Value(INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL)).current;
   const scrollY = useRef(new Animated.Value(0)).current; // Theo dõi vị trí cuộn dọc
@@ -580,7 +579,7 @@ export default function HomeScreen({ navigation }: any) {
                 <TouchableOpacity
                   style={styles.glassHeaderBtn}
                   activeOpacity={0.7}
-                  onPress={() => setIsSideMenuVisible(true)}
+                  onPress={() => DeviceEventEmitter.emit('openSideMenu')}
                 >
                   <AppIcon name="menu" size="sm" color={Colors.white} />
                 </TouchableOpacity>
@@ -669,7 +668,7 @@ export default function HomeScreen({ navigation }: any) {
               <TouchableOpacity
                 style={styles.glassHeaderBtn}
                 activeOpacity={0.7}
-                onPress={() => setIsSideMenuVisible(true)}
+                onPress={() => DeviceEventEmitter.emit('openSideMenu')}
               >
                 <AppIcon name="menu" size="sm" color={Colors.white} />
               </TouchableOpacity>
@@ -990,11 +989,7 @@ export default function HomeScreen({ navigation }: any) {
 
       </Animated.ScrollView>
       {/* Slide-In Side Menu Drawer (Nút 3 gạch chuẩn 1:1 theo ảnh) */}
-      <SideMenuDrawer
-        visible={isSideMenuVisible}
-        onClose={() => setIsSideMenuVisible(false)}
-        navigation={navigation}
-      />
+      {/* Side Menu Drawer - Moved to MainTabs */}
     </View>
   );
 }

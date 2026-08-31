@@ -15,7 +15,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
-import { SideMenuDrawer } from '../components/SideMenuDrawer';
+import { SearchFilterDrawer } from '../components/SearchFilterDrawer';
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
 import { useHideOnScroll } from '../hooks/useHideOnScroll';
@@ -163,7 +163,7 @@ function AdBannerCard() {
 }
 
 export default function PromotionsScreen({ navigation }: any) {
-  const [isSideMenuVisible, setIsSideMenuVisible] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isPromoModalVisible, setIsPromoModalVisible] = useState(true);
   const { onScroll } = useHideOnScroll();
 
@@ -205,7 +205,7 @@ export default function PromotionsScreen({ navigation }: any) {
               <TouchableOpacity
                 style={styles.glassHeaderBtn}
                 activeOpacity={0.7}
-                onPress={() => setIsSideMenuVisible(true)}
+                onPress={() => DeviceEventEmitter.emit('openSideMenu')}
               >
                 <AppIcon name="menu" size="sm" color={Colors.white} />
               </TouchableOpacity>
@@ -533,12 +533,7 @@ export default function PromotionsScreen({ navigation }: any) {
         </View>
       </Modal>
 
-      {/* Slide-In Side Menu Drawer */}
-      <SideMenuDrawer
-        visible={isSideMenuVisible}
-        onClose={() => setIsSideMenuVisible(false)}
-        navigation={navigation}
-      />
+      {/* Side Menu Drawer - Moved to MainTabs */}
     </View>
   );
 }

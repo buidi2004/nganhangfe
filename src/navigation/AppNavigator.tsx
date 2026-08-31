@@ -21,7 +21,6 @@ import QRMyScreen from '../screens/QRMyScreen';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
 import TransactionHistoryScreen from '../screens/TransactionHistoryScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import SecuritySettingsScreen from '../screens/SecuritySettingsScreen';
 import DeviceManagementScreen from '../screens/DeviceManagementScreen';
 import WithdrawScreen from '../screens/WithdrawScreen';
@@ -119,7 +118,6 @@ export default function AppNavigator() {
         <Stack.Screen name="EKyc" component={EKycScreen} />
         <Stack.Screen name="DeviceManagement" component={DeviceManagementScreen} />
         <Stack.Screen name="EmailSettings" component={EmailSettingsScreen} />
-        <Stack.Screen name="EditProfile" component={ProfileScreen} />
         <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="BankCardManagement" component={BankCardsScreen} />
