@@ -1244,8 +1244,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,        // 👈 Khoảng cách từ mép trên tới dòng "Tổng số dư VND"
     paddingHorizontal: 14, // 👈 Đệm lề 2 bên trong thẻ (trái & phải)
     paddingBottom: 8,      // 👈 Khoảng cách mép dưới
-    borderWidth: 1,        // 👈 Độ dày viền kính glassmorphism
-    borderColor: 'rgba(255,255,255,0.25)', // 👈 Màu viền kính mờ
     justifyContent: 'space-between',
   },
   balanceHeader: {
