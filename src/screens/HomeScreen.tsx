@@ -535,7 +535,9 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.stickyHeaderWrapper}>
           <LiquidGlassView 
             style={StyleSheet.absoluteFill} 
-            tintColor="rgba(210, 81, 157, 0.35)" // 1 màu hồng mờ duy nhất
+            // BẠN CÓ THỂ CHỈNH SỬA MÀU SẮC Ở DÒNG tintColor BÊN DƯỚI:
+            // Tăng hệ số cuối cùng (0.55 -> 0.7) để hồng đậm hơn, hoặc đổi mã màu RGB
+            tintColor="rgba(228, 172, 178, 0.55)" // Màu hồng nhạt (sáng hơn)
             thickness={1.8} // Tăng hiệu ứng thấu kính cạnh
             refraction={true} // Bật hiện tượng khúc xạ thực
             ior={1.8} // Chiết suất cao để ánh sáng bẻ cong mạnh hơn
