@@ -20,6 +20,7 @@ import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { saveCredentials, getCredentials, hasSavedCredentials, getSavedCredentialsInfo, clearCredentials, checkBiometricSupport } from '../services/secureStore';
+import { WalletApi } from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
@@ -77,7 +78,20 @@ export default function LoginScreen({ navigation }: any) {
         setIsRemembered(true);
         setHasBiometricsEnabled(true);
         setPhone(savedInfo.phone);
-        if (savedInfo.name) setSavedName(savedInfo.name);
+        
+        if (savedInfo.name) {
+          setSavedName(savedInfo.name);
+        } else {
+          // Lấy tên từ API theo yêu cầu
+          try {
+            const infoRes = await WalletApi.getRecipientInfo(undefined, savedInfo.phone);
+            if (infoRes.data?.maskedName) {
+              setSavedName(infoRes.data.maskedName);
+            }
+          } catch (apiError) {
+            console.warn('Không thể lấy tên từ API:', apiError);
+          }
+        }
         // User must manually press the fingerprint button to trigger it now.
       }
     } catch (e) {
@@ -281,7 +295,7 @@ export default function LoginScreen({ navigation }: any) {
                 <View style={{ marginBottom: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View style={{ flex: 1, paddingRight: 10 }}>
                     <AppText style={styles.greetingText}>Xin chào,</AppText>
-                    <AppText style={[styles.userNameLine1, { fontSize: 36, lineHeight: 42 }]} numberOfLines={2} adjustsFontSizeToFit>{savedName || 'Bùi Văn Dĩ'}</AppText>
+                    <AppText style={[styles.userNameLine1, { fontSize: 36, lineHeight: 42 }]} numberOfLines={2} adjustsFontSizeToFit>{savedName || phone}</AppText>
                   </View>
                   
                   {/* Fingerprint Button floating to the right */}
