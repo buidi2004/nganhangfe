@@ -95,7 +95,7 @@ export function SideMenuDrawer({ visible, onClose, navigation }: SideMenuDrawerP
               activeOpacity={0.75}
               onPress={() => {
                 onClose();
-                navigation?.navigate('EditProfile');
+                navigation?.navigate('UserProfile');
               }}
             >
               <View style={styles.avatarWrapper}>
