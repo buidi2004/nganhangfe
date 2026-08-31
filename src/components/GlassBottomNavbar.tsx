@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     // Không dùng nền tròn nữa, bóng sẽ được bám sát hình khối icon
   },
   iconShadow: {
-    textShadowColor: 'rgba(255, 255, 255, 1)', // Glow phát sáng màu trắng bám sát Icon
+    textShadowColor: 'rgba(244, 114, 182, 1)', // Glow phát sáng màu hồng bám sát Icon
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
