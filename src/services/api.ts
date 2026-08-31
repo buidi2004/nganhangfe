@@ -352,6 +352,12 @@ export const WalletApi = {
   revokeSession: (deviceId: string) =>
     request<void>(`/sessions/${deviceId}`, { method: 'DELETE' }),
 
+  registerFcmToken: (deviceId: string, token: string) =>
+    request<void>(`/sessions/${deviceId}/fcm`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+
   // --- Bill Payment ---
   lookupBill: (type: string, customerCode: string) =>
     request<any>(`/bills/lookup?type=${type}&customerCode=${customerCode}`),

@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { WalletApi } from '../services/api';
 import { ActivityIndicator } from 'react-native';
+import { useHideOnScroll } from '../hooks/useHideOnScroll';
 
 interface NotificationItem {
   id: string;
@@ -39,6 +41,7 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<DateGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { onScroll } = useHideOnScroll();
 
   React.useEffect(() => {
     const fetchNotifs = async () => {
@@ -167,44 +170,51 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
       {isLoading ? (
         <ActivityIndicator size="large" color="#D2519D" style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {activeTab === 'balance' ? (
-            filteredGroups.length === 0 ? (
+        <LinearGradient colors={['#FFF0F5', '#FCE7F3', '#FDF2F8']} style={{ flex: 1 }}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            contentContainerStyle={styles.scrollContent}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+          >
+            {activeTab === 'balance' ? (
+              filteredGroups.length === 0 ? (
+                <View style={styles.emptyWrap}>
+                  <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
+                  <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
+                </View>
+              ) : (
+                filteredGroups.map((group) => (
+                  <View key={group.date} style={styles.dateGroupCard}>
+                    <View style={styles.dateHeaderStrip}>
+                      <AppText style={styles.dateHeaderText}>{group.date}</AppText>
+                    </View>
+                    <View style={styles.groupItemsContainer}>
+                      {group.items.map((item, itIdx) => (
+                        <View key={item.id}>
+                          <TouchableOpacity style={styles.notificationItem} activeOpacity={0.7} onPress={() => handleRead(item.id)}>
+                            <View style={styles.itemTitleRow}>
+                              <AppText style={styles.itemTitleText}>{item.title}</AppText>
+                              {item.isUnread && <View style={styles.unreadCyanDot} />}
+                            </View>
+                            <AppText style={styles.itemBodyText}>{item.body}</AppText>
+                            <AppText style={styles.itemTimeText}>{item.time}</AppText>
+                          </TouchableOpacity>
+                          {itIdx < group.items.length - 1 && <View style={styles.itemInnerDivider} />}
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ))
+              )
+            ) : (
               <View style={styles.emptyWrap}>
-                <Ionicons name="notifications-off-outline" size={48} color="#CBD5E1" style={{ marginBottom: 12 }} />
+                <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
                 <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
               </View>
-            ) : (
-              filteredGroups.map((group) => (
-                <View key={group.date} style={styles.dateGroupCard}>
-                  <View style={styles.dateHeaderStrip}>
-                    <AppText style={styles.dateHeaderText}>{group.date}</AppText>
-                  </View>
-                  <View style={styles.groupItemsContainer}>
-                    {group.items.map((item, itIdx) => (
-                      <View key={item.id}>
-                        <TouchableOpacity style={styles.notificationItem} activeOpacity={0.7} onPress={() => handleRead(item.id)}>
-                          <View style={styles.itemTitleRow}>
-                            <AppText style={styles.itemTitleText}>{item.title}</AppText>
-                            {item.isUnread && <View style={styles.unreadCyanDot} />}
-                          </View>
-                          <AppText style={styles.itemBodyText}>{item.body}</AppText>
-                          <AppText style={styles.itemTimeText}>{item.time}</AppText>
-                        </TouchableOpacity>
-                        {itIdx < group.items.length - 1 && <View style={styles.itemInnerDivider} />}
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              ))
-            )
-          ) : (
-            <View style={styles.emptyWrap}>
-              <Ionicons name="notifications-off-outline" size={48} color="#CBD5E1" style={{ marginBottom: 12 }} />
-              <AppText style={styles.emptyText}>Bạn chưa có thông báo trong mục này</AppText>
-            </View>
-          )}
-        </ScrollView>
+            )}
+          </ScrollView>
+        </LinearGradient>
       )}
     </SafeAreaView>
   );
@@ -213,7 +223,7 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -300,6 +310,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   dateGroupCard: {
     backgroundColor: '#FFFFFF',
@@ -369,9 +380,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 14,
   },
   emptyWrap: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 120,
   },
   emptyText: {
     fontSize: 14.5,

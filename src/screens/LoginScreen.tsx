@@ -17,7 +17,11 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Polyfill AsyncStorage for Expo Go demo
+const AsyncStorage = {
+  getItem: async (key: string) => (global as any).SAVED_PHONE || null,
+  setItem: async (key: string, value: string) => { (global as any).SAVED_PHONE = value; }
+};
 
 const { width } = Dimensions.get('window');
 
@@ -57,6 +61,7 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isRemembered, setIsRemembered] = useState(false);
 
   React.useEffect(() => {
     const loadSavedPhone = async () => {
@@ -64,6 +69,7 @@ export default function LoginScreen({ navigation }: any) {
         const savedPhone = await AsyncStorage.getItem('SAVED_PHONE');
         if (savedPhone) {
           setPhone(savedPhone);
+          setIsRemembered(true);
         }
       } catch (e) {
         console.warn('Failed to load phone from storage', e);
@@ -172,20 +178,35 @@ export default function LoginScreen({ navigation }: any) {
               </View>
 
               {/* Greeting & Name */}
-              <AppText style={styles.greetingText}>Xin chào,</AppText>
-              <View style={styles.formContainer}>
-                <AppText style={styles.label}>Số điện thoại</AppText>
-                <View style={[styles.inputWrapper, { marginBottom: 20 }]}>
-                  <Ionicons name="call-outline" size={20} color="#700F43" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nhập số điện thoại"
-                    placeholderTextColor="#94A3B8"
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="numeric"
-                  />
+              {isRemembered ? (
+                <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+                    <Ionicons name="person" size={32} color="#FFFFFF" />
+                  </View>
+                  <AppText style={styles.greetingText}>Xin chào,</AppText>
+                  <AppText style={styles.userNameLine1}>{phone}</AppText>
                 </View>
+              ) : (
+                <AppText style={[styles.greetingText, { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 }]}>Đăng nhập</AppText>
+              )}
+              
+              <View style={styles.formContainer}>
+                {!isRemembered && (
+                  <>
+                    <AppText style={styles.label}>Số điện thoại</AppText>
+                    <View style={[styles.inputWrapper, { marginBottom: 20 }]}>
+                      <Ionicons name="call-outline" size={20} color="#700F43" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Nhập số điện thoại"
+                        placeholderTextColor="#94A3B8"
+                        value={phone}
+                        onChangeText={setPhone}
+                        keyboardType="numeric"
+                      />
+                    </View>
+                  </>
+                )}
 
                 <AppText style={styles.label}>Mật khẩu</AppText>
                 <View style={styles.inputWrapper}>
@@ -206,9 +227,19 @@ export default function LoginScreen({ navigation }: any) {
 
               {/* Links Row */}
               <View style={styles.linksRow}>
-                <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
-                  <AppText style={styles.linkText}>Đăng ký ngay</AppText>
-                </TouchableOpacity>
+                {isRemembered ? (
+                  <TouchableOpacity activeOpacity={0.7} onPress={() => {
+                    setIsRemembered(false);
+                    setPhone('');
+                    setPassword('');
+                  }}>
+                    <AppText style={styles.linkText}>Đăng nhập tài khoản khác</AppText>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
+                    <AppText style={styles.linkText}>Đăng ký ngay</AppText>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPassword')}>
                   <AppText style={styles.linkText}>Quên mật khẩu?</AppText>

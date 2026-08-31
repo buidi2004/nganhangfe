@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Radius, Shadows, Spacing } from '../theme';
@@ -8,17 +8,11 @@ import { FAQAccordionItem } from '../components/FAQAccordionItem';
 import { SearchBar } from '../components/SearchBar';
 import { ProviderIconGrid } from '../components/ProviderIconGrid';
 import { AppText } from '../components/typography/AppText';
+import { WalletApi } from '../services/api';
 
 interface HelpCenterScreenProps {
   navigation: any;
 }
-
-const faqs = [
-  { question: 'Làm thế nào để nạp tiền?', answer: 'Bạn có thể nạp tiền qua chuyển khoản ngân hàng, quẹt thẻ tín dụng, hoặc quét mã QR.' },
-  { question: 'Phí giao dịch là bao nhiêu?', answer: 'Hiện tại chúng tôi đang miễn phí 100% cho các giao dịch dưới 10 triệu đồng.' },
-  { question: 'Làm sao để đổi mật khẩu?', answer: 'Vào Hồ sơ > Bảo mật > Đổi mật khẩu để cập nhật thông tin đăng nhập của bạn.' },
-  { question: 'Liên hệ hỗ trợ như thế nào?', answer: 'Bạn có thể chat trực tuyến với nhân viên hỗ trợ 24/7 qua nút "Chat với hỗ trợ viên" ở cuối màn hình.' },
-];
 
 const quickTopics = [
   { icon: 'swap-horizontal', label: 'Chuyển tiền' },
@@ -29,6 +23,27 @@ const quickTopics = [
 
 export default function HelpCenterScreen({ navigation }: HelpCenterScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await WalletApi.getFaq();
+        setFaqs(res.data || []);
+      } catch (error) {
+        console.error('Failed to load FAQs', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFaqs();
+  }, []);
+
+  const filteredFaqs = faqs.filter(faq => 
+    (faq.question && faq.question.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (faq.answer && faq.answer.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,13 +72,19 @@ export default function HelpCenterScreen({ navigation }: HelpCenterScreenProps) 
         {/* FAQ list */}
         <AppText style={styles.sectionTitle}>Câu hỏi thường gặp</AppText>
         <View style={styles.faqList}>
-          {faqs.map((faq, index) => (
-            <FAQAccordionItem
-              key={index}
-              question={faq.question}
-              answer={faq.answer}
-            />
-          ))}
+          {isLoading ? (
+            <ActivityIndicator size="small" color={Colors.primary} style={{ padding: 20 }} />
+          ) : filteredFaqs.length > 0 ? (
+            filteredFaqs.map((faq, index) => (
+              <FAQAccordionItem
+                key={index}
+                question={faq.question}
+                answer={faq.answer}
+              />
+            ))
+          ) : (
+            <AppText style={{ padding: 20, textAlign: 'center', color: Colors.textSecondary }}>Không tìm thấy kết quả</AppText>
+          )}
         </View>
 
         {/* Chat CTA */}

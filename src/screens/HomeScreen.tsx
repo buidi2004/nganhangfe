@@ -12,7 +12,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Path, Circle, Rect, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
@@ -24,6 +24,7 @@ import { useApp } from '../context/AppContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import AISearchIcon from '../components/icons/AISearchIcon';
+import { showNavBar, hideNavBar } from '../components/GlassNavBarBridge';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -391,7 +392,7 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
 });
 
 export default function HomeScreen({ navigation }: any) {
-  const { user, wallet, refreshBalance, isBalanceLoading } = useApp();
+  const { user, wallet, refreshBalance, isBalanceLoading, customBackgroundUri } = useApp();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [isSideMenuVisible, setIsSideMenuVisible] = useState(false); // Modal menu 3 gạch
   const [activeIndex, setActiveIndex] = useState(INITIAL_CAROUSEL_INDEX);
@@ -408,6 +409,32 @@ export default function HomeScreen({ navigation }: any) {
       { useNativeDriver: true }
     )
   ).current;
+
+  // Lắng nghe cuộn để ẩn/hiện Bottom Navbar (tối ưu mượt mà)
+  const lastScrollY = useRef(0);
+  const scrollOffset = useRef(0);
+  useEffect(() => {
+    const listenerId = scrollY.addListener(({ value }) => {
+      const diff = value - lastScrollY.current;
+      scrollOffset.current += diff;
+      
+      // Reset gia tốc nếu đổi chiều cuộn
+      if (diff > 0 && scrollOffset.current < 0) scrollOffset.current = 0;
+      if (diff < 0 && scrollOffset.current > 0) scrollOffset.current = 0;
+
+      // Chỉ kích hoạt khi cuộn một quãng đủ dài (ví dụ > 25px liên tục)
+      if (scrollOffset.current > 25 && value > 100) {
+        hideNavBar();
+      } else if (scrollOffset.current < -25 || value <= 100) {
+        showNavBar();
+      }
+      
+      lastScrollY.current = value;
+    });
+    return () => {
+      scrollY.removeListener(listenerId);
+    };
+  }, [scrollY]);
 
   // Hiệu ứng xuất hiện thanh nổi "Dán chuyển tiền AI" khi kéo cuộn xuống dưới
   const stickyHeaderOpacity = scrollY.interpolate({
@@ -551,32 +578,34 @@ export default function HomeScreen({ navigation }: any) {
 
       {/* Background Gradient & Light Flares */}
       <View style={styles.headerBackground} pointerEvents="none">
-        <LinearGradient
-          colors={['#E4ACB2', '#D2519D', '#700F43']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.capsuleShape1} />
-        <View style={styles.capsuleShape2} />
-        <View style={styles.auraGlow} />
-        
+        {customBackgroundUri ? (
+          <Image source={{ uri: customBackgroundUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : (
+          <LinearGradient
+            colors={['#E4ACB2', '#D2519D', '#700F43']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
         {/* Thêm các đường nét trang trí uốn lượn (Waves & Rings) */}
-        <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
-          {/* Đường cong mềm mại */}
-          <Path d="M-50 150 Q 150 50 400 180 T 600 100" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" fill="none" />
-          <Path d="M-50 165 Q 200 -20 450 200 T 600 120" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
-          <Path d="M-20 280 C 150 200, 250 350, 500 220" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
-          <Path d="M0 320 C 200 380, 300 250, 500 280" stroke="rgba(255,255,255,0.03)" strokeWidth="3" fill="none" />
-          
-          {/* Vòng tròn đồng tâm */}
-          <Circle cx="85%" cy="25%" r="140" stroke="rgba(255,255,255,0.03)" strokeWidth="1" fill="none" strokeDasharray="4 6" />
-          <Circle cx="85%" cy="25%" r="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" fill="none" />
-          <Circle cx="85%" cy="25%" r="80" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none" />
-          
-          <Circle cx="10%" cy="60%" r="200" stroke="rgba(255,255,255,0.02)" strokeWidth="4" fill="none" />
-          <Circle cx="10%" cy="60%" r="150" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
-        </Svg>
+        {!customBackgroundUri && (
+          <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+            {/* Đường cong mềm mại */}
+            <Path d="M-50 150 Q 150 50 400 180 T 600 100" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" fill="none" />
+            <Path d="M-50 165 Q 200 -20 450 200 T 600 120" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
+            <Path d="M-20 280 C 150 200, 250 350, 500 220" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" fill="none" />
+            <Path d="M0 320 C 200 380, 300 250, 500 280" stroke="rgba(255,255,255,0.03)" strokeWidth="3" fill="none" />
+            
+            {/* Vòng tròn đồng tâm */}
+            <Circle cx="85%" cy="25%" r="140" stroke="rgba(255,255,255,0.03)" strokeWidth="1" fill="none" strokeDasharray="4 6" />
+            <Circle cx="85%" cy="25%" r="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" fill="none" />
+            <Circle cx="85%" cy="25%" r="80" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none" />
+            
+            <Circle cx="10%" cy="60%" r="200" stroke="rgba(255,255,255,0.02)" strokeWidth="4" fill="none" />
+            <Circle cx="10%" cy="60%" r="150" stroke="rgba(255,255,255,0.04)" strokeWidth="1" fill="none" />
+          </Svg>
+        )}
       </View>
 
       <Animated.ScrollView
@@ -697,9 +726,13 @@ export default function HomeScreen({ navigation }: any) {
                       <AppText style={styles.amountCurrency}> {wallet?.currency || 'VND'}</AppText>
                     </View>
 
-                    {/* Dòng 3: Link "SINH LỜI MỖI NGÀY" + chevron > */}
-                    <TouchableOpacity style={styles.profitStrip} activeOpacity={0.8}>
-                      <AppText style={styles.profitText}>SINH LỜI MỖI NGÀY</AppText>
+                    {/* Dòng 3: Link Lịch sử giao dịch */}
+                    <TouchableOpacity 
+                      style={styles.profitStrip} 
+                      activeOpacity={0.8}
+                      onPress={() => navigation.navigate('TransactionHistory')}
+                    >
+                      <AppText style={styles.profitText}>LỊCH SỬ GIAO DỊCH</AppText>
                       <AppIcon name="chevronRight" size="xs" color="#FDF2F8" />
                     </TouchableOpacity>
                   </LinearGradient>

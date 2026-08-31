@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Radius, Spacing } from '../theme';
 import { Typography } from '../theme';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { PinDot } from '../components/PinDot';
 import { AppText } from '../components/typography/AppText';
+import { GlassHeader } from '../components/GlassHeader';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 
 interface SetPinScreenProps {
   navigation: any;
@@ -42,97 +44,177 @@ export default function SetPinScreen({ navigation }: SetPinScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <GlassHeader
+        title="Thiết lập PIN"
+        onBack={() => navigation.goBack()}
+      />
       <View style={styles.content}>
-        <AppText variant="headingLg" style={styles.title}>Thiết lập PIN</AppText>
-        <AppText style={styles.subtitle}>Nhập PIN 6 chữ số mới</AppText>
-
-        <View style={styles.pinContainer}>
-          {[...Array(6)].map((_, i) => (
-            <PinDot key={i} filled={i < pin.length} size={18} />
-          ))}
+        <View style={styles.topSection}>
+          <View style={styles.iconWrapper}>
+            <Ionicons name="lock-closed-outline" size={36} color="#700F43" />
+          </View>
+          <AppText style={styles.subtitle}>Nhập PIN 6 chữ số mới để bảo vệ tài khoản</AppText>
         </View>
 
-        <View style={styles.keypad}>
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map((key, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[styles.key, key === '' && styles.emptyKey]}
-              onPress={() => {
-                if (key === 'del') handleDelete();
-                else if (key) handlePress(key);
-              }}
-              activeOpacity={0.7}
-            >
-              {key === 'del' ? (
-                <AppText variant="headingXl" style={styles.keyText}>⌫</AppText>
-              ) : (
-                <AppText variant="headingXl" style={styles.keyText}>{key}</AppText>
-              )}
-            </TouchableOpacity>
-          ))}
+        <View style={styles.pinCirclesRow}>
+          {[...Array(6)].map((_, index) => {
+            const isFilled = index < pin.length;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.pinCircle,
+                  isFilled && styles.pinCircleFilled,
+                  index === 0 && !isFilled && styles.pinCircleFirstEmpty,
+                ]}
+              >
+                {isFilled && <View style={styles.pinInnerDot} />}
+              </View>
+            );
+          })}
         </View>
 
-        <PrimaryButton
-          title="Tiếp tục"
-          onPress={() => navigation.navigate('Home')}
-          disabled={pin.length !== 6}
-          style={styles.continueBtn}
-        />
+        <View style={styles.keypadWrapper}>
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+          <View style={styles.keypad}>
+            {[
+              ['1', '2', '3'],
+              ['4', '5', '6'],
+              ['7', '8', '9'],
+              ['', '0', 'del'],
+            ].map((row, rIdx) => (
+              <View key={rIdx} style={styles.keypadRow}>
+                {row.map((key, kIdx) => (
+                  <TouchableOpacity
+                    key={kIdx}
+                    style={[styles.key, key === '' && styles.emptyKey]}
+                    onPress={() => {
+                      if (key === 'del') handleDelete();
+                      else if (key) handlePress(key);
+                    }}
+                    activeOpacity={0.7}
+                    disabled={!key}
+                  >
+                    {key === 'del' ? (
+                      <Ionicons name="backspace-outline" size={28} color="#700F43" />
+                    ) : key !== '' ? (
+                      <AppText style={styles.keyText}>{key}</AppText>
+                    ) : null}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </View>
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.xxl,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 40,
   },
-  title: {
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
+  topSection: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 40,
+  },
+  iconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FDF2F8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
   },
   subtitle: {
-    
-    color: Colors.textSecondary,
+    fontSize: 15,
+    color: '#64748B',
     textAlign: 'center',
-    marginBottom: Spacing.xxl,
+    lineHeight: 22,
   },
-  pinContainer: {
+  pinCirclesRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.xxl,
+    alignItems: 'center',
+    gap: 16,
+    marginVertical: 40,
+  },
+  pinCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.8,
+    borderColor: '#CBD5E1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  pinCircleFirstEmpty: {
+    borderColor: '#700F43',
+  },
+  pinCircleFilled: {
+    borderColor: '#D2519D',
+    backgroundColor: '#FDF2F8',
+  },
+  pinInnerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#D2519D',
+  },
+  keypadWrapper: {
+    marginHorizontal: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   keypad: {
+    padding: 24,
+    gap: 20,
+  },
+  keypadRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   key: {
     width: 72,
     height: 72,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   emptyKey: {
     backgroundColor: 'transparent',
+    borderWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   keyText: {
-    color: Colors.textPrimary,
-  },
-  continueBtn: {
-    marginTop: Spacing.md,
+    fontSize: 28,
+    fontWeight: '600',
+    color: '#0F172A',
   },
 });

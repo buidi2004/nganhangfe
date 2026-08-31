@@ -19,6 +19,7 @@ import TransferConfirmScreen from '../screens/TransferConfirmScreen';
 import ScanQRScreen from '../screens/ScanQRScreen';
 import QRMyScreen from '../screens/QRMyScreen';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
+import TransactionHistoryScreen from '../screens/TransactionHistoryScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SecuritySettingsScreen from '../screens/SecuritySettingsScreen';
@@ -139,6 +140,7 @@ export default function AppNavigator() {
         {/* Help */}
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
         <Stack.Screen name="LiveChat" component={HelpCenterScreen} />
+        <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
 
         {/* Search */}
         <Stack.Screen name="Search" component={SearchScreen} />

@@ -43,6 +43,7 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
 
   const displayDate = timestamp ? new Date(timestamp).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN');
   const [isDownloading, setIsDownloading] = React.useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = React.useState(false);
 
   const handleShare = async () => {
     try {
@@ -94,8 +95,29 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
     }
   };
 
-  const handleSaveTemplate = () => {
-    Alert.alert('Thông báo', 'Đã lưu mẫu chuyển tiền thành công!');
+  const handleSaveTemplate = async () => {
+    setIsSavingTemplate(true);
+    try {
+      let bankCode = 'senbank';
+      const sbLower = selectedBank.toLowerCase();
+      if (sbLower.includes('mb')) bankCode = 'mbbank';
+      else if (sbLower.includes('vcb') || sbLower.includes('ngoại thương')) bankCode = 'vcb';
+      else if (sbLower.includes('tcb')) bankCode = 'tcb';
+      else if (sbLower.includes('acb')) bankCode = 'acb';
+      else if (sbLower.includes('bidv')) bankCode = 'bidv';
+      
+      await WalletApi.addBeneficiary(
+        recipient.phone,
+        recipient.name || 'Người nhận',
+        bankCode,
+        recipient.phone
+      );
+      Alert.alert('Thành công', 'Đã lưu người nhận vào danh bạ thành công!');
+    } catch (e: any) {
+      Alert.alert('Lỗi', 'Không thể lưu mẫu lúc này: ' + e.message);
+    } finally {
+      setIsSavingTemplate(false);
+    }
   };
 
   return (

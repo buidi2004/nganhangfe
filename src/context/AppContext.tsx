@@ -6,6 +6,45 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { WalletApi, setAuthTokens, getAuthToken, API_BASE_URL } from '../services/api';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const perm = await Notifications.getPermissionsAsync() as any;
+    let isGranted = perm.granted;
+    if (!isGranted) {
+      const requestPerm = await Notifications.requestPermissionsAsync() as any;
+      isGranted = requestPerm.granted;
+    }
+    if (!isGranted) {
+      console.warn('Failed to get push token for push notification!');
+      return null;
+    }
+    try {
+        const pushToken = await Notifications.getDevicePushTokenAsync();
+        token = pushToken.data;
+    } catch (e) {
+        console.warn('Could not get push token', e);
+        return null;
+    }
+  } else {
+    console.warn('Must use physical device for Push Notifications');
+  }
+  return token;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface WalletData {
@@ -49,6 +88,8 @@ interface AppContextValue {
   wsConnected: boolean;
   lastError: string | null;
   clearError: () => void;
+  customBackgroundUri: string | null;
+  setCustomBackgroundUri: (uri: string | null) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -146,6 +187,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [wsConnected, setWsConnected] = useState(false);
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [customBackgroundUri, setCustomBackgroundUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load custom background from global mock or actual storage on start
+    const saved = (global as any).SAVED_BACKGROUND_URI;
+    if (saved) {
+      setCustomBackgroundUri(saved);
+    }
+  }, []);
+
+  const updateCustomBackground = useCallback((uri: string | null) => {
+    setCustomBackgroundUri(uri);
+    (global as any).SAVED_BACKGROUND_URI = uri;
+  }, []);
 
   const stomp = useRef(new NativeStompClient());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
@@ -241,6 +296,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       connectWS(realWalletId);
       await _loadNotifications();
+      
+      const pushToken = await registerForPushNotificationsAsync();
+      if (pushToken) {
+          const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
+          try {
+              await WalletApi.registerFcmToken(deviceId, pushToken);
+              console.log('[Push] Registered token for device:', deviceId);
+          } catch (e) {
+              console.warn('[Push] Failed to register token with backend', e);
+          }
+      }
     } catch (e: any) {
       setLastError(e.message || 'Đăng nhập thất bại. Kiểm tra lại SĐT/mật khẩu.');
       throw e;
@@ -284,6 +350,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setWallet({ walletId: realWalletId, balance: 0, currency: 'VND' });
       }
       connectWS(realWalletId);
+      
+      const pushToken = await registerForPushNotificationsAsync();
+      if (pushToken) {
+          const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
+          try {
+              await WalletApi.registerFcmToken(deviceId, pushToken);
+              console.log('[Push] Registered token for device:', deviceId);
+          } catch (e) {
+              console.warn('[Push] Failed to register token with backend', e);
+          }
+      }
       return { walletId: realWalletId };
     } catch (e: any) {
       setLastError(e.message || 'Đăng ký thất bại');
@@ -359,7 +436,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markRead, markAllRead,
       pendingTransactionId, setPendingTransactionId,
       wsConnected,
-      lastError, clearError: () => setLastError(null),
+      lastError,
+      clearError: () => setLastError(null),
+      customBackgroundUri,
+      setCustomBackgroundUri: updateCustomBackground,
     }}>
       {children}
     </AppContext.Provider>

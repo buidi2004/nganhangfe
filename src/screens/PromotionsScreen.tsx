@@ -18,6 +18,7 @@ import { Colors } from '../theme';
 import { SideMenuDrawer } from '../components/SideMenuDrawer';
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
+import { useHideOnScroll } from '../hooks/useHideOnScroll';
 
 const { width } = Dimensions.get('window');
 
@@ -164,6 +165,7 @@ function AdBannerCard() {
 export default function PromotionsScreen({ navigation }: any) {
   const [isSideMenuVisible, setIsSideMenuVisible] = useState(false);
   const [isPromoModalVisible, setIsPromoModalVisible] = useState(true);
+  const { onScroll } = useHideOnScroll();
 
   return (
     <View style={styles.container}>
@@ -215,6 +217,8 @@ export default function PromotionsScreen({ navigation }: any) {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       >
         {/* 2. PAGE TITLE */}
         <AppText style={styles.pageTitle}>Ưu đãi</AppText>

@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet, Text, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AnimatedGradientQRIcon from './icons/AnimatedGradientQRIcon';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { navBarTranslateY } from './GlassNavBarBridge';
+import { LiquidGlassView } from 'react-native-liquid-glassmorphism';
 
 // ==========================================
 // THÔNG SỐ BẠN CÓ THỂ TỰ DO CHỈNH SỬA Ở ĐÂY:
@@ -28,6 +29,12 @@ const TABS = [
 ];
 
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
+  // Kiểm tra cấu hình ẩn navbar của tab hiện tại
+  const focusedOptions = descriptors[state.routes[state.index].key].options;
+  if (focusedOptions.tabBarStyle && (focusedOptions.tabBarStyle as any).display === 'none') {
+    return null;
+  }
+
   const tabElements = state.routes.map((route, index) => {
     const isFocused = state.index === index;
     const tabDef = TABS.find((t) => t.name === route.name);
@@ -99,33 +106,39 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
   };
 
   return (
-    <View style={styles.wrapper}>
+    <Animated.View style={[styles.wrapper, { transform: [{ translateY: navBarTranslateY }] }]}>
       {/* 1. Lớp đổ bóng chuyên dụng cho Android (Tách rời để không bị lỗi elevation) */}
       <View style={[styles.shadowContainer, radiusStyles]} />
 
       {/* 2. Lớp chứa nội dung (Cắt gọt hiển thị theo đúng 4 góc bo cong) */}
       <View style={[styles.pillContent, radiusStyles]}>
 
-        {/* Nền Kính Mờ (Glassmorphism) hoạt động mượt trên Android */}
-        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill}>
-          <LinearGradient
-            colors={['rgba(210, 81, 157, 0.85)', 'rgba(163, 27, 107, 0.92)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
+        {/* Nền Kính Khúc Xạ Thực trên Android */}
+        <LiquidGlassView 
+          preset="floatingTabBar" 
+          style={[StyleSheet.absoluteFill, radiusStyles, { overflow: 'hidden', height: BAR_HEIGHT }]} 
+        />
 
-          {/* Viền nổi 3D */}
-          <View style={[styles.innerBorder, radiusStyles]} />
+        {/* Đã comment lớp phủ màu theo yêu cầu để lộ kính trong suốt */}
+        {/*
+        <LinearGradient
+          colors={['rgba(210, 81, 157, 0.85)', 'rgba(163, 27, 107, 0.92)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        */}
 
-          {/* Các nút bấm */}
-          <View style={styles.tabRow}>
-            {tabElements}
-          </View>
-        </BlurView>
+        {/* Viền nổi 3D */}
+        <View style={[styles.innerBorder, radiusStyles]} />
+
+        {/* Các nút bấm */}
+        <View style={styles.tabRow}>
+          {tabElements}
+        </View>
 
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -160,7 +160,7 @@ export default function ForgotPinScreen({ navigation }: ForgotPinScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: 'transparent',
   },
   scrollView: {
     flex: 1,
