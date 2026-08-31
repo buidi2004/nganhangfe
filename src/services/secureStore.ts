@@ -5,6 +5,7 @@ const CREDENTIALS_KEY = 'SenBank_Secure_Credentials';
 
 export interface SavedCredentials {
   phone: string;
+  name?: string;
   password?: string;
   refreshToken?: string;
 }
@@ -82,14 +83,17 @@ export const clearCredentials = async (): Promise<void> => {
 };
 
 /**
- * Check if there is any saved data (without prompting biometrics)
- * Useful for showing/hiding the biometric button.
+ * Get saved info (phone, name) without prompting biometrics.
  */
-export const hasSavedCredentials = async (): Promise<boolean> => {
+export const getSavedCredentialsInfo = async (): Promise<Partial<SavedCredentials> | null> => {
   try {
     const data = await SecureStore.getItemAsync(CREDENTIALS_KEY);
-    return !!data;
+    if (data) {
+      const parsed = JSON.parse(data) as SavedCredentials;
+      return { phone: parsed.phone, name: parsed.name };
+    }
+    return null;
   } catch (e) {
-    return false;
+    return null;
   }
 };

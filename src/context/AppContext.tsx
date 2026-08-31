@@ -82,7 +82,7 @@ interface AppContextValue {
   user: UserProfile | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (phone: string, password: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<UserProfile>;
   register: (phone: string, password: string) => Promise<{ walletId: string }>;
   logout: () => void;
   wallet: WalletData | null;
@@ -326,6 +326,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               console.warn('[Push] Failed to register token with backend', e);
           }
       }
+      return profile;
     } catch (e: any) {
       setLastError(e.message || 'Đăng nhập thất bại. Kiểm tra lại SĐT/mật khẩu.');
       throw e;

@@ -19,7 +19,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert, ImageBackground } from 'react-native';
-import { saveCredentials, getCredentials, hasSavedCredentials, clearCredentials, checkBiometricSupport } from '../services/secureStore';
+import { saveCredentials, getCredentials, hasSavedCredentials, getSavedCredentialsInfo, clearCredentials, checkBiometricSupport } from '../services/secureStore';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
@@ -61,6 +61,7 @@ export default function LoginScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isRemembered, setIsRemembered] = useState(false);
+  const [savedName, setSavedName] = useState('');
   const [hasBiometricsEnabled, setHasBiometricsEnabled] = useState(false);
   const passwordRef = React.useRef<TextInput>(null);
   const scrollViewRef = React.useRef<ScrollView>(null);
@@ -71,10 +72,12 @@ export default function LoginScreen({ navigation }: any) {
 
   const checkInitialState = async () => {
     try {
-      const hasSaved = await hasSavedCredentials();
-      if (hasSaved) {
+      const savedInfo = await getSavedCredentialsInfo();
+      if (savedInfo && savedInfo.phone) {
         setIsRemembered(true);
         setHasBiometricsEnabled(true);
+        setPhone(savedInfo.phone);
+        if (savedInfo.name) setSavedName(savedInfo.name);
         // User must manually press the fingerprint button to trigger it now.
       }
     } catch (e) {
@@ -110,7 +113,8 @@ export default function LoginScreen({ navigation }: any) {
       return;
     }
     try {
-      await login(phone, password);
+      const profile = await login(phone, password);
+      const userName = profile?.name || phone;
       
       // Nếu đăng nhập thành công thủ công, hỏi xem có muốn lưu vân tay không (nếu chưa lưu)
       const isBiometricSupported = await checkBiometricSupport();
@@ -129,7 +133,7 @@ export default function LoginScreen({ navigation }: any) {
             {
               text: 'Đồng ý',
               onPress: async () => {
-                await saveCredentials({ phone, password });
+                await saveCredentials({ phone, password, name: userName });
                 navigation.navigate('MainTabs');
               }
             }
@@ -138,7 +142,7 @@ export default function LoginScreen({ navigation }: any) {
       } else {
         if (!hasSaved) {
           // Chỉ lưu tạm sđt vào secure store nếu không có vân tay
-          await saveCredentials({ phone });
+          await saveCredentials({ phone, name: userName });
         }
         navigation.navigate('MainTabs');
       }
@@ -267,30 +271,30 @@ export default function LoginScreen({ navigation }: any) {
             />
 
             <View style={styles.cardInnerPadding}>
-              {/* Top Row: Shield Check + Real Fingerprint Icon */}
-              <View style={styles.cardTopRow}>
-                <MaterialCommunityIcons name="shield-check" size={32} color="#10B981" />
-
-                {/* Fingerprint Button */}
-                {hasBiometricsEnabled && (
-                  <TouchableOpacity
-                    style={styles.biometricBtn}
-                    activeOpacity={0.8}
-                    onPress={handleBiometricLogin}
-                  >
-                    <MaterialCommunityIcons name="fingerprint" size={32} color="#F472B6" />
-                  </TouchableOpacity>
-                )}
+              {/* Top Row: Shield Check */}
+              <View style={[styles.cardTopRow, { justifyContent: 'flex-start', marginBottom: 8 }]}>
+                <MaterialCommunityIcons name="shield-check" size={28} color="#10B981" />
               </View>
 
               {/* Greeting & Name */}
               {isRemembered ? (
-                <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-                    <Ionicons name="person" size={32} color="#FFFFFF" />
+                <View style={{ marginBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1, paddingRight: 10 }}>
+                    <AppText style={styles.greetingText}>Xin chào,</AppText>
+                    <AppText style={styles.userNameLine1} numberOfLines={2} adjustsFontSizeToFit>{savedName || phone}</AppText>
+                    <AppText style={[styles.greetingText, { marginTop: 4, fontSize: 13, opacity: 0.8 }]}>{phone}</AppText>
                   </View>
-                  <AppText style={styles.greetingText}>Xin chào,</AppText>
-                  <AppText style={styles.userNameLine1}>{phone}</AppText>
+                  
+                  {/* Fingerprint Button floating to the right */}
+                  {hasBiometricsEnabled && (
+                    <TouchableOpacity
+                      style={[styles.biometricBtn, { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(210, 81, 157, 0.2)', borderColor: 'rgba(244, 114, 182, 0.4)' }]}
+                      activeOpacity={0.8}
+                      onPress={handleBiometricLogin}
+                    >
+                      <MaterialCommunityIcons name="fingerprint" size={32} color="#F472B6" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               ) : (
                 <AppText style={[styles.greetingText, { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 }]}>Đăng nhập</AppText>
@@ -321,14 +325,14 @@ export default function LoginScreen({ navigation }: any) {
                   </>
                 )}
 
-                <AppText style={styles.label}>Mật khẩu</AppText>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#700F43" style={styles.inputIcon} />
+                <AppText style={[styles.label, isRemembered && { marginTop: 0 }]}>Mật khẩu</AppText>
+                <View style={[styles.inputWrapper, isRemembered && { backgroundColor: 'transparent', borderTopWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0 }]}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#F472B6" style={styles.inputIcon} />
                   <TextInput
                     ref={passwordRef}
                     style={styles.input}
                     placeholder="Nhập mật khẩu"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
