@@ -278,11 +278,10 @@ export default function LoginScreen({ navigation }: any) {
 
               {/* Greeting & Name */}
               {isRemembered ? (
-                <View style={{ marginBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ marginBottom: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View style={{ flex: 1, paddingRight: 10 }}>
                     <AppText style={styles.greetingText}>Xin chào,</AppText>
-                    <AppText style={styles.userNameLine1} numberOfLines={2} adjustsFontSizeToFit>{savedName || phone}</AppText>
-                    <AppText style={[styles.greetingText, { marginTop: 4, fontSize: 13, opacity: 0.8 }]}>{phone}</AppText>
+                    <AppText style={[styles.userNameLine1, { fontSize: 36, lineHeight: 42 }]} numberOfLines={2} adjustsFontSizeToFit>{savedName || 'Bùi Văn Dĩ'}</AppText>
                   </View>
                   
                   {/* Fingerprint Button floating to the right */}
@@ -325,14 +324,14 @@ export default function LoginScreen({ navigation }: any) {
                   </>
                 )}
 
-                <AppText style={[styles.label, isRemembered && { marginTop: 0 }]}>Mật khẩu</AppText>
-                <View style={[styles.inputWrapper, isRemembered && { backgroundColor: 'transparent', borderTopWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0 }]}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#F472B6" style={styles.inputIcon} />
+                <AppText style={[styles.label, isRemembered && { display: 'none' }]}>Mật khẩu</AppText>
+                <View style={[styles.inputWrapper, isRemembered && { backgroundColor: 'transparent', borderTopWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0, height: 46 }]}>
+                  {!isRemembered && <Ionicons name="lock-closed-outline" size={20} color="#F472B6" style={styles.inputIcon} />}
                   <TextInput
                     ref={passwordRef}
-                    style={styles.input}
-                    placeholder="Nhập mật khẩu"
-                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    style={[styles.input, isRemembered && { fontSize: 18, paddingLeft: 4 }]}
+                    placeholder={isRemembered ? "Mật khẩu" : "Nhập mật khẩu"}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
