@@ -44,12 +44,12 @@ const FAN_SPREAD_DEG = 150; // total angle from leftmost to rightmost petal
 const SCATTER_DISTANCE = 60; // px petals start out shifted away from resting spot
 const SCATTER_ROT_DEG = 34; // extra rotation petals start with, alternating in/out
 
-const PETAL_DURATION_MS = 1300; // fixed, exact duration of one petal's fly-in (increased for a slower, majestic bloom)
-const STAGGER_MS = 110; // small vs. duration → petals overlap into one wave
-const SCALE_OVERSHOOT = 0.85; // 0 = no bloom, ~1.7 = very bouncy; kept gentle
+const PETAL_DURATION_MS = 2000; // increased for even more majestic bloom
+const STAGGER_MS = 200; // increased for a very clear wave effect
+const SCALE_OVERSHOOT = 0.85;
 
-const CROSSFADE_OVERLAP_MS = 250; // crossfade starts this much BEFORE petals fully settle
-const CROSSFADE_MS = 800;
+const CROSSFADE_OVERLAP_MS = 400; // crossfade starts before petals fully settle
+const CROSSFADE_MS = 1200; // much longer crossfade
 
 // viewBox is a fixed 260x260 square; petals pivot from this base point,
 // roughly where all the real logo's petals converge.
@@ -146,6 +146,8 @@ type Props = {
   petalColorDark?: string;
   /** Called once the crossfade to the real logo has finished */
   onFinish?: () => void;
+  /** Called once the animation has visually mounted/started */
+  onReady?: () => void;
 };
 
 export default function LotusIntroAnimation({
@@ -154,6 +156,7 @@ export default function LotusIntroAnimation({
   petalColorLight = '#F472B6',
   petalColorDark = '#DB2777',
   onFinish,
+  onReady,
 }: Props) {
   const [showLogo, setShowLogo] = useState(false);
   const petalsOpacity = useSharedValue(1);
@@ -173,6 +176,12 @@ export default function LotusIntroAnimation({
   const rawValues = [r0, r1, r2, r3, r4, r5, r6];
 
   useEffect(() => {
+    // Notify parent that the animation component has mounted and is ready to start playing.
+    // We delay slightly to ensure Reanimated has mounted on the native thread, avoiding black screen flickers.
+    const readyTimer = setTimeout(() => {
+      if (onReady) onReady();
+    }, 50);
+
     const smoothGlide = { duration: PETAL_DURATION_MS, easing: Easing.linear };
     rawValues.forEach((r, i) => {
       r.value = withDelay(i * STAGGER_MS, withTiming(1, smoothGlide));
@@ -193,7 +202,10 @@ export default function LotusIntroAnimation({
       });
     }, crossfadeStart);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(readyTimer);
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

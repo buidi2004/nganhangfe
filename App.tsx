@@ -12,20 +12,17 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const [introDone, setIntroDone] = useState(false);
 
-  const onLayoutRootView = useCallback(async () => {
-    // Ẩn splash tĩnh NGAY khi JS bundle sẵn sàng
+  const handleIntroReady = useCallback(async () => {
+    // Ẩn splash tĩnh NGAY KHI animation JS đã mount xong, ngăn lỗi màn đen
     await SplashScreen.hideAsync().catch(console.warn);
   }, []);
-
-  useEffect(() => { 
-    onLayoutRootView(); 
-  }, [onLayoutRootView]);
 
   if (!introDone) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
         <LotusIntroAnimation
           logoSource={require('./assets/sen-hong-logo.png')}
+          onReady={handleIntroReady}
           onFinish={() => setIntroDone(true)}
         />
       </View>
