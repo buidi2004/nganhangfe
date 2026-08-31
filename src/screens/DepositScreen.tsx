@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Radius, Shadows, Spacing } from '../theme';
@@ -8,7 +8,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { BankCardRow } from '../components/BankCardRow';
 import { QuickAmountChip } from '../components/QuickAmountChip';
-import { AmountEntryPad } from '../components/AmountEntryPad';
+
 import { AppText } from '../components/typography/AppText';
 
 interface DepositScreenProps {
@@ -47,7 +47,14 @@ export default function DepositScreen({ navigation }: DepositScreenProps) {
           <AppText style={styles.amountLabel}>Nhập số tiền nạp</AppText>
           <View style={styles.amountDisplay}>
             <AppText style={styles.currencySymbol}>VNĐ</AppText>
-            <AppText variant="display" style={styles.amountValue}>{amount || '0'}</AppText>
+            <TextInput
+              style={[styles.amountValue, { padding: 0, margin: 0, flex: 1, fontSize: 32, fontWeight: '700' }]}
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              placeholder="0"
+              placeholderTextColor={Colors.primary}
+            />
           </View>
         </View>
 
@@ -58,8 +65,6 @@ export default function DepositScreen({ navigation }: DepositScreenProps) {
           ))}
         </View>
 
-        {/* Amount entry pad */}
-        <AmountEntryPad onInputChange={setAmount} />
 
         {/* Info */}
         <View style={styles.infoCard}>
