@@ -38,6 +38,7 @@ import PromotionsScreen from '../screens/PromotionsScreen';
 import HelpCenterScreen from '../screens/HelpCenterScreen';
 import SearchScreen from '../screens/SearchScreen';
 import PhoneRechargeScreen from '../screens/PhoneRechargeScreen';
+import LotteryScreen from '../screens/LotteryScreen';
 import EKycScreen from '../screens/EKycScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import KycLevelScreen from '../screens/KycLevelScreen';
@@ -128,6 +129,7 @@ export default function AppNavigator() {
         <Stack.Screen name="BillInput" component={BillInputScreen} />
         <Stack.Screen name="BillConfirm" component={BillConfirmScreen} />
         <Stack.Screen name="PhoneRecharge" component={PhoneRechargeScreen} />
+        <Stack.Screen name="Lottery" component={LotteryScreen} />
 
         {/* Request transfer */}
         <Stack.Screen name="RequestTransfer" component={RequestTransferScreen} />

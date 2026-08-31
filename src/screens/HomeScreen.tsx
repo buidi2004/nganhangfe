@@ -924,7 +924,9 @@ export default function HomeScreen({ navigation }: any) {
                   style={styles.serviceItem}
                   activeOpacity={0.8}
                   onPress={() => {
-                    if (item.id === '3' || item.id === '6') {
+                    if (item.id === '1' || item.id === '2') {
+                      navigation.navigate('Lottery');
+                    } else if (item.id === '3' || item.id === '6') {
                       navigation.navigate('PhoneRecharge');
                     } else {
                       navigation.navigate('BillPayment');
