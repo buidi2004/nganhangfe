@@ -8,6 +8,7 @@ import {
   Dimensions,
   StatusBar,
   Modal,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,7 +16,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
-import { SearchFilterDrawer } from '../components/SearchFilterDrawer';
+
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
 import { useHideOnScroll } from '../hooks/useHideOnScroll';
