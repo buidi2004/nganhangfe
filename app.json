@@ -11,6 +11,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "notification": {
+      "icon": "./assets/notification_icon.png",
+      "color": "#700F43"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
