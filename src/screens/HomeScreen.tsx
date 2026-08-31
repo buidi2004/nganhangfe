@@ -190,12 +190,12 @@ const INITIAL_CAROUSEL_INDEX = BASE_CAROUSEL_DATA.length * 5; // Bắt đầu �
 const SERVICES = [
   { id: '1', title: 'Vua Xổ Số', iconBg: '#FFF1F2', iconColor: '#E11D48', icon: 'ticket', badgeText: '9' },
   { id: '2', title: 'Vé số\nVietlott', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'ticket' },
-  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'cellular' },
+  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'smartphone' },
   { id: '4', title: 'Vé Máy Bay\nSố', iconBg: '#06B6D4', iconColor: '#FDE047', icon: 'plane' },
   { id: '5', title: 'Vé Máy Bay', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'plane' },
-  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'cellular' },
+  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'wifi' },
   { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', isYinYang: true },
-  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', iconColor: '#D97706', icon: 'flash' },
+  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', iconColor: '#D97706', icon: 'zap' },
 ];
 
 // --- ANIMATED SEARCH BUTTON ---
