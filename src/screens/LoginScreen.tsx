@@ -75,8 +75,7 @@ export default function LoginScreen({ navigation }: any) {
       if (hasSaved) {
         setIsRemembered(true);
         setHasBiometricsEnabled(true);
-        // Tự động gọi vân tay nếu đã lưu
-        handleBiometricLogin();
+        // User must manually press the fingerprint button to trigger it now.
       }
     } catch (e) {
       console.warn('Failed to load credentials state', e);
