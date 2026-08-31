@@ -55,7 +55,7 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
 
     const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
     const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
-    const color = isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)';
+    const color = isFocused ? '#F472B6' : 'rgba(255, 255, 255, 0.6)';
 
     if (tabDef.isCenter) {
       return (
