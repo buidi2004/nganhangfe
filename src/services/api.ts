@@ -150,8 +150,18 @@ async function request<T>(
     }
   }
 
-  const json = await response.json();
-  if (!response.ok || !json.success) {
+  const rawText = await response.text();
+  let json: any = {};
+  try {
+    json = rawText && rawText.trim() ? JSON.parse(rawText) : {};
+  } catch (err) {
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    return { success: true, message: 'OK', data: null as any };
+  }
+
+  if (!response.ok || (json && json.success === false)) {
     throw new Error(json.message || `Request failed with status ${response.status}`);
   }
 
@@ -367,20 +377,45 @@ export const WalletApi = {
   getTerms: () =>
     request<string>('/legal/terms'),
 
-  // --- Support FAQ ---
+  submitConsent: (termsVersion: string = '2026.08') =>
+    request<any>(`/legal/consent?termsVersion=${encodeURIComponent(termsVersion)}`, { method: 'POST' }),
+
+  // --- Support & Tickets ---
   getFaq: () =>
     request<any[]>('/support/faq'),
+
+  createSupportTicket: (subject: string, category: string = 'GENERAL', initialMessage: string = '') =>
+    request<any>(
+      `/support/tickets?subject=${encodeURIComponent(subject)}&category=${encodeURIComponent(category)}&initialMessage=${encodeURIComponent(initialMessage)}`,
+      { method: 'POST' }
+    ),
+
+  getSupportTickets: () =>
+    request<any[]>('/support/tickets'),
 
   // --- Session & Device Management ---
   getActiveSessions: () =>
     request<any[]>('/sessions'),
 
+  // Cách A: Quản lý theo session thiết bị
   revokeSession: (deviceId: string) =>
     request<void>(`/sessions/${deviceId}`, { method: 'DELETE' }),
 
   registerFcmToken: (deviceId: string, token: string) =>
     request<void>(`/sessions/${deviceId}/fcm?fcmToken=${encodeURIComponent(token)}`, {
       method: 'POST',
+    }),
+
+  // Cách B: REST endpoint chuẩn cho Device Token
+  registerDevice: (fcmToken: string, deviceType: 'ANDROID' | 'IOS' = 'ANDROID') =>
+    request<void>('/devices/register', {
+      method: 'POST',
+      body: JSON.stringify({ fcmToken, deviceType }),
+    }),
+
+  unregisterDevice: (fcmToken: string) =>
+    request<void>(`/devices/unregister?fcmToken=${encodeURIComponent(fcmToken)}`, {
+      method: 'DELETE',
     }),
 
   // --- Bill Payment ---

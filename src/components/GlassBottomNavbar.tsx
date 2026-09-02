@@ -28,6 +28,77 @@ const TABS = [
   { name: 'Menu', label: 'Menu', icon: 'grid-outline', iconFocused: 'grid', lib: 'Ionicons' },
 ];
 
+interface TabItemButtonProps {
+  isFocused: boolean;
+  tabDef: any;
+  onPress: () => void;
+}
+
+function TabItemButton({ isFocused, tabDef, onPress }: TabItemButtonProps) {
+  const scaleAnim = React.useRef(new Animated.Value(isFocused ? 1.08 : 1)).current;
+  const bounceAnim = React.useRef(new Animated.Value(isFocused ? -2 : 0)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: isFocused ? 1.08 : 1,
+        friction: 5,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: isFocused ? -3 : 0,
+        friction: 5,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isFocused]);
+
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.85, duration: 80, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1.08, friction: 4, tension: 90, useNativeDriver: true }),
+    ]).start();
+    onPress();
+  };
+
+  const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+  const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
+  const color = isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)';
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={handlePress}
+      style={styles.tabItem}
+    >
+      <Animated.View
+        style={[
+          styles.iconWrap,
+          isFocused && styles.iconWrapActive,
+          {
+            transform: [
+              { scale: scaleAnim },
+              { translateY: bounceAnim },
+            ],
+          },
+        ]}
+      >
+        <IconComponent
+          name={iconName as any}
+          size={25}
+          color={color}
+          style={isFocused ? styles.iconShadow : undefined}
+        />
+      </Animated.View>
+      <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
+        {tabDef.label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
   // Kiểm tra cấu hình ẩn navbar của tab hiện tại
   const focusedOptions = descriptors[state.routes[state.index].key].options;
@@ -76,24 +147,12 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
     }
 
     return (
-      <TouchableOpacity
+      <TabItemButton
         key={index}
-        activeOpacity={0.7}
+        isFocused={isFocused}
+        tabDef={tabDef}
         onPress={onPress}
-        style={styles.tabItem}
-      >
-        <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
-          <IconComponent
-            name={iconName as any}
-            size={25}
-            color={color}
-            style={isFocused ? styles.iconShadow : undefined}
-          />
-        </View>
-        <Text style={[styles.label, { color }, isFocused && styles.labelFocused]}>
-          {tabDef.label}
-        </Text>
-      </TouchableOpacity>
+      />
     );
   });
 

@@ -11,6 +11,7 @@ import { Colors } from '../theme';
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
 import { useThrottledNavBarScroll } from '../hooks/useThrottledNavBarScroll';
+import AnimatedRainbowPill from '../components/AnimatedRainbowPill';
 
 const { width } = Dimensions.get('window');
 
@@ -189,14 +190,13 @@ export default function PromotionsScreen({ navigation }: any) {
 
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
-            {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc */}
-            <TouchableOpacity
-              style={styles.searchPill}
-              activeOpacity={0.85}
+            {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc viền 7 màu chạy động */}
+            <AnimatedRainbowPill
+              title="Dán chuyển tiền AI"
+              height={40}
+              style={{ flex: 1, marginRight: 16 }}
               onPress={() => navigation.navigate('Search')}
-            >
-              <AppText style={styles.searchText}>Dán chuyển tiền AI</AppText>
-            </TouchableOpacity>
+            />
 
             {/* 2. Cụm Icon: Chuông 🔔 + 3 Gạch ☰ */}
             <View style={styles.headerActions}>

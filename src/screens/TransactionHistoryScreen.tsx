@@ -133,14 +133,14 @@ export default function TransactionHistoryScreen({ navigation }: any) {
 
     try {
       const res = await WalletApi.getTransactionHistory(wallet.walletId, pageIndex, 20);
-      const data = res.data;
-      const newItems = data.content || [];
+      const data: any = res.data;
+      const newItems = Array.isArray(data) ? data : (data?.content || []);
       if (reset) {
         setTransactions(newItems);
       } else {
         setTransactions(prev => [...prev, ...newItems]);
       }
-      setHasMore(!data.isLast);
+      setHasMore(Array.isArray(data) ? data.length >= 20 : !data?.isLast);
       setPage(pageIndex);
     } catch (error) {
       console.warn('Failed to load transactions:', error);

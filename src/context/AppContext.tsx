@@ -10,6 +10,11 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { clearCredentials } from '../services/secureStore';
+import { 
+  registerFcmTokenWithBackend, 
+  setupTokenRefreshListener, 
+  unregisterFcmTokenFromBackend 
+} from '../services/notificationService';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -22,42 +27,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-async function registerForPushNotificationsAsync() {
-  let token;
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Giao dịch',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#D2519D',
-    });
-  }
-  if (Device.isDevice) {
-    const perm = await Notifications.getPermissionsAsync() as any;
-    let isGranted = perm.granted;
-    if (!isGranted) {
-      const requestPerm = await Notifications.requestPermissionsAsync() as any;
-      isGranted = requestPerm.granted;
-    }
-    if (!isGranted) {
-      console.warn('Failed to get push token for push notification!');
-      return null;
-    }
-    if (Constants.appOwnership === 'expo') {
-      return 'expo-dummy-token';
-    }
-    try {
-        const pushToken = await Notifications.getDevicePushTokenAsync();
-        token = pushToken.data;
-    } catch (e) {
-        // Suppress warning in dev to avoid annoying yellow box
-        return null;
-    }
-  } else {
-    console.warn('Must use physical device for Push Notifications');
-  }
-  return token;
-}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface WalletData {
@@ -130,7 +99,7 @@ class NativeStompClient {
     try {
       this.ws = new WebSocket(url);
       this.ws.onopen = () => {
-        console.log('[WS] TCP Socket opened to:', url);
+        console.log('[WS_DEBUG - BƯỚC 1] TCP Socket opened to:', url);
         this._send(`CONNECT\naccept-version:1.2\nheart-beat:10000,10000\nAuthorization: Bearer ${token}\n\n\0`);
       };
       this.ws.onmessage = (evt) => this._onMessage(evt.data as string);
@@ -139,8 +108,8 @@ class NativeStompClient {
         this._stopHeartbeat();
         this.onDisconnectCb?.();
       };
-      this.ws.onerror = (e) => console.warn('[WS]', e);
-    } catch (e) { console.warn('[WS] Connect error', e); }
+      this.ws.onerror = (e) => console.warn('[WS_DEBUG - BƯỚC 1] WS Error:', e);
+    } catch (e) { console.warn('[WS_DEBUG - BƯỚC 1] Connect error', e); }
   }
 
   private _send(data: string) {
@@ -148,6 +117,7 @@ class NativeStompClient {
   }
 
   private _onMessage(data: string) {
+    console.log('[WS_DEBUG - BƯỚC 3] Raw message received:', data);
     if (data.startsWith('CONNECTED')) {
       this._connected = true;
       this._startHeartbeat();
@@ -163,13 +133,27 @@ class NativeStompClient {
           else if (line === '' && !inBody) inBody = true;
           else if (inBody && line !== '\0') body += line;
         }
+        console.log(`[WS_DEBUG - BƯỚC 3] Parsed destination from message: ${dest}`);
         const cb = this.subscriptions.get(dest);
-        if (cb && body) { try { cb(JSON.parse(body)); } catch { cb(body); } }
-      } catch {}
+        if (cb && body) { 
+          try { 
+            const parsed = JSON.parse(body);
+            console.log('[WS_DEBUG - BƯỚC 4] JSON Parse Success');
+            cb(parsed); 
+          } catch (e) { 
+            console.error('[WS_PARSE_ERROR]', e, 'raw body:', body);
+          } 
+        } else {
+            if (!cb) console.log(`[WS_DEBUG - BƯỚC 3] No subscription found for destination: ${dest}`);
+        }
+      } catch (e) {
+          console.log('[WS_DEBUG - BƯỚC 3] Error parsing STOMP MESSAGE:', e);
+      }
     }
   }
 
   subscribe(dest: string, cb: (msg: any) => void) {
+    console.log(`[WS_DEBUG - BƯỚC 2] subscribe called for dest: ${dest} at ${new Date().toISOString()}`);
     this.subscriptions.set(dest, cb);
     this._send(`SUBSCRIBE\nid:sub-${Date.now()}\ndestination:${dest}\n\n\0`);
   }
@@ -221,9 +205,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const stomp = useRef(new NativeStompClient());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deviceIdRef = useRef<string | null>(null);
+  const currentFcmTokenRef = useRef<string | null>(null);
+  const tokenRefreshUnsubRef = useRef<(() => void) | null>(null);
 
   // ── connectWS ──────────────────────────────────────────────────────────
-  const connectWS = useCallback((userId: string) => {
+  const connectWS = useCallback((walletId: string) => {
     const token = getAuthToken();
     if (!token) return;
     const wsUrl = API_BASE_URL
@@ -234,17 +221,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       stomp.current.connect(wsUrl, token,
         () => {
           setWsConnected(true);
-          console.log('[WS] Connected to SenBank');
-          stomp.current.subscribe(`/topic/users/${userId}/notifications`, (msg) => {
-            if (typeof msg.newBalance === 'number') {
-              setWallet(prev => prev ? { ...prev, balance: msg.newBalance } : prev);
+          console.log(`[WS_DEBUG - BƯỚC 1] Connected to SenBank WS at ${wsUrl}`);
+          console.log(`[WS_DEBUG - BƯỚC 2] Calling subscribe inside onConnect, walletId = ${walletId}`);
+          stomp.current.subscribe(`/topic/wallets/${walletId}/notifications`, (msg) => {
+            console.log('[WS_DEBUG - BƯỚC 4] Parsed message in callback:', JSON.stringify(msg, null, 2));
+            const rawBalance = msg.newBalance !== undefined ? msg.newBalance : msg.balance;
+            const newBalanceNum = rawBalance !== undefined && rawBalance !== null && !isNaN(Number(rawBalance)) ? Number(rawBalance) : undefined;
+            if (typeof newBalanceNum === 'number') {
+              console.log('[WS_DEBUG - BƯỚC 5] Dispatching balance update:', newBalanceNum);
+              setWallet(prev => {
+                console.log('[WS_DEBUG - BƯỚC 5] Previous balance:', prev?.balance, 'New balance:', newBalanceNum);
+                return prev ? { ...prev, balance: newBalanceNum } : prev;
+              });
+            } else {
+                console.log('[WS_DEBUG - BƯỚC 5] No valid balance field found in message. Did not dispatch balance update. (expected newBalance)');
             }
-            if (msg.message) {
+
+            if (msg.body) {
               setNotifications(prev => [{
-                id: `ws-${Date.now()}`,
-                title: msg.type === 'DEBIT' ? '📤 Tiền ra' : '📥 Tiền vào',
-                body: msg.message,
-                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                id: msg.transactionId || `ws-${Date.now()}`,
+                title: msg.title || (msg.type === 'TRANSFER_OUT' || msg.type === 'WITHDRAWAL' ? '📤 Tiền ra' : '📥 Tiền vào'),
+                body: msg.body,
+                time: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
                 isUnread: true,
                 type: msg.type,
               }, ...prev]);
@@ -252,11 +250,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               // Bắn luôn thông báo Push Notification Native ra ngoài màn hình
               Notifications.scheduleNotificationAsync({
                 content: {
-                  title: msg.type === 'DEBIT' ? '📤 Biến động số dư' : '📥 Tiền vào tài khoản',
-                  body: msg.message,
+                  title: msg.title || (msg.type === 'TRANSFER_OUT' || msg.type === 'WITHDRAWAL' ? '📤 Biến động số dư' : '📥 Tiền vào tài khoản'),
+                  body: msg.body,
                   sound: true,
                 },
-                trigger: null, // trigger null means show immediately
+                trigger: { channelId: 'default' }, // trigger channelId ghim vào khay thông báo Android
               });
             }
           });
@@ -268,7 +266,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
           reconnectTimerRef.current = setTimeout(() => {
             reconnectTimerRef.current = null;
-            connectWS(userId);
+            connectWS(walletId);
           }, 5000);
         }
       }
@@ -336,18 +334,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch(e) {
         setWallet({ walletId: realWalletId, balance: 0, currency: 'VND' });
       }
-      connectWS(profile.userId);
+      connectWS(profile.walletId);
       await _loadNotifications();
       
-      const pushToken = await registerForPushNotificationsAsync();
-      if (pushToken) {
-          const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
-          try {
-              await WalletApi.registerFcmToken(deviceId, pushToken);
-              console.log('[Push] Registered token for device:', deviceId);
-          } catch (e) {
-              console.warn('[Push] Failed to register token with backend', e);
-          }
+      const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
+      deviceIdRef.current = deviceId;
+      try {
+        const token = await registerFcmTokenWithBackend(deviceId);
+        currentFcmTokenRef.current = token;
+        if (tokenRefreshUnsubRef.current) {
+          tokenRefreshUnsubRef.current();
+        }
+        tokenRefreshUnsubRef.current = setupTokenRefreshListener(deviceId);
+      } catch (e) {
+        console.warn('[FCM] Error registering token on login:', e);
       }
       return profile;
     } catch (e: any) {
@@ -392,17 +392,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch(e) {
         setWallet({ walletId: realWalletId, balance: 0, currency: 'VND' });
       }
-      connectWS(profile.userId);
+      connectWS(profile.walletId);
       
-      const pushToken = await registerForPushNotificationsAsync();
-      if (pushToken) {
-          const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
-          try {
-              await WalletApi.registerFcmToken(deviceId, pushToken);
-              console.log('[Push] Registered token for device:', deviceId);
-          } catch (e) {
-              console.warn('[Push] Failed to register token with backend', e);
-          }
+      const deviceId = Device.osBuildId || Constants.sessionId || `device-${phone}`;
+      deviceIdRef.current = deviceId;
+      try {
+        const token = await registerFcmTokenWithBackend(deviceId);
+        currentFcmTokenRef.current = token;
+        if (tokenRefreshUnsubRef.current) {
+          tokenRefreshUnsubRef.current();
+        }
+        tokenRefreshUnsubRef.current = setupTokenRefreshListener(deviceId);
+      } catch (e) {
+        console.warn('[FCM] Error registering token on register:', e);
       }
       return { walletId: realWalletId };
     } catch (e: any) {
@@ -415,6 +417,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ── logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
+    if (deviceIdRef.current) {
+      try {
+        await unregisterFcmTokenFromBackend(deviceIdRef.current, currentFcmTokenRef.current || undefined);
+      } catch (e) {}
+      deviceIdRef.current = null;
+      currentFcmTokenRef.current = null;
+    }
+    if (tokenRefreshUnsubRef.current) {
+      tokenRefreshUnsubRef.current();
+      tokenRefreshUnsubRef.current = null;
+    }
     try { await WalletApi.logout(); } catch {}
     try { await clearCredentials(); } catch {}
     if (reconnectTimerRef.current) {
@@ -466,12 +479,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (next) => {
       if (appStateRef.current === 'background' && next === 'active' && user) {
         refreshBalance();
-        if (!stomp.current.isConnected() && user.userId) connectWS(user.userId);
+        if (!stomp.current.isConnected() && user.walletId) connectWS(user.walletId);
       }
       appStateRef.current = next;
     });
     return () => sub.remove();
   }, [user, refreshBalance, connectWS]);
+
+  // ── FCM Foreground Notification Listener ───────────────────────────────
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('FCM_NOTIFICATION_RECEIVED', (parsed: any) => {
+      console.log('[AppContext] Nhận FCM Push Notification:', parsed);
+      const rawBal = parsed.newBalance !== undefined ? parsed.newBalance : parsed.balance;
+      const newBal = rawBal !== undefined && rawBal !== null && !isNaN(Number(rawBal)) ? Number(rawBal) : undefined;
+      if (typeof newBal === 'number') {
+        setWallet(prev => prev ? { ...prev, balance: newBal } : prev);
+      }
+      if (parsed.body) {
+        setNotifications(prev => [{
+          id: parsed.transactionId || `push-${Date.now()}`,
+          title: parsed.title,
+          body: parsed.body,
+          time: parsed.timestamp ? new Date(parsed.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          isUnread: true,
+          type: parsed.type,
+        }, ...prev]);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => () => {
     if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);

@@ -89,8 +89,7 @@ Khi lỗi: `"success": false`, `"errorCode": "WALLET_NOT_FOUND"`, `"data": null`
   "bankCode": "SENHONG",
   "isInternal": true,
   "feeAmount": 0.00,
-  "balance": 4500000.00,             // Số dư sender sau GD
-  "runningBalance": 4500000.00,      // Same as balance
+  "newBalance": 4500000.00,          // Số dư sender sau GD
   "senderName": "TRAN THI BINH",
   "senderAccount": "0987654321",
   "recipientName": "NGUYEN VAN AN",
@@ -105,7 +104,7 @@ Khi lỗi: `"success": false`, `"errorCode": "WALLET_NOT_FOUND"`, `"data": null`
 **⚠️ Lưu ý FE:**
 - `bankCode = "SENHONG"` = nội bộ, `bankCode = "VCB"/"BIDV"...` = ngoại
 - `type` từ history API: `TRANSFER_OUT` / `TRANSFER_IN` (đã enrich theo walletId người xem)
-- `balance` là snapshot tại lúc commit — dùng để cập nhật UI ngay mà không cần GET lại ví
+- `newBalance` là snapshot tại lúc commit — dùng để cập nhật UI ngay mà không cần GET lại ví
 
 ---
 

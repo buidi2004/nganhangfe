@@ -17,7 +17,7 @@ import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { WalletApi } from '../services/api';
 import { Alert, ActivityIndicator } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, scanFromURLAsync } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 
 interface ScanQRScreenProps {
@@ -53,8 +53,17 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
       allowsEditing: false,
       quality: 1,
     });
-    if (!result.canceled) {
-      Alert.alert('Tính năng đang hoàn thiện', 'Đọc mã từ ảnh tải lên sẽ có trong bản cập nhật tới.');
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      try {
+        const barcodes = await scanFromURLAsync(result.assets[0].uri, ['qr']);
+        if (barcodes && barcodes.length > 0) {
+          onBarcodeScanned({ data: barcodes[0].data });
+        } else {
+          Alert.alert('Không tìm thấy QR', 'Không phát hiện mã QR trong ảnh đã chọn. Vui lòng chọn ảnh chứa mã VietQR hoặc SenBank.');
+        }
+      } catch (err) {
+        Alert.alert('Lỗi', 'Không thể quét mã QR từ ảnh đã chọn.');
+      }
     }
   };
 

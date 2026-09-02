@@ -9,6 +9,7 @@ import {
   Share,
   Alert,
   TextInput,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -109,7 +110,11 @@ export default function QRMyScreen({ navigation }: QRMyScreenProps) {
           <View style={styles.cardHeaderRow}>
             <View style={styles.bankBrandRow}>
               <View style={styles.senbankStarCircle}>
-                <AppText style={{ color: '#E11D48', fontSize: 16, fontWeight: '900' }}>★</AppText>
+                <Image
+                  source={require('../../assets/sen-hong-logo.png')}
+                  style={{ width: 28, height: 28, borderRadius: 14 }}
+                  resizeMode="contain"
+                />
               </View>
               <View>
                 <AppText style={styles.brandTitle}>SenBank</AppText>
@@ -150,7 +155,11 @@ export default function QRMyScreen({ navigation }: QRMyScreenProps) {
 
               {/* Center SenBank Logo in QR */}
               <View style={styles.qrCenterBadge}>
-                <AppText style={{ color: '#E11D48', fontSize: 13, fontWeight: '900' }}>★</AppText>
+                <Image
+                  source={require('../../assets/sen-hong-logo.png')}
+                  style={{ width: 26, height: 26, borderRadius: 13 }}
+                  resizeMode="contain"
+                />
               </View>
             </View>
 

@@ -1,7 +1,8 @@
-import React from 'react';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import React, { useMemo } from 'react';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ImageBackground } from 'react-native';
+import { ImageBackground, View } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -50,26 +51,34 @@ import ReferralScreen from '../screens/ReferralScreen';
 import BeneficiariesScreen from '../screens/BeneficiariesScreen';
 import ConfigScreen from '../screens/ConfigScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import SavingsScreen from '../screens/SavingsScreen';
+import QuickLoanScreen from '../screens/QuickLoanScreen';
 import MainTabs from './MainTabs';
 
 const Stack = createStackNavigator();
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: 'transparent',
-  },
-};
+import { navigationRef } from './navigationRef';
 
 export default function AppNavigator() {
-  return (
-    <ImageBackground 
-      source={require('../assets/images/bg-white-pink-pattern.png')} 
-      style={{ flex: 1 }}
-      resizeMode="cover"
-    >
-      <NavigationContainer theme={navTheme}>
+  const { isDark, colors } = useTheme();
+
+  const navigationTheme = useMemo(() => {
+    const baseTheme = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...baseTheme,
+      colors: {
+        ...baseTheme.colors,
+        background: 'transparent',
+        card: colors.surface,
+        text: colors.textPrimary,
+        border: colors.border,
+        primary: colors.primary,
+      },
+    };
+  }, [isDark, colors]);
+
+  const navContent = (
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -108,19 +117,19 @@ export default function AppNavigator() {
         {/* Transaction detail */}
         <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
 
-        {/* Notifications */}
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-
-        {/* Profile & Settings */}
+        {/* Account & Profile */}
         <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-        <Stack.Screen name="KycLevel" component={KycLevelScreen} />
         <Stack.Screen name="IdentityDocument" component={IdentityDocumentScreen} />
+        <Stack.Screen name="KycLevel" component={KycLevelScreen} />
         <Stack.Screen name="EKyc" component={EKycScreen} />
-        <Stack.Screen name="DeviceManagement" component={DeviceManagementScreen} />
+        <Stack.Screen name="DigitalSignature" component={DigitalSignatureScreen} />
         <Stack.Screen name="EmailSettings" component={EmailSettingsScreen} />
-        <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
+
+        {/* Payment & Cards */}
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+        <Stack.Screen name="BankCards" component={BankCardsScreen} />
         <Stack.Screen name="BankCardManagement" component={BankCardsScreen} />
+        <Stack.Screen name="Beneficiaries" component={BeneficiariesScreen} />
 
         {/* Bills & Payments */}
         <Stack.Screen name="BillPayment" component={BillPaymentScreen} />
@@ -129,15 +138,21 @@ export default function AppNavigator() {
         <Stack.Screen name="PhoneRecharge" component={PhoneRechargeScreen} />
         <Stack.Screen name="Lottery" component={LotteryScreen} />
 
-        {/* Request transfer */}
-        <Stack.Screen name="RequestTransfer" component={RequestTransferScreen} />
+        {/* Savings & Loans */}
+        <Stack.Screen name="Savings" component={SavingsScreen} />
+        <Stack.Screen name="QuickLoan" component={QuickLoanScreen} />
 
-        {/* Promotions & Referrals */}
+        {/* Request transfer & Promotions */}
+        <Stack.Screen name="RequestTransfer" component={RequestTransferScreen} />
         <Stack.Screen name="Promotions" component={PromotionsScreen} />
         <Stack.Screen name="Referral" component={ReferralScreen} />
-        <Stack.Screen name="Beneficiaries" component={BeneficiariesScreen} />
 
-        {/* Help */}
+        {/* Security & Devices */}
+        <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
+        <Stack.Screen name="DeviceManagement" component={DeviceManagementScreen} />
+
+        {/* Notifications & Support */}
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
         <Stack.Screen name="LiveChat" component={HelpCenterScreen} />
         <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
@@ -149,7 +164,22 @@ export default function AppNavigator() {
         <Stack.Screen name="Config" component={ConfigScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
-      </NavigationContainer>
-    </ImageBackground>
+    </NavigationContainer>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {!isDark ? (
+        <ImageBackground 
+          source={require('../assets/images/bg-white-pink-pattern.png')} 
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        >
+          {navContent}
+        </ImageBackground>
+      ) : (
+        navContent
+      )}
+    </View>
   );
 }

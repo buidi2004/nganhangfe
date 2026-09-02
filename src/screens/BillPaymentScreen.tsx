@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
+import { useTheme } from '../context/ThemeContext';
 
 interface BillPaymentScreenProps {
   navigation: any;
@@ -14,14 +15,14 @@ const { width } = Dimensions.get('window');
 const GRID_ITEM_WIDTH = (width - 32 - 48) / 4; // 4 items per row with gaps
 
 const PROVIDERS = [
-  { id: '1', icon: 'flash', label: 'Điện', color: '#D97706', bg: '#FEF3C7' },
-  { id: '2', icon: 'water', label: 'Nước', color: '#0284C7', bg: '#E0F2FE' },
-  { id: '3', icon: 'wifi', label: 'Internet', color: '#059669', bg: '#D1FAE5' },
-  { id: '4', icon: 'cellphone', label: 'Di động', color: '#7C3AED', bg: '#EDE9FE' },
-  { id: '5', icon: 'television-classic', label: 'Truyền hình', color: '#E11D48', bg: '#FFE4E6' },
-  { id: '6', icon: 'school', label: 'Học phí', color: '#0F766E', bg: '#CCFBF1' },
-  { id: '7', icon: 'shield-check', label: 'Bảo hiểm', color: '#C2410C', bg: '#FFEDD5' },
-  { id: '8', icon: 'home-city', label: 'Chung cư', color: '#4F46E5', bg: '#E0E7FF' },
+  { id: '1', icon: 'flash', label: 'Điện' },
+  { id: '2', icon: 'water', label: 'Nước' },
+  { id: '3', icon: 'wifi', label: 'Internet' },
+  { id: '4', icon: 'cellphone', label: 'Di động' },
+  { id: '5', icon: 'television-classic', label: 'Truyền hình' },
+  { id: '6', icon: 'school', label: 'Học phí' },
+  { id: '7', icon: 'shield-check', label: 'Bảo hiểm' },
+  { id: '8', icon: 'home-city', label: 'Chung cư' },
 ];
 
 const SAVED_BILLS = [
@@ -50,6 +51,7 @@ const SAVED_BILLS = [
 ];
 
 export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps) {
+  const { isDark, colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
@@ -98,10 +100,17 @@ export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps
                   activeOpacity={0.7}
                   onPress={() => navigation.navigate('BillInput', { provider: p.label })}
                 >
-                  <View style={[styles.providerIconBg, { backgroundColor: p.bg }]}>
-                    <MaterialCommunityIcons name={p.icon as any} size={26} color={p.color} />
+                  <View style={[
+                    styles.providerIconBg, 
+                    { 
+                      backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
+                      borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                      borderWidth: 1,
+                    }
+                  ]}>
+                    <MaterialCommunityIcons name={p.icon as any} size={24} color={isDark ? colors.primary : '#700F43'} />
                   </View>
-                  <AppText style={styles.providerLabel}>{p.label}</AppText>
+                  <AppText style={[styles.providerLabel, { color: colors.textPrimary }]}>{p.label}</AppText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -126,8 +135,15 @@ export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps
                     activeOpacity={0.8}
                     onPress={() => navigation.navigate('BillInput', { provider: bill.provider })}
                   >
-                    <View style={[styles.billIconWrap, { backgroundColor: bill.bg }]}>
-                      <MaterialCommunityIcons name={bill.icon as any} size={28} color={bill.color} />
+                    <View style={[
+                      styles.billIconWrap, 
+                      { 
+                        backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
+                        borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                        borderWidth: 1,
+                      }
+                    ]}>
+                      <MaterialCommunityIcons name={bill.icon as any} size={26} color={isDark ? colors.primary : '#700F43'} />
                     </View>
 
                     <View style={styles.billCenter}>

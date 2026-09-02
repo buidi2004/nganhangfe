@@ -13,7 +13,16 @@ import {
   Platform,
   RefreshControl,
   DeviceEventEmitter,
+  LayoutAnimation,
+  UIManager,
+  Easing as RNEasing,
 } from 'react-native';
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 import Reanimated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -34,10 +43,12 @@ import { Colors, Shadows, Typography, Radius } from '../theme';
 import { AppText } from '../components/typography/AppText';
 import { GlassBottomNavbar } from '../components/GlassBottomNavbar';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { useThrottledNavBarScroll } from '../hooks/useThrottledNavBarScroll';
 import { BlurView } from 'expo-blur';
 import AISearchIcon from '../components/icons/AISearchIcon';
+import AnimatedRainbowPill from '../components/AnimatedRainbowPill';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -85,103 +96,141 @@ const QUICK_ACTIONS = [
   { id: '4', component: MBCoinsIcon, title: 'Vay nhanh', badge: 'NHƯ GIÓ 💨', badgeColor: '#FDF2F8', badgeTextColor: '#D2519D' },
 ];
 
-// 6 Banners đồng bộ kích thước & layout chuẩn đẹp 100%
+// 4 Icon Quick Actions mở rộng khi bấm nút mũi tên kép
+const EXPANDED_ACTIONS = [
+  {
+    id: 'e1',
+    title: 'Thanh toán\nhóa đơn',
+    iconName: 'receipt-text-outline',
+    lib: 'MaterialCommunityIcons',
+    route: 'BillPayment',
+    badge: 'GIẢM 50K',
+    badgeColor: '#E11D48',
+  },
+  {
+    id: 'e2',
+    title: 'Nhận tiền\nQR',
+    iconName: 'qrcode',
+    lib: 'MaterialCommunityIcons',
+    route: 'MyQR',
+    badge: null,
+    badgeColor: null,
+  },
+  {
+    id: 'e3',
+    title: 'Yêu cầu\nchuyển tiền',
+    iconName: 'hand-coin-outline',
+    lib: 'MaterialCommunityIcons',
+    route: 'RequestTransfer',
+    badge: null,
+    badgeColor: null,
+  },
+  {
+    id: 'e4',
+    title: 'Lịch sử\ngiao dịch',
+    iconName: 'history',
+    lib: 'MaterialCommunityIcons',
+    route: 'TransactionHistory',
+    badge: 'MỚI ✨',
+    badgeColor: '#700F43',
+  },
+];
+
+// 6 Banners SenBank thương hiệu chuẩn với dải màu hồng nhạt đến đậm hài hòa cao cấp
 const BASE_CAROUSEL_DATA = [
   {
     id: 'b1',
-    type: 'blue',
-    brand: 'MB',
-    badge: 'TÍCH LŨY 24/7',
-    titleYellow: 'TIẾT KIỆM',
-    titleRed: 'SINH LỜI',
-    subtitle: 'Lãi suất hấp dẫn mỗi ngày từ 1K',
-    cta: 'GỬI TIỀN NGAY',
-    colorStart: '#1E1B4B',
-    colorEnd: '#312E81',
+    type: 'pink-magenta',
+    brand: 'SenBank Vay',
+    badge: '⚡ DUYỆT TRONG 1 PHÚT',
+    titleYellow: 'VAY SIÊU TỐC',
+    titleRed: '100 TRIỆU',
+    subtitle: 'Không thế chấp • Giải ngân ví trong 1 phút',
+    cta: 'VAY NGAY',
+    colorStart: '#700F43', // Hồng mận đậm sang trọng
+    colorEnd: '#D2519D',   // Hồng sen rực rỡ
     tags: [
-      { text: '0.1%', color: '#FDD349', textColor: '#1A1A1A', top: 25, right: 20, rotate: '12deg' },
+      { text: '1 PHÚT', color: '#FEF08A', textColor: '#700F43', top: 22, right: 18, rotate: '12deg' },
     ],
     showCarMascot: false,
   },
   {
     id: 'b2',
-    type: 'live',
-    brand: 'MB',
-    badge: 'LIVESTREAM ▷ 26.08 19:30-21:30',
-    titleYellow: 'SIÊU THỊ SỐ',
-    titleRed: 'LÊN LIVE',
-    subtitle: 'Mở quẩy deal vi vu 2/9',
-    cta: 'ĐĂNG KÝ NGAY',
-    colorStart: '#0B2E73',
-    colorEnd: '#0A1AD2',
+    type: 'pink-ruby',
+    brand: 'SenBank Tiết Kiệm',
+    badge: '📈 TÍCH LŨY SINH LỜI 24/7',
+    titleYellow: 'TIẾT KIỆM',
+    titleRed: 'LÃI 7.8%/NĂM',
+    subtitle: 'Nhận lãi mỗi ngày • Rút gốc linh hoạt từ 10K',
+    cta: 'GỬI TIỀN NGAY',
+    colorStart: '#831843', // Hồng ruby đậm quý phái
+    colorEnd: '#BE185D',   // Hồng sen tươi
     tags: [
-      { text: '50K', color: '#FDD349', textColor: '#1A1A1A', top: 24, right: 16, rotate: '12deg' },
-      { text: '50%', color: '#FDD349', textColor: '#1A1A1A', top: 60, right: 26, rotate: '-10deg' },
-      { text: '500K', color: '#FDD349', textColor: '#1A1A1A', top: 98, right: 14, rotate: '15deg' },
+      { text: '7.8%', color: '#FDF2F8', textColor: '#831843', top: 22, right: 18, rotate: '-10deg' },
     ],
-    showCarMascot: true,
+    showCarMascot: false,
   },
   {
     id: 'b3',
-    type: 'orange',
-    brand: 'MB',
-    badge: 'ƯU ĐÃI THẺ MB',
-    titleYellow: 'HOÀN 500K',
-    titleRed: 'MỞ THẺ',
-    subtitle: 'Miễn phí thường niên trọn đời',
+    type: 'pink-wine',
+    brand: 'SenBank Card',
+    badge: '🎁 TẶNG VOUCHER 1 TRIỆU',
+    titleYellow: 'MỞ THẺ TÍN DỤNG',
+    titleRed: 'HOÀN TIỀN 15%',
+    subtitle: 'Miễn phí thường niên trọn đời • Chi tiêu trước',
     cta: 'MỞ THẺ NGAY',
-    colorStart: '#EA580C',
-    colorEnd: '#C2410C',
+    colorStart: '#500724', // Rượu vang mận quý tộc
+    colorEnd: '#9D174D',   // Hồng tím hoàng gia
     tags: [
-      { text: 'HOT', color: '#FDE047', textColor: '#1A1A1A', top: 25, right: 20, rotate: '-15deg' },
+      { text: 'HOÀN 15%', color: '#FEF08A', textColor: '#500724', top: 22, right: 18, rotate: '14deg' },
     ],
     showCarMascot: false,
   },
   {
     id: 'b4',
-    type: 'green',
-    brand: 'MB Ageas',
-    badge: 'BẢO VỆ TOÀN DIỆN',
-    titleYellow: 'BẢO HIỂM',
-    titleRed: 'BÌNH AN',
-    subtitle: 'Quyền lợi y tế lên đến 1 tỷ VNĐ',
-    cta: 'TÌM HIỂU NGAY',
-    colorStart: '#064E3B',
-    colorEnd: '#047857',
+    type: 'pink-coral',
+    brand: 'SenBank Pay',
+    badge: '✨ MIỄN PHÍ TRỌN ĐỜI',
+    titleYellow: 'CHUYỂN TIỀN 24/7',
+    titleRed: '0 ĐỒNG PHÍ',
+    subtitle: 'Quét VietQR siêu tốc • Không giới hạn hạn mức',
+    cta: 'CHUYỂN TIỀN',
+    colorStart: '#9D174D', // Hồng hoa sen kiêu sa
+    colorEnd: '#F43F5E',   // Hồng san hô rạng ngời
     tags: [
-      { text: '1 TỶ', color: '#34D399', textColor: '#064E3B', top: 25, right: 20, rotate: '10deg' },
+      { text: 'FREE 0Đ', color: '#FFFFFF', textColor: '#9D174D', top: 22, right: 18, rotate: '-8deg' },
     ],
     showCarMascot: false,
   },
   {
     id: 'b5',
-    type: 'purple',
-    brand: 'MBS',
-    badge: 'CHỨNG KHOÁN MBS',
-    titleYellow: 'MIỄN PHÍ',
-    titleRed: 'GIAO DỊCH',
-    subtitle: 'Khởi đầu đầu tư chỉ từ 10.000đ',
-    cta: 'MỞ TÀI KHOẢN',
-    colorStart: '#4C1D95',
-    colorEnd: '#6D28D9',
+    type: 'pink-orchid',
+    brand: 'SenBank Rewards',
+    badge: '🎉 VÒNG QUAY MAY MẮN',
+    titleYellow: 'SĂN IPHONE 16',
+    titleRed: 'TRÚNG 100%',
+    subtitle: 'Giao dịch nhận lượt quay • Đổi vàng & quà khủng',
+    cta: 'QUAY NGAY',
+    colorStart: '#4A044E', // Tím hoa sen đậm
+    colorEnd: '#C026D3',   // Hồng tím phát quang
     tags: [
-      { text: 'FREE', color: '#FDE047', textColor: '#1A1A1A', top: 25, right: 20, rotate: '-12deg' },
+      { text: 'TRÚNG 100%', color: '#FDF2F8', textColor: '#4A044E', top: 22, right: 18, rotate: '12deg' },
     ],
     showCarMascot: false,
   },
   {
     id: 'b6',
-    type: 'cyan',
-    brand: 'MB Vay',
-    badge: 'DUYỆT TRONG 1 PHÚT',
-    titleYellow: 'VAY SIÊU TỐC',
-    titleRed: '100 TRIỆU',
-    subtitle: 'Lãi suất ưu đãi không thế chấp',
-    cta: 'VAY NGAY',
-    colorStart: '#0C4A6E',
-    colorEnd: '#0284C7',
+    type: 'pink-blossom',
+    brand: 'SenBank Bill',
+    badge: '💡 THANH TOÁN TIỆN LỢI',
+    titleYellow: 'ĐIỆN NƯỚC & DATA',
+    titleRed: 'GIẢM NGAY 50K',
+    subtitle: 'Tự động nhắc nợ • Thanh toán 1 chạm an toàn',
+    cta: 'THANH TOÁN',
+    colorStart: '#700F43', // Sen Hồng kinh điển
+    colorEnd: '#FB7185',   // Hồng phấn hoàng hôn
     tags: [
-      { text: '1 PHÚT', color: '#38BDF8', textColor: '#0C4A6E', top: 25, right: 20, rotate: '15deg' },
+      { text: '-50.000Đ', color: '#FEF08A', textColor: '#700F43', top: 22, right: 18, rotate: '-12deg' },
     ],
     showCarMascot: false,
   },
@@ -200,14 +249,14 @@ const LOOP_CENTER_INDEX = BASE_CAROUSEL_DATA.length * Math.floor(LOOP_MULTIPLIER
 const INITIAL_CAROUSEL_INDEX = LOOP_CENTER_INDEX;
 
 const SERVICES = [
-  { id: '1', title: 'Vua Xổ Số', iconBg: '#FFF1F2', iconColor: '#E11D48', icon: 'ticket', badgeText: '9' },
-  { id: '2', title: 'Vé số\nVietlott', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'ticket' },
-  { id: '3', title: 'Data 4G/\nNạp tiền', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'smartphone' },
-  { id: '4', title: 'Vé Máy Bay\nSố', iconBg: '#06B6D4', iconColor: '#FDE047', icon: 'plane' },
-  { id: '5', title: 'Vé Máy Bay', iconBg: '#FFFFFF', iconColor: '#0284C7', icon: 'plane' },
-  { id: '6', title: 'Data Viettel', iconBg: '#FFFFFF', iconColor: '#E11D48', icon: 'wifi' },
-  { id: '7', title: 'Tử Vi', iconBg: '#1E1B4B', iconColor: '#A5B4FC', isYinYang: true },
-  { id: '9', title: 'Tiền điện', iconBg: '#FFFFFF', iconColor: '#D97706', icon: 'zap' },
+  { id: '1', title: 'Hóa đơn\ntiện ích', icon: 'zap' },
+  { id: '2', title: 'Nạp Data\n4G / 5G', icon: 'smartphone' },
+  { id: '3', title: 'Vé máy bay\n& Du lịch', icon: 'plane' },
+  { id: '4', title: 'Bảo hiểm\nsức khỏe', icon: 'shield-check' },
+  { id: '5', title: 'Vé xem phim\nCinema', icon: 'film' },
+  { id: '6', title: 'Mua sắm\nhoàn tiền', icon: 'cart' },
+  { id: '7', title: 'Đầu tư\ntài chính', icon: 'trending-up' },
+  { id: '8', title: 'Vé số\nVietlott', icon: 'ticket', badgeText: 'HOT' },
 ];
 
 // --- ANIMATED SEARCH BUTTON ---
@@ -264,6 +313,102 @@ const AnimatedSearchButton = ({ onPress, paused = false }: { onPress: () => void
   );
 };
 
+// --- WIGGLING NOTIFICATION BELL BUTTON ---
+const WigglingBellButton = ({
+  onPress,
+  isFocused = true,
+}: {
+  onPress: () => void;
+  isFocused?: boolean;
+}) => {
+  const bellRotateAnim = useRef(new Animated.Value(0)).current;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!isFocused) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      bellRotateAnim.stopAnimation();
+      bellRotateAnim.setValue(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    const runWiggle = () => {
+      if (!isMounted) return;
+
+      // Mô phỏng chuông thật bị gõ nhẹ rồi tắt dần (damped oscillation):
+      // 0° → 14° → -10° → 6° → -3° → 0°
+      Animated.sequence([
+        Animated.timing(bellRotateAnim, {
+          toValue: 14,
+          duration: 75,
+          easing: RNEasing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellRotateAnim, {
+          toValue: -10,
+          duration: 75,
+          easing: RNEasing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellRotateAnim, {
+          toValue: 6,
+          duration: 75,
+          easing: RNEasing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellRotateAnim, {
+          toValue: -3,
+          duration: 70,
+          easing: RNEasing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellRotateAnim, {
+          toValue: 0,
+          duration: 85,
+          easing: RNEasing.out(RNEasing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        if (!isMounted) return;
+
+        // Khoảng cách giữa các lần rung: NGẪU NHIÊN từ 4 đến 9 giây (4000 - 9000ms)
+        const nextDelay = 4000 + Math.random() * 5000;
+        timeoutRef.current = setTimeout(runWiggle, nextDelay);
+      });
+    };
+
+    // Lần rung đầu tiên ngẫu nhiên sau 2.5 - 4.5 giây khi vào màn hình
+    const initialDelay = 2500 + Math.random() * 2000;
+    timeoutRef.current = setTimeout(runWiggle, initialDelay);
+
+    return () => {
+      isMounted = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      bellRotateAnim.stopAnimation();
+      bellRotateAnim.setValue(0);
+    };
+  }, [isFocused, bellRotateAnim]);
+
+  const rotateInterpolated = bellRotateAnim.interpolate({
+    inputRange: [-15, 0, 15],
+    outputRange: ['-15deg', '0deg', '15deg'],
+  });
+
+  return (
+    <TouchableOpacity
+      style={styles.glassHeaderBtn}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <Animated.View style={{ transform: [{ rotate: rotateInterpolated }] }}>
+        <AppIcon name="notification" size="sm" color={Colors.white} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 // 7. Giải pháp 3: Gói (Memoize) thành phần renderItem để chống lag
 const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; index: number; scrollX: Animated.Value }) => {
   const inputRange = [
@@ -312,18 +457,19 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
           end={{ x: 1, y: 1 }}
           style={styles.bannerBackground}
         >
-          {/* Top Row: Mini Brand Logo (20px) + Livestream / Promo Badge */}
+          {/* Top Row: Mini Brand Logo + Promo Badge */}
           <View style={styles.bannerTopRow}>
             <View style={styles.bannerBrandLogo}>
-              <View style={styles.miniStar}>
-                <AppText style={styles.miniStarText}>★</AppText>
-              </View>
+              <Image
+                source={require('../../assets/sen-hong-logo.png')}
+                style={styles.bannerSenBankLogo}
+                contentFit="contain"
+              />
               <AppText style={styles.bannerBrandText}>{item.brand}</AppText>
             </View>
 
             {item.badge && (
               <View style={styles.bannerBadge}>
-                <AppIcon name="play" size="xs" color={Colors.white} />
                 <AppText style={styles.bannerBadgeText}>{item.badge}</AppText>
               </View>
             )}
@@ -396,10 +542,39 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
 
 export default function HomeScreen({ navigation }: any) {
   const { user, wallet, refreshBalance, isBalanceLoading, customBackgroundUri } = useApp();
+  const { isDark, colors } = useTheme();
   const isFocused = useIsFocused();
   const throttledNavBarScroll = useThrottledNavBarScroll();
   const lastBalanceRefreshRef = useRef(0);
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  const toggleExpand = useCallback(() => {
+    LayoutAnimation.configureNext({
+      duration: 280,
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+      },
+      delete: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+    });
+
+    Animated.timing(rotateAnim, {
+      toValue: isExpanded ? 0 : 1,
+      duration: 280,
+      easing: RNEasing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+
+    setIsExpanded((prev) => !prev);
+  }, [isExpanded, rotateAnim]);
   const scrollX = useRef(new Animated.Value(INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL)).current;
   const scrollY = useRef(new Animated.Value(0)).current; // Theo dõi vị trí cuộn dọc
   const flatListRef = useRef<FlatList>(null);
@@ -540,27 +715,20 @@ export default function HomeScreen({ navigation }: any) {
 
           <SafeAreaView edges={['top']}>
             <View style={styles.stickyHeaderContent}>
-              {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc */}
-              <TouchableOpacity
-                style={styles.stickySearchPill}
-                activeOpacity={0.85}
+              {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc viền 7 màu chạy động từ trái sang phải */}
+              <AnimatedRainbowPill
+                title="Dán chuyển tiền AI"
+                height={38}
+                style={{ flex: 1, marginLeft: 6 }}
                 onPress={() => navigation.navigate('Search')}
-              >
-                <View style={styles.stickySearchPillInner}>
-                  <AppText style={styles.stickySearchText}>Dán chuyển tiền AI</AppText>
-                  <AISearchIcon size={18} color="#64748B" />
-                </View>
-              </TouchableOpacity>
+              />
 
               {/* 2. Cụm Icon: Chuông 🔔 + 3 Gạch ☰ */}
               <View style={styles.stickyHeaderActions}>
-                <TouchableOpacity
-                  style={styles.glassHeaderBtn}
-                  activeOpacity={0.7}
+                <WigglingBellButton
+                  isFocused={isFocused}
                   onPress={() => navigation.navigate('Notifications')}
-                >
-                  <AppIcon name="notification" size="sm" color={Colors.white} />
-                </TouchableOpacity>
+                />
 
                 <TouchableOpacity
                   style={styles.glassHeaderBtn}
@@ -638,14 +806,11 @@ export default function HomeScreen({ navigation }: any) {
               {/* Search Icon with Animated Sweeping Border */}
               <AnimatedSearchButton paused={!isFocused} onPress={() => navigation.navigate('Search')} />
 
-              {/* Notification Bell */}
-              <TouchableOpacity
-                style={styles.glassHeaderBtn}
-                activeOpacity={0.7}
+              {/* Notification Bell với hiệu ứng rung nhẹ tự nhiên */}
+              <WigglingBellButton
+                isFocused={isFocused}
                 onPress={() => navigation.navigate('Notifications')}
-              >
-                <AppIcon name="notification" size="sm" color={Colors.white} />
-              </TouchableOpacity>
+              />
 
               {/* Hamburger Menu 3 gạch */}
               <TouchableOpacity
@@ -765,12 +930,15 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         </SafeAreaView>
 
-        {/* MAIN FULL-WIDTH WHITE BODY CONTAINER (Bo cong đỉnh 32px, chứa 4 mục, carousel và dịch vụ) */}
-        <ImageBackground 
-          source={require('../assets/images/bg-white-pink-pattern.png')}
-          style={styles.whiteBodyContainer}
-          imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
-        >
+        {/* MAIN FULL-WIDTH BODY CONTAINER (Chuyển nền tối khi bật Dark Mode) */}
+        <View style={[styles.whiteBodyContainer, { backgroundColor: colors.background }]}>
+          {!isDark && (
+            <ImageBackground 
+              source={require('../assets/images/bg-white-pink-pattern.png')}
+              style={StyleSheet.absoluteFill}
+              imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+            />
+          )}
           {/* 4 Quick Actions Row */}
           <View style={styles.quickActionsRow}>
             {QUICK_ACTIONS.map((item, index) => {
@@ -783,14 +951,14 @@ export default function HomeScreen({ navigation }: any) {
                   onPress={() => {
                     if (item.id === '1') navigation.navigate('Transfer');
                     else if (item.id === '2') navigation.navigate('PhoneRecharge');
-                    else if (item.id === '3') navigation.navigate('Deposit');
-                    else if (item.id === '4') navigation.navigate('Deposit');
+                    else if (item.id === '3') navigation.navigate('Savings');
+                    else if (item.id === '4') navigation.navigate('QuickLoan');
                   }}
                 >
                   {/* Icon Container with relative position for the badge */}
                   <View style={styles.actionIconContainer}>
-                    <View style={styles.actionIconBg}>
-                      <IconComp size={28} color="#D2519D" />
+                    <View style={[styles.actionIconBg, isDark && { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+                      <IconComp size={28} color={isDark ? colors.primary : '#D2519D'} />
                     </View>
 
                     {/* Badges positioned at top: -8, right: -10 */}
@@ -814,7 +982,7 @@ export default function HomeScreen({ navigation }: any) {
                   </View>
 
                   {/* Text below icon */}
-                  <AppText style={styles.actionTitle} numberOfLines={2}>
+                  <AppText style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                     {item.title}
                   </AppText>
                 </TouchableOpacity>
@@ -822,18 +990,75 @@ export default function HomeScreen({ navigation }: any) {
             })}
           </View>
 
+          {/* 4 Quick Actions Row 2 (Mở rộng khi bấm nút mũi tên kép) */}
+          {isExpanded && (
+            <View style={[styles.quickActionsRow, { marginTop: 12 }]}>
+              {EXPANDED_ACTIONS.map((item, index) => {
+                const IconComp = item.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+                return (
+                  <TouchableOpacity
+                    key={item.id || index}
+                    style={styles.actionItem}
+                    activeOpacity={0.8}
+                    onPress={() => item.route && navigation.navigate(item.route)}
+                  >
+                    <View style={styles.actionIconContainer}>
+                      <View style={[styles.actionIconBg, isDark && { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+                        <IconComp name={item.iconName as any} size={28} color={isDark ? colors.primary : '#D2519D'} />
+                      </View>
+
+                      {item.badge && (
+                        <View
+                          style={[
+                            styles.badge,
+                            { backgroundColor: item.badgeColor || '#E11D48' },
+                          ]}
+                        >
+                          <AppText style={[styles.badgeText, { color: '#FFFFFF' }]}>
+                            {item.badge}
+                          </AppText>
+                        </View>
+                      )}
+                    </View>
+
+                    <AppText style={[styles.actionTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                      {item.title}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           {/* Center Red Round Chevrons Down Expand Button */}
           <View style={styles.expandButtonWrapper}>
-            <TouchableOpacity style={styles.expandButton} activeOpacity={0.8}>
-              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M7 8l5 5 5-5M7 14l5 5 5-5"
-                  stroke="#FFFFFF"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
+            <TouchableOpacity
+              style={styles.expandButton}
+              activeOpacity={0.8}
+              onPress={toggleExpand}
+            >
+              <Animated.View
+                style={{
+                  transform: [
+                    {
+                      rotate: rotateAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M7 8l5 5 5-5M7 14l5 5 5-5"
+                    stroke="#FFFFFF"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              </Animated.View>
             </TouchableOpacity>
           </View>
 
@@ -894,28 +1119,32 @@ export default function HomeScreen({ navigation }: any) {
                   style={styles.serviceItem}
                   activeOpacity={0.8}
                   onPress={() => {
-                    if (item.id === '1' || item.id === '2') {
+                    if (item.id === '8') {
                       navigation.navigate('Lottery');
-                    } else if (item.id === '3' || item.id === '6') {
+                    } else if (item.id === '2') {
                       navigation.navigate('PhoneRecharge');
                     } else {
                       navigation.navigate('BillPayment');
                     }
                   }}
                 >
-                  <View style={[styles.serviceIconBg, { backgroundColor: item.iconBg }]}>
-                    {item.isYinYang ? (
-                      <AppText style={{ fontSize: 24 }}>☯</AppText>
-                    ) : (
-                      <AppIcon name={item.icon as any} size="md" color={item.iconColor} />
-                    )}
+                  <View style={styles.serviceIconContainer}>
+                    <View style={[
+                      styles.serviceIconBg, 
+                      { 
+                        backgroundColor: isDark ? colors.surface : '#FDF2F8',
+                        borderColor: isDark ? colors.border : '#FCE7F3',
+                      }
+                    ]}>
+                      <AppIcon name={item.icon as any} size="md" color={isDark ? colors.primary : '#700F43'} />
+                    </View>
                     {item.badgeText && (
-                      <View style={styles.serviceItemBadge}>
+                      <View style={[styles.serviceItemBadge, { backgroundColor: isDark ? colors.primary : '#700F43' }]}>
                         <AppText style={styles.serviceItemBadgeText}>{item.badgeText}</AppText>
                       </View>
                     )}
                   </View>
-                  <AppText style={styles.serviceTitle} numberOfLines={2}>
+                  <AppText style={[styles.serviceTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                     {item.title}
                   </AppText>
                 </TouchableOpacity>
@@ -957,7 +1186,7 @@ export default function HomeScreen({ navigation }: any) {
             </ScrollView>
 
           </View>
-        </ImageBackground>
+        </View>
 
       </Animated.ScrollView>
       {/* Slide-In Side Menu Drawer (Nút 3 gạch chuẩn 1:1 theo ảnh) */}
@@ -1299,6 +1528,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FCE7F3', // Viền hồng pastel
+    overflow: 'hidden',
     shadowColor: '#D2519D',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -1388,39 +1618,41 @@ const styles = StyleSheet.create({
   bannerBrandLogo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: Radius.pill,
+    borderWidth: 0.8,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
-  miniStar: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  miniStarText: {
-    color: '#EF4444',
-    fontSize: 10,
-    fontWeight: '900',
+  bannerSenBankLogo: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
   bannerBrandText: {
     color: Colors.white,
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '900',
+    letterSpacing: 0.2,
   },
   bannerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0A1AD2',
-    paddingHorizontal: 7,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radius.pill,
+    borderWidth: 0.8,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     gap: 4,
   },
   bannerBadgeText: {
-    color: Colors.white,
-    fontSize: 9,
+    color: '#FEF08A',
+    fontSize: 9.5,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
   bannerTextContent: {
     marginTop: 2,
@@ -1443,34 +1675,37 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   bannerTitleRed: {
-    color: '#EF4444',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(255,255,255,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   bannerSubtitle: {
-    color: '#7DD3FC',
+    color: '#FFE4E6',
     fontSize: 11,
     fontWeight: '700',
     marginTop: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   floatingTag: {
     position: 'absolute',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
     zIndex: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 3,
     elevation: 3,
   },
   floatingTagText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '900',
   },
   mascotBleedContainer: {
@@ -1495,18 +1730,24 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   ctaPill: {
-    backgroundColor: '#38BDF8',
-    paddingHorizontal: 14,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
     paddingVertical: 6,
     borderRadius: Radius.pill,
     alignSelf: 'flex-start',
     marginTop: 'auto',
     zIndex: 4,
+    shadowColor: '#700F43',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   ctaPillText: {
-    color: Colors.white,
-    fontSize: 10,
-    fontWeight: '800',
+    color: '#700F43',
+    fontSize: 10.5,
+    fontWeight: '900',
+    letterSpacing: 0.4,
   },
   servicesSection: {
     paddingHorizontal: 16,
@@ -1528,15 +1769,25 @@ const styles = StyleSheet.create({
     width: '23%',
     marginBottom: 16,
   },
+  serviceIconContainer: {
+    position: 'relative',
+    marginBottom: 6,
+  },
   serviceIconBg: {
-    width: 54, height: 54,
-    borderRadius: 16,
+    width: 54,
+    height: 54,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
-    position: 'relative',
-    ...Shadows.card,
-    shadowOpacity: 0.06,
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
+    backgroundColor: '#FDF2F8',
+    overflow: 'hidden',
+    shadowColor: '#D2519D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   customLogoText: {
     fontSize: 11,

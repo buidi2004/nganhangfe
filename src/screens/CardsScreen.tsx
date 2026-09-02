@@ -8,6 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../theme';
 
+import { useTheme } from '../context/ThemeContext';
+
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
 const CARD_HEIGHT = CARD_WIDTH * 0.6;
@@ -28,9 +30,9 @@ const MOCK_CARDS = [
     id: '2',
     type: 'Mastercard',
     name: 'MB PLATINUM',
-    number: '**** **** **** 8888',
-    expiry: '09/27',
-    colors: ['#434343', '#000000'],
+    number: '**** **** **** 8899',
+    expiry: '09/29',
+    colors: ['#1E1B4B', '#312E81'],
     balance: '150,000,000 VND',
     cardholder: 'NGUYEN VAN A',
   },
@@ -39,22 +41,22 @@ const MOCK_CARDS = [
     type: 'JCB',
     name: 'MB JCB SAKURA',
     number: '**** **** **** 1234',
-    expiry: '05/29',
-    colors: ['#F59E0B', '#B45309'],
-    balance: '5,000,000 VND',
+    expiry: '05/27',
+    colors: ['#831843', '#BE185D'],
+    balance: '50,000,000 VND',
     cardholder: 'NGUYEN VAN A',
   }
 ];
 
 const UTILITIES = [
-  { id: '1', icon: 'lock-outline', label: 'Khóa thẻ', color: '#EF4444' },
-  { id: '2', icon: 'eye-outline', label: 'Xem số thẻ', color: '#3B82F6' },
-  { id: '3', icon: 'tune', label: 'Hạn mức', color: '#10B981' },
-  { id: '4', icon: 'history', label: 'Giao dịch', color: '#F59E0B' },
-  { id: '5', icon: 'bank-transfer', label: 'Trả góp', color: '#8B5CF6' },
-  { id: '6', icon: 'shield-check-outline', label: 'Bảo mật', color: '#14B8A6' },
-  { id: '7', icon: 'credit-card-plus-outline', label: 'Mở thẻ phụ', color: '#EC4899' },
-  { id: '8', icon: 'help-circle-outline', label: 'Trợ giúp', color: '#64748B' },
+  { id: '1', icon: 'lock-outline', label: 'Khóa thẻ' },
+  { id: '2', icon: 'eye-outline', label: 'Xem số thẻ' },
+  { id: '3', icon: 'tune', label: 'Hạn mức' },
+  { id: '4', icon: 'history', label: 'Giao dịch' },
+  { id: '5', icon: 'bank-transfer', label: 'Trả góp' },
+  { id: '6', icon: 'shield-check-outline', label: 'Bảo mật' },
+  { id: '7', icon: 'credit-card-plus-outline', label: 'Mở thẻ phụ' },
+  { id: '8', icon: 'headphones', label: 'Trợ giúp' },
 ];
 
 const PROMOTIONS = [
@@ -89,6 +91,7 @@ const PROMOTIONS = [
 ];
 
 export default function CardsScreen({ navigation }: any) {
+  const { isDark, colors } = useTheme();
   const { onScroll } = useHideOnScroll();
 
   const renderCard = (card: typeof MOCK_CARDS[0], index: number) => {
@@ -195,9 +198,27 @@ export default function CardsScreen({ navigation }: any) {
           <GlassCard style={styles.utilitiesCard}>
             <View style={styles.utilitiesGrid}>
               {UTILITIES.map((item, index) => (
-                <TouchableOpacity key={item.id} style={styles.utilityItem}>
-                  <View style={[styles.utilityIconWrap, { backgroundColor: `${item.color}15` }]}>
-                    <MaterialCommunityIcons name={item.icon as any} size={26} color={item.color} />
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.utilityItem}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (item.id === '1' || item.id === '2' || item.id === '7') navigation?.navigate('PaymentMethods');
+                    else if (item.id === '3') navigation?.navigate('Config');
+                    else if (item.id === '4') navigation?.navigate('TransactionHistory');
+                    else if (item.id === '6') navigation?.navigate('SecuritySettings');
+                    else if (item.id === '8') navigation?.navigate('HelpCenter');
+                  }}
+                >
+                  <View style={[
+                    styles.utilityIconWrap, 
+                    { 
+                      backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
+                      borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                      borderWidth: 1,
+                    }
+                  ]}>
+                    <MaterialCommunityIcons name={item.icon as any} size={24} color={isDark ? colors.primary : '#700F43'} />
                   </View>
                   <AppText style={styles.utilityLabel}>{item.label}</AppText>
                 </TouchableOpacity>
@@ -212,8 +233,15 @@ export default function CardsScreen({ navigation }: any) {
           <View style={styles.promotionsContainer}>
             {PROMOTIONS.map((promo) => (
               <GlassCard key={promo.id} style={styles.promoCard}>
-                <View style={styles.promoIconWrap}>
-                  <MaterialCommunityIcons name={promo.icon as any} size={28} color={promo.color} />
+                <View style={[
+                  styles.promoIconWrap,
+                  {
+                    backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
+                    borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                    borderWidth: 1,
+                  }
+                ]}>
+                  <MaterialCommunityIcons name={promo.icon as any} size={26} color={isDark ? colors.primary : '#700F43'} />
                 </View>
                 <View style={styles.promoInfo}>
                   <AppText style={styles.promoTitle}>{promo.title}</AppText>

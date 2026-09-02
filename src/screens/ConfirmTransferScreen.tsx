@@ -19,6 +19,31 @@ import { ActivityIndicator, Alert } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
+// Helper định dạng thông báo lỗi Backend sang Tiếng Việt chuẩn xác
+function formatErrorMessage(rawMsg: string): string {
+  if (!rawMsg) return 'Giao dịch thất bại. Vui lòng thử lại sau.';
+  if (rawMsg.includes('Daily transaction limit exceeded')) {
+    const match = rawMsg.match(/Spent today:\s*([0-9.]+),\s*Attempted:\s*([0-9.]+),\s*Limit:\s*([0-9.]+)/i);
+    if (match) {
+      const spent = Number(match[1]).toLocaleString('vi-VN');
+      const attempted = Number(match[2]).toLocaleString('vi-VN');
+      const limit = Number(match[3]).toLocaleString('vi-VN');
+      return `Đã vượt quá hạn mức giao dịch trong ngày của bạn!\n\n• Đã chuyển hôm nay: ${spent} đ\n• Số tiền muốn chuyển: ${attempted} đ\n• Hạn mức tối đa / ngày: ${limit} đ`;
+    }
+    return 'Giao dịch vượt quá hạn mức chuyển tiền trong ngày của tài khoản.';
+  }
+  if (rawMsg.includes('INSUFFICIENT_BALANCE') || rawMsg.toLowerCase().includes('insufficient')) {
+    return 'Số dư trong ví không đủ để thực hiện giao dịch này. Vui lòng nạp thêm tiền.';
+  }
+  if (rawMsg.includes('INVALID_PIN') || rawMsg.toLowerCase().includes('pin')) {
+    return 'Mã PIN xác thực không chính xác. Vui lòng kiểm tra lại.';
+  }
+  if (rawMsg.includes('ACCOUNT_LOCKED')) {
+    return 'Tài khoản tạm thời bị khóa do lý do bảo mật. Vui lòng liên hệ CSKH.';
+  }
+  return rawMsg;
+}
+
 // Helper to convert number to Vietnamese words
 function numberToVietnameseWords(numStr: string): string {
   const num = parseInt(numStr.replace(/[^0-9]/g, ''), 10);
@@ -50,6 +75,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
   const [isTransferring, setIsTransferring] = useState(false);
   const [feeAmount, setFeeAmount] = useState<number | null>(null);
   const [isFetchingFee, setIsFetchingFee] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const rawNumAmount = parseInt(String(amount).replace(/[^0-9]/g, ''), 10) || 0;
 
@@ -58,16 +84,20 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
       try {
         if (!user?.walletId) return;
         const res = await WalletApi.estimateFees(user.walletId, rawNumAmount, 'TRANSFER', 'VND');
-        setFeeAmount(res.data?.feeAmount ?? 0);
+        if (res.data && typeof res.data.feeAmount === 'number') {
+          setFeeAmount(res.data.feeAmount);
+        } else {
+          setFeeAmount(0);
+        }
       } catch (error) {
-        console.warn('Lỗi tính phí:', error);
-        setFeeAmount(0); // fallback to 0 if failed
+        console.warn('Failed to estimate fee:', error);
+        setFeeAmount(0);
       } finally {
         setIsFetchingFee(false);
       }
     };
     fetchFee();
-  }, []);
+  }, [user?.walletId, rawNumAmount]);
 
   const displayAmount = amount.includes('VND') || amount.includes('đ') ? amount : `${amount} VND`;
 
@@ -123,7 +153,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
         } catch (e: any) {
           setIsTransferring(false);
           setPinDigits([]);
-          Alert.alert('Lỗi chuyển tiền', e.message || 'Giao dịch thất bại');
+          setErrorMessage(formatErrorMessage(e.message));
         }
       }
     }
@@ -419,6 +449,48 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
             </View>
           </>
         )}
+          </View>
+        </View>
+
+        {/* Custom Error Alert Dialog: Card hồng trắng + nút OK đỏ (hiển thị đè lên trên PIN modal) */}
+        {errorMessage && (
+          <View style={styles.errorModalOverlay}>
+            <View style={styles.errorCardContainer}>
+              <View style={styles.errorIconCircle}>
+                <Ionicons name="alert-circle" size={44} color="#EF4444" />
+              </View>
+              <AppText style={styles.errorCardTitle}>Lỗi chuyển tiền</AppText>
+              <AppText style={styles.errorCardMessage}>{errorMessage}</AppText>
+              
+              <TouchableOpacity
+                style={styles.errorRedOkBtn}
+                activeOpacity={0.85}
+                onPress={() => setErrorMessage(null)}
+              >
+                <AppText style={styles.errorRedOkBtnText}>OK</AppText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </Modal>
+
+      {/* Custom Error Alert Dialog khi OTP modal không mở */}
+      <Modal visible={!!errorMessage && !isOtpModalVisible} transparent animationType="fade" onRequestClose={() => setErrorMessage(null)}>
+        <View style={styles.errorModalOverlay}>
+          <View style={styles.errorCardContainer}>
+            <View style={styles.errorIconCircle}>
+              <Ionicons name="alert-circle" size={44} color="#EF4444" />
+            </View>
+            <AppText style={styles.errorCardTitle}>Lỗi chuyển tiền</AppText>
+            <AppText style={styles.errorCardMessage}>{errorMessage}</AppText>
+            
+            <TouchableOpacity
+              style={styles.errorRedOkBtn}
+              activeOpacity={0.85}
+              onPress={() => setErrorMessage(null)}
+            >
+              <AppText style={styles.errorRedOkBtnText}>OK</AppText>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -738,5 +810,77 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#0F172A',
+  },
+
+  // ===== ERROR MODAL (CARD HỒNG TRẮNG CỦA HỆ THỐNG & NÚT OK ĐỎ) =====
+  errorModalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+    zIndex: 99999,
+    elevation: 99999,
+  },
+  errorCardContainer: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingHorizontal: 22,
+    paddingTop: 26,
+    paddingBottom: 22,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFE4E6', // Viền hồng phấn nhẹ đặc trưng Sen Hồng
+    shadowColor: '#D2519D', // Đổ bóng hồng cao cấp
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  errorIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  errorCardTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  errorCardMessage: {
+    fontSize: 14,
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 22,
+  },
+  errorRedOkBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EF4444', // Màu đỏ nổi bật chuẩn xác
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  errorRedOkBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });

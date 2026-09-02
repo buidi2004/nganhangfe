@@ -1,47 +1,72 @@
 // ============================================
 // THEME — Central design tokens for E-Wallet
-// Import this file everywhere, never hard-code colors/radii/typography
 // ============================================
+import { StatusBarStyle } from 'react-native';
 
-export const Colors = {
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+export const lightColors = {
   // Background
-  bgBase: '#F3F8FC', // --color-surface-alt
-  bgGray: '#F3F8FC', 
+  bgBase: '#F3F8FC',
+  bgGray: '#F3F8FC',
+  background: '#F8FAFC',
 
   // Surface
   surface: '#FFFFFF',
+  surfaceSecondary: '#F1F5F9',
+  surfaceCard: '#FFFFFF',
 
   // Primary palette (Lotus Deep Pink - Hồng Sen Đậm & Hồng Cánh Sen)
-  primary: '#D2519D', // --color-primary-500: Hồng sen đậm rực rỡ
-  primarySoft: '#FDF2F8', // --color-primary-50: Hồng phấn nhẹ nhàng
-  primaryDeep: '#700F43', // --color-primary-900: Hồng sen sẫm quý phái (đáy gradient)
-  primary700: '#9D1764', // --color-primary-700
-  primary800: 'rgba(157, 23, 100, 0.55)', // --color-primary-800 cho Balance Card glass
-  primaryGlow: '#F472B6', // --color-primary-glow: Ánh hồng phát sáng (aura)
-  
-  // Custom Gradients (Hoa sen lúc nở rộ)
-  heroGradStart: '#E4ACB2', // Hồng cánh sen tươi sáng
-  heroGradMid: '#D2519D',   // Hồng sen đậm rực rỡ
-  heroGradEnd: '#700F43',   // Hồng sen sẫm quý phái
+  primary: '#D2519D',
+  primarySoft: '#FDF2F8',
+  primaryDeep: '#700F43',
+  primary700: '#9D1764',
+  primary800: 'rgba(157, 23, 100, 0.55)',
+  primaryGlow: '#F472B6',
+
+  // Custom Gradients
+  heroGradStart: '#E4ACB2',
+  heroGradMid: '#D2519D',
+  heroGradEnd: '#700F43',
   lotusPink: '#D2519D',
   lotusPetal: '#E4ACB2',
 
-  bannerDeep: '#700F43', 
+  bannerDeep: '#700F43',
   navBg: '#D2519D',
 
   // Text
-  textPrimary: '#1A1A1A',
-  textSecondary: '#8A93A6',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+  textMuted: '#94A3B8',
   textOnDark: '#FFFFFF',
   textOnDarkMuted: 'rgba(255,255,255,0.75)',
 
+  // Border
+  border: '#E2E8F0',
+  borderSubtle: '#F1F5F9',
+
+  // Icons
+  iconDefault: '#64748B',
+  iconActive: '#D2519D',
+  iconOnHeader: '#FFFFFF',
+
+  // Inputs
+  inputBackground: '#F8FAFC',
+  inputBorder: '#E2E8F0',
+  inputText: '#0F172A',
+  inputPlaceholder: '#94A3B8',
+
+  // Modals / Bottom Sheets
+  modalBackground: '#FFFFFF',
+  modalOverlay: 'rgba(0,0,0,0.5)',
+
   // Status & Accents
-  success: '#34C759',
-  danger: '#FF3B30',
-  warning: '#FF9F0A',
-  
+  success: '#10B981',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+
   badgeRed: '#E11D48',
-  badgeBlueSoft: '#FCE7F3', // Hồng pastel cho badge
+  badgeBlueSoft: '#FCE7F3',
   accentYellow: '#FDD349',
   ctaPill: '#F472B6',
 
@@ -71,18 +96,16 @@ export const Colors = {
   deviceIconGradStart: '#DCEBFF',
   deviceIconGradEnd: '#E8F4FF',
 
-  // White (for icons on dark backgrounds)
+  // Base
   white: '#FFFFFF',
-
-  // Black (for camera screen)
   black: '#000000',
 
-  // Drag handle / muted UI elements
+  // Drag handle
   dragHandleBg: '#D0D5DD',
 
-  // Overlay dark (for banners)
+  // Overlay dark
   overlayDark: 'rgba(0,0,0,0.5)',
-  
+
   // Custom glass/rgba overlays
   glassLight: 'rgba(255,255,255,0.3)',
   glassMedium: 'rgba(255,255,255,0.5)',
@@ -90,7 +113,128 @@ export const Colors = {
   glassHeavy: 'rgba(255,255,255,0.8)',
   glassOpaque: 'rgba(255,255,255,0.9)',
   glassSolid: 'rgba(255,255,255,0.95)',
-} as const;
+
+  // Status bar
+  statusBarStyle: 'dark-content' as StatusBarStyle,
+};
+
+export const darkColors = {
+  // Background (Slate 900 đậm sâu, chuẩn Material/Apple dark mode)
+  bgBase: '#0B1329',
+  bgGray: '#0F172A',
+  background: '#0B1329',
+
+  // Surface (Slate 800 - Nổi bật rõ rệt trên background)
+  surface: '#1E293B',
+  surfaceSecondary: '#334155',
+  surfaceCard: '#1E293B',
+
+  // Primary palette (Hồng sen sáng hơn để nổi bật trên nền tối)
+  primary: '#F472B6',
+  primarySoft: 'rgba(244, 114, 182, 0.15)',
+  primaryDeep: '#831843',
+  primary700: '#BE185D',
+  primary800: 'rgba(131, 24, 67, 0.7)',
+  primaryGlow: '#F472B6',
+
+  // Custom Gradients (Giữ bản sắc hoa sen rạng rỡ)
+  heroGradStart: '#9D174D',
+  heroGradMid: '#D2519D',
+  heroGradEnd: '#500724',
+  lotusPink: '#F472B6',
+  lotusPetal: '#FBCFE8',
+
+  bannerDeep: '#500724',
+  navBg: '#1E293B',
+
+  // Text (Độ tương phản cao, êm dịu mắt)
+  textPrimary: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  textOnDark: '#FFFFFF',
+  textOnDarkMuted: 'rgba(255,255,255,0.8)',
+
+  // Border (Sắc nét trên nền tối, không bị chìm)
+  border: '#334155',
+  borderSubtle: '#1E293B',
+
+  // Icons
+  iconDefault: '#94A3B8',
+  iconActive: '#F472B6',
+  iconOnHeader: '#FFFFFF',
+
+  // Inputs
+  inputBackground: '#1E293B',
+  inputBorder: '#475569',
+  inputText: '#F8FAFC',
+  inputPlaceholder: '#64748B',
+
+  // Modals / Bottom Sheets
+  modalBackground: '#1E293B',
+  modalOverlay: 'rgba(0,0,0,0.75)',
+
+  // Status & Accents
+  success: '#34D399',
+  danger: '#F87171',
+  warning: '#FBBF24',
+
+  badgeRed: '#F43F5E',
+  badgeBlueSoft: 'rgba(244, 114, 182, 0.2)',
+  accentYellow: '#FCD34D',
+  ctaPill: '#F472B6',
+
+  // Glass
+  glassTint: 'rgba(30, 41, 59, 0.7)',
+  glassBorder: 'rgba(255, 255, 255, 0.12)',
+
+  // Shadow
+  shadowColor: '#000000',
+  shadowTransparent: 'transparent',
+
+  // Status chip soft backgrounds
+  successSoft: 'rgba(16, 185, 129, 0.2)',
+  dangerSoft: 'rgba(239, 68, 68, 0.2)',
+  warningSoft: 'rgba(245, 158, 11, 0.2)',
+
+  // Status chip text colors
+  successText: '#6EE7B7',
+  dangerText: '#FCA5A5',
+  warningText: '#FDE68A',
+
+  // Promo/special gradients
+  promoGradStart: '#E11D48',
+  promoGradEnd: '#BE123C',
+
+  // Device management icon gradient
+  deviceIconGradStart: '#1E293B',
+  deviceIconGradEnd: '#334155',
+
+  // Base
+  white: '#FFFFFF',
+  black: '#000000',
+
+  // Drag handle
+  dragHandleBg: '#475569',
+
+  // Overlay dark
+  overlayDark: 'rgba(0,0,0,0.75)',
+
+  // Custom glass/rgba overlays
+  glassLight: 'rgba(255,255,255,0.06)',
+  glassMedium: 'rgba(255,255,255,0.1)',
+  glassStrong: 'rgba(255,255,255,0.15)',
+  glassHeavy: 'rgba(255,255,255,0.2)',
+  glassOpaque: 'rgba(30,41,59,0.9)',
+  glassSolid: '#1E293B',
+
+  // Status bar
+  statusBarStyle: 'light-content' as StatusBarStyle,
+};
+
+export type ThemeColors = typeof lightColors;
+
+// Tương thích ngược với các file import { Colors } cũ
+export const Colors = lightColors;
 
 export const Opacity = {
   disabled: 0.5,

@@ -8,6 +8,7 @@ import {
   Dimensions,
   Share,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,16 +32,25 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
   const {
     amount = '0 VND',
     recipient = { name: 'Người nhận', phone: '' },
-    selectedBank = 'Ngân hàng Nội bộ',
+    selectedBank = 'SenBank (Nội bộ)',
     notes = 'Chuyển tiền',
     transactionId = '',
     timestamp = '',
   } = route.params || {};
 
   const displayAmount = amount.includes('VND') || amount.includes('đ') ? amount : `${amount} VND`;
-  const cleanBankName = selectedBank.includes('VCB') || selectedBank.includes('Ngoại thương')
-    ? 'Vietcombank (VCB)'
-    : selectedBank;
+  
+  // Xác định chuẩn xác nếu là ngân hàng SenBank / Sen Hồng nội bộ
+  const isSenBank =
+    !selectedBank ||
+    selectedBank.toUpperCase().includes('SENHONG') ||
+    selectedBank.toUpperCase().includes('SENBANK') ||
+    selectedBank.includes('Nội bộ') ||
+    selectedBank.includes('Khách hàng nội bộ');
+
+  const cleanBankName = isSenBank
+    ? 'SenBank (Nội bộ)'
+    : (selectedBank.includes('VCB') || selectedBank.includes('Ngoại thương') ? 'Vietcombank (VCB)' : selectedBank);
 
   const displayDate = timestamp ? new Date(timestamp).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN');
   const [isDownloading, setIsDownloading] = React.useState(false);
@@ -49,7 +59,7 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `[MBBank] Giao dịch chuyển tiền thành công số tiền ${displayAmount} đến ${recipient?.name || 'Người nhận'} (${cleanBankName}). Mã GD: ${transactionId}`,
+        message: `[SenBank] Giao dịch chuyển tiền thành công số tiền ${displayAmount} đến ${recipient?.name || 'Người nhận'} (${cleanBankName}). Mã GD: ${transactionId}`,
       });
     } catch (error) {
       console.log(error);
@@ -154,13 +164,15 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
 
             {/* Bank Row */}
             <View style={styles.bankRow}>
-              {cleanBankName.includes('SenBank') ? (
-                <View style={[styles.vcbLogoSmall, { backgroundColor: '#FDF2F8' }]}>
-                  <AppText style={{ color: '#D2519D', fontSize: 11, fontWeight: '900' }}>★</AppText>
-                </View>
+              {isSenBank ? (
+                <Image
+                  source={require('../../assets/sen-hong-logo.png')}
+                  style={styles.senbankReceiptLogo}
+                  resizeMode="contain"
+                />
               ) : (
                 <View style={styles.vcbLogoSmall}>
-                  <Ionicons name="triangle" size={13} color="#15803D" />
+                  <Ionicons name="business-outline" size={13} color="#700F43" />
                 </View>
               )}
               <AppText style={styles.bankNameText}>{cleanBankName}</AppText>
@@ -186,16 +198,18 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
           </View>
         </View>
 
-        {/* 4. THANK YOU TEXT & MB LOGO */}
+        {/* 4. THANK YOU TEXT & SENBANK LOGO */}
         <AppText style={styles.thankYouText}>
-          Cảm ơn bạn đã sử dụng dịch vụ của MBBank
+          Cảm ơn bạn đã sử dụng dịch vụ của SenBank
         </AppText>
 
-        <View style={styles.mbLogoRow}>
-          <View style={styles.mbStarIcon}>
-            <AppText style={{ color: '#E11D48', fontSize: 18, fontWeight: '900' }}>★</AppText>
-          </View>
-          <AppText style={styles.mbBrandText}>MB</AppText>
+        <View style={styles.senbankBrandRow}>
+          <Image
+            source={require('../../assets/sen-hong-logo.png')}
+            style={styles.senbankBrandLogo}
+            resizeMode="contain"
+          />
+          <AppText style={styles.senbankBrandText}>SenBank</AppText>
         </View>
 
         {/* 5. 3 ACTION BUTTONS (CHIA SẺ | LƯU ẢNH | LƯU MẪU) */}
@@ -348,6 +362,11 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 8,
   },
+  senbankReceiptLogo: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
   vcbLogoSmall: {
     width: 22,
     height: 22,
@@ -400,18 +419,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  mbLogoRow: {
+  senbankBrandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     marginBottom: 30,
   },
-  mbStarIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  senbankBrandLogo: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
   },
-  mbBrandText: {
+  senbankBrandText: {
     fontSize: 22,
     fontWeight: '900',
     color: '#700F43',

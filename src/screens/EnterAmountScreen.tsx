@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,115 +21,50 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
+import { BankItem, SENHONG_BANK, getVietQrBanks, removeVietnameseTones } from '../services/bankService';
 
 const { width, height } = Dimensions.get('window');
 
-// Bank Definition Interface
-interface BankItem {
-  id: string;
-  code?: string;
-  shortName: string;
-  fullName: string;
-  displayName: string;
-  iconType: string;
-}
+// Bank Logo Component (Hỗ trợ logo chính thức từ VietQR CDN và logo SenBank nội bộ)
+function BankLogoBadge({ item, size = 38 }: { item?: BankItem | null; size?: number }) {
+  if (!item) {
+    return (
+      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
+        <MaterialCommunityIcons name="bank" size={20} color="#64748B" />
+      </View>
+    );
+  }
 
+  const isInternal = item.isInternal || item.id === 'senbank' || item.code === 'SENHONG';
+  if (isInternal) {
+    return (
+      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
+        <Image
+          source={require('../../assets/sen-hong-logo.png')}
+          style={{ width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
 
+  if (item.logo) {
+    return (
+      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', overflow: 'hidden', padding: 2 }]}>
+        <Image
+          source={{ uri: item.logo }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
 
-// Bank Logo Component (100% Crisp Vector & Official Branding Badges)
-function BankLogoBadge({ type, size = 38 }: { type: string; size?: number }) {
-  if (type === 'senbank') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
-        <AppText style={{ color: '#D2519D', fontSize: 18, fontWeight: '900' }}>★</AppText>
-      </View>
-    );
-  }
-  if (type === 'mb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}>
-        <AppText style={{ color: '#E11D48', fontSize: 18, fontWeight: '900' }}>★</AppText>
-      </View>
-    );
-  }
-  if (type === 'mbv') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#E11D48', borderColor: '#BE123C' }]}>
-        <AppText style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>MBV</AppText>
-      </View>
-    );
-  }
-  if (type === 'vba') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#8A1538', borderColor: '#70102D' }]}>
-        <MaterialCommunityIcons name="sprout" size={19} color="#FBBF24" />
-      </View>
-    );
-  }
-  if (type === 'vcb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }]}>
-        <Ionicons name="triangle" size={17} color="#15803D" />
-      </View>
-    );
-  }
-  if (type === 'ctg') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#004B87', borderColor: '#003A68' }]}>
-        <MaterialCommunityIcons name="circle-slice-8" size={19} color="#38BDF8" />
-      </View>
-    );
-  }
-  if (type === 'bidv') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#0054A6', borderColor: '#004080' }]}>
-        <MaterialCommunityIcons name="flower-tulip-outline" size={19} color="#34D399" />
-      </View>
-    );
-  }
-  if (type === 'tcb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#E21A22', borderColor: '#C4131A' }]}>
-        <MaterialCommunityIcons name="view-grid" size={17} color="#FFFFFF" />
-      </View>
-    );
-  }
-  if (type === 'vpb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
-        <MaterialCommunityIcons name="flower" size={18} color="#00B14F" />
-      </View>
-    );
-  }
-  if (type === 'acb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#005BAA', borderColor: '#004887' }]}>
-        <AppText style={{ color: '#FFFFFF', fontSize: 10.5, fontWeight: '900' }}>ACB</AppText>
-      </View>
-    );
-  }
-  if (type === 'tpb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#5A2D81', borderColor: '#482468' }]}>
-        <Ionicons name="triangle" size={15} color="#F97316" style={{ transform: [{ rotate: '90deg' }] }} />
-      </View>
-    );
-  }
-  if (type === 'stb') {
-    return (
-      <View style={[styles.bankLogoBase, { backgroundColor: '#0054A6', borderColor: '#004080' }]}>
-        <AppText style={{ color: '#FFFFFF', fontSize: 10.5, fontWeight: '900' }}>STB</AppText>
-      </View>
-    );
-  }
   return (
-    <View style={[styles.bankLogoBase, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
-      <Image 
-        source={require('../assets/images/bank_icon.png')} 
-        style={{ width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }} 
-        resizeMode="contain" 
-      />
+    <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
+      <MaterialCommunityIcons name="bank" size={20} color="#64748B" />
     </View>
   );
 }
@@ -201,54 +138,73 @@ interface EnterAmountScreenProps {
 
 export default function EnterAmountScreen({ route, navigation }: EnterAmountScreenProps) {
   const { user, wallet } = useApp();
+  const { isDark, colors } = useTheme();
   const params = route.params || {};
   
   const [accountNumber, setAccountNumber] = useState(params.phone || '');
-  const [bankList, setBankList] = useState<BankItem[]>([]);
-  const [selectedBankItem, setSelectedBankItem] = useState<BankItem | null>(null);
+  const [bankList, setBankList] = useState<BankItem[]>([SENHONG_BANK]);
+  const [selectedBankItem, setSelectedBankItem] = useState<BankItem | null>(SENHONG_BANK);
   
   React.useEffect(() => {
-    const FALLBACK_BANKS: BankItem[] = [
-      { id: 'senbank', code: 'SENHONG', shortName: 'SenBank (Nội bộ)', fullName: 'Ngân hàng SenBank', displayName: 'SenBank\n(Nội bộ)', iconType: 'senbank' },
-      { id: 'mb', code: '970422', shortName: 'MBBank', fullName: 'Ngân hàng TMCP Quân đội', displayName: 'MBBank', iconType: 'mb' },
-      { id: 'vcb', code: '970436', shortName: 'Vietcombank', fullName: 'Ngân hàng TMCP Ngoại thương VN', displayName: 'Vietcombank', iconType: 'vcb' },
-    ];
-
+    let isMounted = true;
     const fetchBanks = async () => {
       try {
-        const res = await WalletApi.getBanks();
-        if (res.data && res.data.length > 0) {
-          const mappedBanks: BankItem[] = res.data.map((b: any) => ({
-            id: b.id,
-            code: b.code || '',
-            shortName: b.shortName || b.code || '',
-            fullName: b.fullName || b.shortName || b.code || '',
-            displayName: b.shortName || b.code || '',
-            iconType: b.code ? b.code.toLowerCase() : 'generic',
-          }));
-          setBankList(mappedBanks);
-          
-          let defaultBank = null;
+        const banks = await getVietQrBanks();
+        if (isMounted) {
+          setBankList(banks);
+          let chosen = SENHONG_BANK;
           if (params.selectedBank) {
-             defaultBank = mappedBanks.find(b => b.shortName === params.selectedBank || b.displayName.includes(params.selectedBank)) || null;
+            const found = banks.find(
+              (b) =>
+                b.shortName === params.selectedBank ||
+                b.name.includes(params.selectedBank) ||
+                b.code === params.selectedBank
+            );
+            if (found) chosen = found;
           }
-          setSelectedBankItem(defaultBank);
-        } else {
-          setBankList(FALLBACK_BANKS);
+          setSelectedBankItem(chosen);
         }
       } catch (error) {
         console.warn("Failed to fetch banks", error);
-        setBankList(FALLBACK_BANKS);
+        if (isMounted) setBankList([SENHONG_BANK]);
       }
     };
     fetchBanks();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [params.selectedBank]);
 
   const [recipientName, setRecipientName] = useState(params.name || '');
   const [recipientWalletId, setRecipientWalletId] = useState(params.walletId || '');
   const [amount, setAmount] = useState('');
   const [transferMessage, setTransferMessage] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+
+  // Kéo dài màn hình và tự động cuộn hiển thị gợi ý số tiền cao hơn bàn phím
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToAmount = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 220, animated: true });
+    }, 120);
+  };
 
   // Dynamic lookup of recipient name when account number changes
   const handleAccountChange = (text: string) => {
@@ -297,40 +253,96 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
   const isInsufficient = rawNumAmount > currentBalance;
   const isContinueEnabled = rawNumAmount >= 2000 && !isInsufficient && accountNumber.length >= 8;
 
+  const handleContinuePress = () => {
+    if (!selectedBankItem) {
+      Alert.alert('Chưa chọn ngân hàng', 'Vui lòng chọn ngân hàng thụ hưởng.');
+      return;
+    }
+
+    const isInternal = selectedBankItem.isInternal || selectedBankItem.code === 'SENHONG' || selectedBankItem.id === 'senbank';
+    if (!isInternal) {
+      Alert.alert(
+        'Thông báo liên kết ngân hàng',
+        `Tính năng liên kết ngân hàng ${selectedBankItem.shortName || selectedBankItem.name} đang được phát triển, hiện chỉ hỗ trợ chuyển khoản nội bộ Sen Hồng Bank.`,
+        [{ text: 'Đã hiểu', style: 'default' }]
+      );
+      return;
+    }
+
+    navigation.navigate('ConfirmTransfer', {
+      amount: amount || '0',
+      accountNumber,
+      selectedBank: selectedBankItem?.shortName || '',
+      bankCode: selectedBankItem?.code || 'SENHONG',
+      notes: transferMessage,
+      recipient: { name: recipientName, phone: accountNumber, walletId: recipientWalletId }
+    });
+  };
+
+  // Đoán số tiền thông minh khi người dùng gõ số (ẩn hoàn toàn khi chưa nhập)
+  const guessedAmounts = useMemo(() => {
+    const clean = amount.replace(/[^0-9]/g, '');
+    if (!clean || clean === '0') return [];
+    const n = parseInt(clean, 10);
+    if (isNaN(n) || n <= 0) return [];
+
+    const candidates = new Set<number>();
+    // Tính toán các bội số hợp lý nhất dựa trên số vừa gõ
+    let mult = 1000;
+    while (n * mult < 10000 && mult <= 1000000) {
+      mult *= 10;
+    }
+    for (let i = 0; i < 3; i++) {
+      const candidate = n * mult * Math.pow(10, i);
+      if (candidate <= 50000000) {
+        candidates.add(candidate);
+      }
+    }
+    return Array.from(candidates).map(num => num.toLocaleString('en-US'));
+  }, [amount]);
+
   // Bank selection modal state
   const [isBankModalVisible, setIsBankModalVisible] = useState(false);
   const [bankSearchQuery, setBankSearchQuery] = useState('');
 
-  // Filtered banks by search
+  // Filtered banks by search (không phân biệt hoa/thường, không dấu tiếng Việt)
   const filteredBanks = useMemo(() => {
     if (!bankSearchQuery.trim()) return bankList;
-    const q = bankSearchQuery.toLowerCase();
-    return bankList.filter(
-      (b) => (b.shortName || '').toLowerCase().includes(q) || (b.fullName || '').toLowerCase().includes(q)
-    );
+    const q = removeVietnameseTones(bankSearchQuery);
+    return bankList.filter((b) => {
+      const normShort = removeVietnameseTones(b.shortName || '');
+      const normName = removeVietnameseTones(b.name || '');
+      const normCode = removeVietnameseTones(b.code || '');
+      return normShort.includes(q) || normName.includes(q) || normCode.includes(q);
+    });
   }, [bankSearchQuery, bankList]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.surface} />
 
       {/* 1. TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Chuyển tiền SenBank 24/7</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Chuyển tiền SenBank 24/7</AppText>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[
+          styles.scrollContent,
+          isKeyboardVisible && { paddingBottom: 460 },
+        ]}
       >
         {/* 2. SECTION 1: NGUỒN CHUYỂN TIỀN */}
         <View style={styles.sectionBlock}>
@@ -362,12 +374,12 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               onPress={() => setIsBankModalVisible(true)}
             >
               <View style={styles.bankLogoWrap}>
-                <BankLogoBadge type={selectedBankItem?.iconType || 'generic'} size={38} />
+                <BankLogoBadge item={selectedBankItem} size={38} />
               </View>
 
               <View style={styles.bankTextCol}>
                 <AppText style={styles.cardSubLabel}>Ngân hàng</AppText>
-                <AppText style={styles.bankNameText}>{selectedBankItem?.displayName || 'Chọn ngân hàng'}</AppText>
+                <AppText style={styles.bankNameText}>{selectedBankItem?.shortName || 'Chọn ngân hàng'}</AppText>
               </View>
               
               <Ionicons name="chevron-down" size={20} color="#D2519D" />
@@ -446,7 +458,11 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
                 placeholderTextColor="#D2519D"
                 keyboardType="numeric"
                 value={amount}
-                onChangeText={setAmount}
+                onFocus={scrollToAmount}
+                onChangeText={(val) => {
+                  setAmount(val);
+                  scrollToAmount();
+                }}
               />
               <AppText style={[styles.currencyLabel, isInsufficient && { color: '#DC2626' }]}>VND</AppText>
             </View>
@@ -462,6 +478,30 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Quick Amount Chips Thông Minh Đoán Số Tiền (Hiển thị ngay dưới ô nhập tiền khi đang gõ số) */}
+          {guessedAmounts.length > 0 && (
+            <View style={styles.inlineGuessedPillsRow}>
+              {guessedAmounts.map((chipVal) => (
+                <TouchableOpacity
+                  key={chipVal}
+                  style={[
+                    styles.inlineQuickPill,
+                    amount === chipVal && styles.inlineQuickPillActive
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => setAmount(chipVal)}
+                >
+                  <AppText style={[
+                    styles.inlineQuickPillText,
+                    amount === chipVal && styles.inlineQuickPillTextActive
+                  ]}>
+                    {chipVal}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* Dòng báo đỏ số dư không đủ */}
           {isInsufficient ? (
@@ -503,8 +543,8 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
         </View>
       </ScrollView>
 
-      {/* 6. BOTTOM ACTION FOOTER (QUICK AMOUNT PILLS + ACTION BUTTONS) */}
-      <View style={styles.bottomFooter}>
+      {/* 6. BOTTOM ACTION FOOTER (ACTION BUTTONS - Ẩn khi mở bàn phím để không che khuất gợi ý) */}
+      <View style={[styles.bottomFooter, isKeyboardVisible && { display: 'none' }]}>
         {/* Nút Quay lại & Tiếp tục */}
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity
@@ -519,14 +559,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             style={[styles.continueActionButton, !isContinueEnabled && styles.continueActionDisabled]}
             activeOpacity={isContinueEnabled ? 0.9 : 1}
             disabled={!isContinueEnabled}
-            onPress={() => navigation.navigate('ConfirmTransfer', {
-              amount: amount || '0',
-              accountNumber,
-              selectedBank: selectedBankItem?.shortName || '',
-              bankCode: selectedBankItem?.code || 'SENHONG',
-              notes: transferMessage,
-              recipient: { name: recipientName, phone: accountNumber, walletId: recipientWalletId }
-            })}
+            onPress={handleContinuePress}
           >
             <LinearGradient
               colors={isContinueEnabled ? ['#D2519D', '#700F43'] : ['#CBD5E1', '#94A3B8']}
@@ -536,28 +569,6 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             />
             <AppText style={styles.continueActionText}>Tiếp tục</AppText>
           </TouchableOpacity>
-        </View>
-
-        {/* 3 Quick Amount Chips Dưới Cùng (20,000 | 200,000 | 2,000,000) */}
-        <View style={styles.quickAmountPillsRow}>
-          {['20,000', '200,000', '2,000,000'].map((chipVal) => (
-            <TouchableOpacity
-              key={chipVal}
-              style={[
-                styles.quickPill,
-                amount === chipVal && styles.quickPillActive
-              ]}
-              activeOpacity={0.8}
-              onPress={() => setAmount(chipVal)}
-            >
-              <AppText style={[
-                styles.quickPillText,
-                amount === chipVal && styles.quickPillTextActive
-              ]}>
-                {chipVal}
-              </AppText>
-            </TouchableOpacity>
-          ))}
         </View>
       </View>
 
@@ -580,57 +591,75 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             onPress={() => setIsBankModalVisible(false)}
           />
 
-          <View style={styles.bankSheetContainer}>
+          <View style={[styles.bankSheetContainer, { backgroundColor: colors.modalBackground }]}>
             {/* Top Drag Handle */}
-            <View style={styles.sheetHandleBar} />
+            <View style={[styles.sheetHandleBar, { backgroundColor: colors.border }]} />
 
             {/* Sheet Title */}
-            <AppText style={styles.sheetTitle}>Chọn ngân hàng</AppText>
+            <AppText style={[styles.sheetTitle, { color: colors.textPrimary }]}>Chọn ngân hàng</AppText>
 
             {/* Search Input Bar */}
-            <View style={styles.searchBarRow}>
+            <View style={[styles.searchBarRow, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: colors.border }]}>
               <TextInput
-                style={styles.searchBarInput}
+                style={[styles.searchBarInput, { color: colors.textPrimary }]}
                 placeholder="Tìm theo tên ngân hàng"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors.textMuted}
                 value={bankSearchQuery}
                 onChangeText={setBankSearchQuery}
               />
-              <Ionicons name="search-outline" size={20} color="#94A3B8" />
+              <Ionicons name="search-outline" size={20} color={colors.textMuted} />
             </View>
 
             {/* Bank Items List — flex: 1 để co giãn khi bàn phím bật */}
             <FlatList
               data={filteredBanks}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => String(item.id)}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.bankListContent}
               keyboardShouldPersistTaps="handled"
-              ItemSeparatorComponent={() => <View style={styles.bankItemDivider} />}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.bankListItem}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setSelectedBankItem(item);
-                    setIsBankModalVisible(false);
-                    setBankSearchQuery('');
-                  }}
-                >
-                  <BankLogoBadge type={item.iconType} size={38} />
+              ItemSeparatorComponent={() => <View style={[styles.bankItemDivider, { backgroundColor: colors.border }]} />}
+              renderItem={({ item }) => {
+                const isInternal = item.isInternal || item.code === 'SENHONG' || item.id === 'senbank';
+                const isSelected = selectedBankItem?.id === item.id || selectedBankItem?.code === item.code;
 
-                  <View style={styles.bankItemInfo}>
-                    <AppText style={styles.bankItemShortName}>{item.shortName}</AppText>
-                    <AppText style={styles.bankItemFullName} numberOfLines={2}>
-                      {item.fullName}
-                    </AppText>
-                  </View>
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.bankListItem,
+                      isInternal && (isDark ? { backgroundColor: 'rgba(244, 114, 182, 0.15)', borderColor: 'rgba(244, 114, 182, 0.3)', borderWidth: 1, borderRadius: 14 } : styles.bankListItemInternal),
+                      isSelected && (isDark ? { backgroundColor: '#334155', borderRadius: 14 } : styles.bankListItemSelected),
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedBankItem(item);
+                      setIsBankModalVisible(false);
+                      setBankSearchQuery('');
+                    }}
+                  >
+                    <BankLogoBadge item={item} size={38} />
 
-                  {selectedBankItem?.id === item.id && (
-                    <Ionicons name="checkmark-circle" size={22} color="#D2519D" />
-                  )}
-                </TouchableOpacity>
-              )}
+                    <View style={styles.bankItemInfo}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <AppText style={[styles.bankItemShortName, { color: colors.textPrimary }, isInternal && { color: isDark ? colors.primary : '#700F43', fontWeight: '900' }]}>
+                          {item.shortName}
+                        </AppText>
+                        {isInternal && (
+                          <View style={styles.internalBadgePill}>
+                            <AppText style={styles.internalBadgeText}>Nội bộ 24/7</AppText>
+                          </View>
+                        )}
+                      </View>
+                      <AppText style={[styles.bankItemFullName, { color: colors.textSecondary }]} numberOfLines={2}>
+                        {item.name}
+                      </AppText>
+                    </View>
+
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </KeyboardAvoidingView>
@@ -670,7 +699,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 140,
+    paddingBottom: 220,
   },
   sectionBlock: {
     marginBottom: 16,
@@ -996,6 +1025,42 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
+  // ===== GỢI Ý ĐOÁN SỐ TIỀN THÔNG MINH (NGAY DƯỚI Ô NHẬP TIỀN) =====
+  inlineGuessedPillsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  inlineQuickPill: {
+    flex: 1,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0F7',
+    borderWidth: 1.2,
+    borderColor: '#FCE7F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#D2519D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inlineQuickPillActive: {
+    backgroundColor: '#D2519D',
+    borderColor: '#D2519D',
+  },
+  inlineQuickPillText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#700F43',
+  },
+  inlineQuickPillTextActive: {
+    color: '#FFFFFF',
+  },
+
   // ===== "CHỌN NGÂN HÀNG" BOTTOM SHEET STYLES =====
   modalOverlay: {
     flex: 1,
@@ -1082,5 +1147,29 @@ const styles = StyleSheet.create({
   bankItemDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
+  },
+  bankListItemInternal: {
+    backgroundColor: '#FFF5F8',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    marginVertical: 4,
+    borderWidth: 1.2,
+    borderColor: '#FCE7F3',
+  },
+  bankListItemSelected: {
+    backgroundColor: '#FDF2F8',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+  },
+  internalBadgePill: {
+    backgroundColor: '#FFE4E6',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 6,
+  },
+  internalBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#E11D48',
   },
 });

@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }: any) {
     {
       key: 'help',
       label: 'Trợ giúp',
-      icon: 'help-buoy-outline' as const,
+      icon: 'headset-outline' as const,
       iconLib: 'ionicons' as const,
       badge: null as string | null,
       onPress: () => navigation.navigate('HelpCenter'),

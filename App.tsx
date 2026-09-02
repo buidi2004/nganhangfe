@@ -5,6 +5,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AppProvider } from './src/context/AppContext';
+import { ThemeProvider } from './src/context/ThemeContext';
+import './src/services/notificationService';
+import { setupNotificationListeners } from './src/services/notificationService';
 import LotusIntroAnimation from './src/components/LotusIntroAnimation';
 
 SplashScreen.preventAutoHideAsync();
@@ -12,13 +15,20 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const [introDone, setIntroDone] = useState(false);
 
+  useEffect(() => {
+    const unsubscribe = setupNotificationListeners();
+    return () => {
+      unsubscribe && unsubscribe();
+    };
+  }, []);
+
   const handleIntroReady = useCallback(async () => {
     // Ẩn splash tĩnh NGAY KHI animation JS đã mount xong, ngăn lỗi màn đen
     await SplashScreen.hideAsync().catch(console.warn);
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <ThemeProvider>
       <SafeAreaProvider>
         <AppProvider>
           <AppNavigator />
@@ -34,6 +44,6 @@ export default function App() {
           />
         </View>
       )}
-    </View>
+    </ThemeProvider>
   );
 }

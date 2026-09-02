@@ -9,6 +9,8 @@ import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { Image } from 'expo-image';
 
+import { useTheme } from '../context/ThemeContext';
+
 const { width } = Dimensions.get('window');
 const SPACING = 16;
 
@@ -19,14 +21,14 @@ const FINANCE_WIDGETS = [
 ];
 
 const LIFESTYLE_SERVICES = [
-  { id: '1', icon: 'airplane-outline', label: 'Vé máy bay', color: '#0EA5E9' },
-  { id: '2', icon: 'film-outline', label: 'Vé xem phim', color: '#F43F5E' },
-  { id: '3', icon: 'bed-outline', label: 'Khách sạn', color: '#8B5CF6' },
-  { id: '4', icon: 'cart-outline', label: 'Hoàn tiền', color: '#F59E0B' },
-  { id: '5', icon: 'car-outline', label: 'Bảo hiểm', color: '#10B981' },
-  { id: '6', icon: 'game-controller-outline', label: 'Giải trí', color: '#D946EF' },
-  { id: '7', icon: 'gift-outline', label: 'Quà tặng', color: '#EC4899' },
-  { id: '8', icon: 'ellipsis-horizontal-outline', label: 'Xem thêm', color: '#64748B' },
+  { id: '1', icon: 'airplane-outline', label: 'Vé máy bay' },
+  { id: '2', icon: 'business-outline', label: 'Khách sạn' },
+  { id: '3', icon: 'cart-outline', label: 'Mua sắm' },
+  { id: '4', icon: 'film-outline', label: 'Vé xem phim' },
+  { id: '5', icon: 'shield-checkmark-outline', label: 'Bảo hiểm số' },
+  { id: '6', icon: 'trending-up-outline', label: 'Đầu tư' },
+  { id: '7', icon: 'gift-outline', label: 'Ưu đãi' },
+  { id: '8', icon: 'grid-outline', label: 'Xem thêm' },
 ];
 
 const NEWS_FEED = [
@@ -54,6 +56,7 @@ const NEWS_FEED = [
 ];
 
 export default function MoreScreen({ navigation }: any) {
+  const { isDark, colors } = useTheme();
   const { onScroll } = useHideOnScroll();
   const { user } = useApp();
 
@@ -152,8 +155,15 @@ export default function MoreScreen({ navigation }: any) {
             <View style={styles.lifestyleGrid}>
               {LIFESTYLE_SERVICES.map((item) => (
                 <TouchableOpacity key={item.id} style={styles.utilityItem}>
-                  <View style={[styles.utilityIconWrap, { backgroundColor: `${item.color}15` }]}>
-                    <Ionicons name={item.icon as any} size={26} color={item.color} />
+                  <View style={[
+                    styles.utilityIconWrap, 
+                    { 
+                      backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
+                      borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                      borderWidth: 1,
+                    }
+                  ]}>
+                    <Ionicons name={item.icon as any} size={24} color={isDark ? colors.primary : '#700F43'} />
                   </View>
                   <AppText style={styles.utilityLabel}>{item.label}</AppText>
                 </TouchableOpacity>

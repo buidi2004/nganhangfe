@@ -13,6 +13,40 @@ import { useNavigation } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator();
 
+// Cấu hình chuyển cảnh mượt mà chuẩn ngân hàng hiện đại
+const tabTransitionSpec = {
+  animation: 'timing' as const,
+  config: {
+    duration: 260,
+  },
+};
+
+// Hiệu ứng chuyển màn hình: Trượt ngang nhẹ kết hợp fade mờ ảo và phóng nhẹ
+const forSmoothTabShift = ({ current }: { current: { progress: any } }) => {
+  return {
+    sceneStyle: {
+      opacity: current.progress.interpolate({
+        inputRange: [-1, 0, 1],
+        outputRange: [0, 1, 0],
+      }),
+      transform: [
+        {
+          translateX: current.progress.interpolate({
+            inputRange: [-1, 0, 1],
+            outputRange: [-35, 0, 35],
+          }),
+        },
+        {
+          scale: current.progress.interpolate({
+            inputRange: [-1, 0, 1],
+            outputRange: [0.97, 1, 0.97],
+          }),
+        },
+      ],
+    },
+  };
+};
+
 function GlassTabBar(props: BottomTabBarProps) {
   return <GlassBottomNavbar {...props} />;
 }
@@ -40,18 +74,49 @@ export default function MainTabs() {
           }
         }}
       >
-        <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Trang chu" }} />
-        <Tab.Screen name="Card" component={CardsScreen} options={{ title: "The" }} />
+        <Tab.Screen 
+          name="HomeTab" 
+          component={HomeScreen} 
+          options={{ 
+            title: "Trang chủ",
+            transitionSpec: tabTransitionSpec,
+            sceneStyleInterpolator: forSmoothTabShift,
+          }} 
+        />
+        <Tab.Screen 
+          name="Card" 
+          component={CardsScreen} 
+          options={{ 
+            title: "Thẻ",
+            transitionSpec: tabTransitionSpec,
+            sceneStyleInterpolator: forSmoothTabShift,
+          }} 
+        />
         <Tab.Screen
           name="QR"
           component={ScanQRScreen}
-          options={{ tabBarStyle: { display: "none" } }}
+          options={{ 
+            tabBarStyle: { display: "none" },
+            animation: 'none', // Trừ mã QR: mở tức thì không hoạt ảnh
+          }}
         />
-        <Tab.Screen name="Gift" component={PromotionsScreen} options={{ title: "Uu dai" }} />
+        <Tab.Screen 
+          name="Gift" 
+          component={PromotionsScreen} 
+          options={{ 
+            title: "Ưu đãi",
+            transitionSpec: tabTransitionSpec,
+            sceneStyleInterpolator: forSmoothTabShift,
+          }} 
+        />
         <Tab.Screen 
           name="Menu" 
           component={MoreScreen} 
-          options={{ title: "Thêm" }} 
+          options={{ 
+            title: "Menu",
+            transitionSpec: tabTransitionSpec,
+            sceneStyleInterpolator: forSmoothTabShift,
+          }} 
         />
       </Tab.Navigator>
 

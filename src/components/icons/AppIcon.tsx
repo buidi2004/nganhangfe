@@ -7,6 +7,7 @@ import {
   ChevronDown, Menu, PiggyBank, Coins, Smartphone, Plane, Ticket, Tag,
   ShoppingBag, ThumbsUp, Star, Play, Wallet, ArrowRightLeft, CircleDollarSign,
   Grid, LayoutGrid, Layers,
+  ShieldCheck, ShieldPlus, Film, Clapperboard, ShoppingCart, TrendingUp, ChartLine,
   type LucideIcon,
 } from 'lucide-react-native';
 import { Colors } from '../../theme';
@@ -58,6 +59,18 @@ const ICON_MAP: Record<string, LucideIcon> = {
   ticket: Ticket,
   tag: Tag,
   shoppingBag: ShoppingBag,
+  'shopping-bag': ShoppingBag,
+  cart: ShoppingCart,
+  shoppingCart: ShoppingCart,
+  shieldCheck: ShieldCheck,
+  'shield-check': ShieldCheck,
+  shieldPlus: ShieldPlus,
+  'shield-plus': ShieldPlus,
+  film: Film,
+  clapperboard: Clapperboard,
+  trendingUp: TrendingUp,
+  'trending-up': TrendingUp,
+  chartLine: ChartLine,
   thumbsUp: ThumbsUp,
   star: Star,
   play: Play,
@@ -73,6 +86,7 @@ interface AppIconProps {
   size?: keyof typeof SIZE_MAP;
   color?: string;
   strokeWidth?: number;
+  style?: any;
 }
 
 export function AppIcon({
@@ -80,10 +94,18 @@ export function AppIcon({
   size = 'md',
   color = Colors.textPrimary,
   strokeWidth = 1.75,
+  style,
 }: AppIconProps) {
   const Icon = ICON_MAP[name];
   if (!Icon) {
     return null;
   }
-  return <Icon size={SIZE_MAP[size]} color={color} strokeWidth={strokeWidth} />;
+  return (
+    <Icon
+      size={SIZE_MAP[size]}
+      color={color}
+      strokeWidth={strokeWidth}
+      style={[{ backgroundColor: 'transparent' }, style]}
+    />
+  );
 }
