@@ -1,6 +1,6 @@
-# Sen Hồng Bank (SenBank) — Ứng Dụng Ngân Hàng Số & Ví Điện Tử
+# Sen Hồng Bank (SenBank) — Ứng Dụng Ngân Hàng Số (Digital Banking)
 
-Ứng dụng Ngân hàng số & Ví điện tử **Sen Hồng E-Wallet (SenBank)** được xây dựng trên nền tảng **React Native (Expo SDK 52)** và **TypeScript**, kết nối Backend **Spring Boot** với đầy đủ các nghiệp vụ tài chính thực tế: quản lý số dư, chuyển tiền nội bộ/liên ngân hàng VietQR, quản lý thẻ, thanh toán hóa đơn, biến động số dư thời gian thực qua WebSocket và giao diện Dark Mode chuẩn ngân hàng thương mại.
+Ứng dụng Ngân hàng số **Sen Hồng Bank (SenBank)** được phát triển bởi **Bùi Văn Dĩ** và **Nguyễn Đăng Khoa**, xây dựng trên nền tảng **React Native (Expo SDK 52)** và **TypeScript**, kết nối Backend **Spring Boot Core Banking** (Hexagonal Architecture, Double-Entry Ledger, Outbox Pattern, RabbitMQ, Redis, PostgreSQL) với đầy đủ các nghiệp vụ tài chính thực tế: quản lý tài khoản thanh toán, chuyển tiền nội bộ/liên ngân hàng VietQR 24/7, quản lý thẻ quốc tế, thanh toán hóa đơn tự động, biến động số dư thời gian thực qua WebSocket và giao diện Dark Mode chuẩn Private Banking.
 
 ---
 
