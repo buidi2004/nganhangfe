@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  ScrollView,
+  FlatList,
   TextInput,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +15,7 @@ import { Colors } from '../theme';
 import { WalletApi } from '../services/api';
 import { ActivityIndicator } from 'react-native';
 import { useHideOnScroll } from '../hooks/useHideOnScroll';
+import { useApp } from '../context/AppContext';
 
 interface NotificationItem {
   id: string;
@@ -23,11 +23,36 @@ interface NotificationItem {
   body: string;
   time: string;
   isUnread: boolean;
+  category: 'balance' | 'news' | 'mine';
 }
 
 interface DateGroup {
   date: string;
   items: NotificationItem[];
+}
+
+const BALANCE_TYPES = new Set([
+  'BALANCE', 'DEBIT', 'CREDIT', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER',
+  'TRANSFER_IN', 'TRANSFER_OUT', 'TOPUP', 'BILL_PAYMENT',
+]);
+
+const NEWS_TYPES = new Set(['NEWS', 'PROMO', 'PROMOTION', 'BROADCAST', 'ANNOUNCEMENT']);
+
+function categorizeNotification(type: string, body: string): 'balance' | 'news' | 'mine' {
+  const upperType = (type || '').toUpperCase();
+  if (
+    BALANCE_TYPES.has(upperType) ||
+    body.includes('PS:') ||
+    body.includes('Số dư') ||
+    body.includes('SD:') ||
+    body.includes('Tài khoản:')
+  ) {
+    return 'balance';
+  }
+  if (NEWS_TYPES.has(upperType)) {
+    return 'news';
+  }
+  return 'mine';
 }
 
 const TABS = [
@@ -37,6 +62,7 @@ const TABS = [
 ];
 
 export default function NotificationsScreen({ navigation }: { navigation: any }) {
+  const { notifications: localNotifs } = useApp();
   const [activeTab, setActiveTab] = useState<'mine' | 'balance' | 'news'>('balance');
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<DateGroup[]>([]);
@@ -47,35 +73,33 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
     const fetchNotifs = async () => {
       try {
         const res = await WalletApi.getNotifications();
-        // The BE likely returns a paginated list of flat items
         const rawItems = res.data?.content || res.data || [];
-        
-        // Group by date
+        console.log("NOTIFICATIONS RAW:", JSON.stringify(rawItems, null, 2));
+
         const grouped: Record<string, NotificationItem[]> = {};
+
+        // Merge API notifications
         rawItems.forEach((it: any) => {
           const dateStr = new Date(it.createdAt).toLocaleDateString('vi-VN');
           if (!grouped[dateStr]) grouped[dateStr] = [];
-          
+
           let displayTitle = it.title || '';
           if (displayTitle.includes('TRANSFER')) displayTitle = displayTitle.replace('TRANSFER', 'Chuyển tiền');
           else if (displayTitle.includes('DEPOSIT')) displayTitle = displayTitle.replace('DEPOSIT', 'Nạp tiền');
           else if (displayTitle.includes('WITHDRAWAL')) displayTitle = displayTitle.replace('WITHDRAWAL', 'Rút tiền');
 
+          const body = it.content || it.message || it.body || '';
           grouped[dateStr].push({
-            id: it.id,
+            id: String(it.id),
             title: displayTitle,
-            body: it.content || it.message || '',
+            body,
             time: new Date(it.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-            isUnread: !it.read,
+            isUnread: !(it.isRead ?? it.read),
+            category: categorizeNotification(it.type || '', body),
           });
         });
 
-        const groupsArray = Object.keys(grouped).map(date => ({
-          date,
-          items: grouped[date],
-        }));
-        
-        setNotifications(groupsArray);
+        setNotifications(Object.keys(grouped).map((date) => ({ date, items: grouped[date] })));
       } catch (e) {
         console.error('Failed to get notifications', e);
       } finally {
@@ -83,14 +107,52 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
       }
     };
     fetchNotifs();
-  }, [activeTab]);
+  }, []);
 
+  // Combine fetched notifications with live local notifications from WebSocket
+  const combinedNotifications = useMemo(() => {
+    const grouped = [...notifications]; // Start with fetched groups
+    const todayStr = new Date().toLocaleDateString('vi-VN');
+
+    localNotifs.forEach((localIt) => {
+      let group = grouped.find(g => g.date === todayStr);
+      if (!group) {
+        group = { date: todayStr, items: [] };
+        grouped.unshift(group);
+      }
+      // Avoid duplicates if ID matches
+      if (!group.items.some(it => it.id === localIt.id)) {
+        group.items.unshift({
+          id: localIt.id,
+          title: localIt.title,
+          body: localIt.body,
+          time: localIt.time,
+          isUnread: localIt.isUnread,
+          category: categorizeNotification(localIt.type || '', localIt.body),
+        });
+      }
+    });
+
+    return grouped;
+  }, [notifications, localNotifs]);
+
+  const tabFilteredGroups = useMemo(() => {
+    if (activeTab === 'mine') {
+      return combinedNotifications;
+    }
+    return combinedNotifications
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((it) => it.category === activeTab),
+      }))
+      .filter((g) => g.items.length > 0);
+  }, [combinedNotifications, activeTab]);
 
   // Search filtering
   const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return notifications;
+    if (!searchQuery.trim()) return tabFilteredGroups;
     const q = searchQuery.toLowerCase();
-    return notifications.map((group) => {
+    return tabFilteredGroups.map((group) => {
       const matchItems = group.items.filter(
         (it) => it.body.toLowerCase().includes(q) || it.title.toLowerCase().includes(q)
       );
@@ -100,18 +162,78 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
         items: isDateMatch ? group.items : matchItems,
       };
     }).filter((g) => g.items.length > 0);
-  }, [searchQuery, notifications]);
+  }, [searchQuery, tabFilteredGroups]);
 
-  const handleRead = async (id: string) => {
+  const handleRead = useCallback(async (id: string) => {
     try {
       await WalletApi.markNotificationAsRead(id);
-      // locally update state
       setNotifications(prev => prev.map(group => ({
         ...group,
         items: group.items.map(it => it.id === id ? { ...it, isUnread: false } : it)
       })));
     } catch (e) {}
-  };
+  }, []);
+
+
+  const renderNotificationBody = useCallback((body: string) => {
+    if (!body.includes('Tài khoản:') && !body.includes('PS:')) {
+      return <AppText style={styles.itemBodyText}>{body}</AppText>;
+    }
+    const lines = body.split('\n');
+    return (
+      <View style={{ marginTop: 4, marginBottom: 4 }}>
+        {lines.map((line, idx) => {
+          if (!line.trim()) return null;
+          let color = '#475569';
+          let fontWeight = '500';
+          if (line.startsWith('PS: +')) {
+            color = '#10B981'; // Green
+            fontWeight = '700';
+          } else if (line.startsWith('PS: -')) {
+            color = '#EF4444'; // Red
+            fontWeight = '700';
+          } else if (line.startsWith('Số dư cuối:') || line.startsWith('SD:')) {
+            fontWeight = '700';
+          }
+          return (
+            <AppText key={idx} style={{ fontSize: 13, color, lineHeight: 18, fontWeight: fontWeight as any }}>
+              {line}
+            </AppText>
+          );
+        })}
+      </View>
+    );
+  }, []);
+
+  const renderDateGroup = useCallback(({ item: group }: { item: DateGroup }) => (
+    <View style={styles.dateGroupCard}>
+      <View style={styles.dateHeaderStrip}>
+        <AppText style={styles.dateHeaderText}>{group.date}</AppText>
+      </View>
+      <View style={styles.groupItemsContainer}>
+        {group.items.map((item, itIdx) => (
+          <View key={item.id}>
+            <TouchableOpacity style={styles.notificationItem} activeOpacity={0.7} onPress={() => handleRead(item.id)}>
+              <View style={styles.itemTitleRow}>
+                <AppText style={styles.itemTitleText}>{item.title}</AppText>
+                {item.isUnread && <View style={styles.unreadCyanDot} />}
+              </View>
+              {renderNotificationBody(item.body)}
+              <AppText style={styles.itemTimeText}>{item.time}</AppText>
+            </TouchableOpacity>
+            {itIdx < group.items.length - 1 && <View style={styles.itemInnerDivider} />}
+          </View>
+        ))}
+      </View>
+    </View>
+  ), [handleRead, renderNotificationBody]);
+
+  const listEmpty = (
+    <View style={styles.emptyWrap}>
+      <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
+      <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -171,49 +293,20 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
         <ActivityIndicator size="large" color="#D2519D" style={{ marginTop: 40 }} />
       ) : (
         <LinearGradient colors={['#FFF0F5', '#FCE7F3', '#FDF2F8']} style={{ flex: 1 }}>
-          <ScrollView 
-            showsVerticalScrollIndicator={false} 
+          <FlatList
+            data={filteredGroups}
+            keyExtractor={(item) => item.date}
+            renderItem={renderDateGroup}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
             onScroll={onScroll}
             scrollEventThrottle={16}
-          >
-            {activeTab === 'balance' ? (
-              filteredGroups.length === 0 ? (
-                <View style={styles.emptyWrap}>
-                  <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
-                  <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
-                </View>
-              ) : (
-                filteredGroups.map((group) => (
-                  <View key={group.date} style={styles.dateGroupCard}>
-                    <View style={styles.dateHeaderStrip}>
-                      <AppText style={styles.dateHeaderText}>{group.date}</AppText>
-                    </View>
-                    <View style={styles.groupItemsContainer}>
-                      {group.items.map((item, itIdx) => (
-                        <View key={item.id}>
-                          <TouchableOpacity style={styles.notificationItem} activeOpacity={0.7} onPress={() => handleRead(item.id)}>
-                            <View style={styles.itemTitleRow}>
-                              <AppText style={styles.itemTitleText}>{item.title}</AppText>
-                              {item.isUnread && <View style={styles.unreadCyanDot} />}
-                            </View>
-                            <AppText style={styles.itemBodyText}>{item.body}</AppText>
-                            <AppText style={styles.itemTimeText}>{item.time}</AppText>
-                          </TouchableOpacity>
-                          {itIdx < group.items.length - 1 && <View style={styles.itemInnerDivider} />}
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                ))
-              )
-            ) : (
-              <View style={styles.emptyWrap}>
-                <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
-                <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
-              </View>
-            )}
-          </ScrollView>
+            ListEmptyComponent={listEmpty}
+            initialNumToRender={6}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
+          />
         </LinearGradient>
       )}
     </SafeAreaView>

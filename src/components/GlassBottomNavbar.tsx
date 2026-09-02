@@ -5,7 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AnimatedGradientQRIcon from './icons/AnimatedGradientQRIcon';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navBarTranslateY } from './GlassNavBarBridge';
-import { LiquidGlassView } from 'react-native-liquid-glassmorphism';
+import { BlurView } from 'expo-blur';
 
 // ==========================================
 // THÔNG SỐ BẠN CÓ THỂ TỰ DO CHỈNH SỬA Ở ĐÂY:
@@ -55,7 +55,7 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
 
     const IconComponent = tabDef.lib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
     const iconName = isFocused ? tabDef.iconFocused : tabDef.icon;
-    const color = isFocused ? '#F472B6' : 'rgba(255, 255, 255, 0.6)';
+    const color = isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)';
 
     if (tabDef.isCenter) {
       return (
@@ -113,21 +113,20 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
       {/* 2. Lớp chứa nội dung (Cắt gọt hiển thị theo đúng 4 góc bo cong) */}
       <View style={[styles.pillContent, radiusStyles]}>
 
-        {/* Nền Kính Khúc Xạ Thực trên Android */}
-        <LiquidGlassView 
-          preset="floatingTabBar" 
+        {/* Thay thế LiquidGlassView bằng BlurView theo yêu cầu */}
+        <BlurView 
+          intensity={80} 
+          tint="light"
           style={[StyleSheet.absoluteFill, radiusStyles, { overflow: 'hidden', height: BAR_HEIGHT }]} 
         />
 
-        {/* Đã comment lớp phủ màu theo yêu cầu để lộ kính trong suốt */}
-        {/*
+        {/* Bật lại lớp phủ màu hồng */}
         <LinearGradient
           colors={['rgba(210, 81, 157, 0.85)', 'rgba(163, 27, 107, 0.92)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        */}
 
         {/* Viền nổi 3D */}
         <View style={[styles.innerBorder, radiusStyles]} />
@@ -205,7 +204,7 @@ const styles = StyleSheet.create({
     // Không dùng nền tròn nữa, bóng sẽ được bám sát hình khối icon
   },
   iconShadow: {
-    textShadowColor: 'rgba(244, 114, 182, 1)', // Glow phát sáng màu hồng bám sát Icon
+    textShadowColor: 'rgba(255, 255, 255, 1)', // Glow phát sáng màu trắng bám sát Icon
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },

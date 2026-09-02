@@ -1,0 +1,57 @@
+appId: ${APP_ID:-com.buidi2004.nganhangfe}
+---
+- launchApp:
+    clearState: true
+
+# 1. BƯỚC ĐĂNG NHẬP
+- assertVisible: "Mật khẩu"
+- tapOn:
+    id: "phone_input" # Giả định ID hoặc placeholder
+    optional: true
+- inputText: "0912345678"
+- tapOn: "Mật khẩu"
+- inputText: "123456"
+- tapOn: "ĐĂNG NHẬP"
+
+# 2. MÀN HÌNH CHÍNH & CHỌN CHỨC NĂNG
+- extendedWaitUntil:
+    visible: "Chuyển tiền"
+    timeout: 10000
+- tapOn: "Chuyển tiền"
+
+# 3. MÀN HÌNH CHỌN NGƯỜI NHẬN (NẾU CÓ)
+# Bấm vào menu "Đến tài khoản / Số điện thoại" nếu app có bước này
+- tapOn: 
+    text: "Tài khoản / Số điện thoại"
+    optional: true
+
+# 4. MÀN HÌNH NHẬP SỐ TIỀN & THÔNG TIN (EnterAmountScreen)
+# Đảm bảo hiển thị đúng màn hình
+- assertVisible: "Chuyển tiền SenBank 24/7"
+
+# Bấm chọn ngân hàng (mở Modal)
+- tapOn: "Ngân hàng"
+- assertVisible: "Chọn ngân hàng"
+- tapOn: "SenBank" # Chọn SenBank (Nội bộ)
+
+# Nhập số tài khoản
+- tapOn: "Nhập số tài khoản hoặc SĐT"
+- inputText: "0912345678"
+- hideKeyboard
+
+# 5. CHỜ BACKEND TRẢ VỀ TÊN NGƯỜI NHẬN (TEST LOGIC MỚI FIX)
+# Đoạn này sẽ timeout và fail test nếu Backend không trả về đúng tên
+- extendedWaitUntil:
+    visible: "Người nhận (Tra cứu tự động)"
+    timeout: 5000
+
+# 6. NHẬP SỐ TIỀN VÀ TIẾP TỤC
+- tapOn: "20,000" # Dùng Quick Pill cho lẹ
+- tapOn: "Tiếp tục"
+
+# 7. MÀN HÌNH XÁC NHẬN GIAO DỊCH (ConfirmTransferScreen)
+- assertVisible: "Xác nhận giao dịch"
+- tapOn: "Xác nhận" # Hoặc "Chuyển ngay" tuỳ UI
+
+# 8. HOÀN THÀNH
+- assertVisible: "Thành công"

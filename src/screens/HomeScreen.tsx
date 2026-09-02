@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Image } from 'expo-image';
 import {
   View,
   StyleSheet,
-  Image,
   ImageBackground,
   TouchableOpacity,
   ScrollView,
@@ -14,20 +14,30 @@ import {
   RefreshControl,
   DeviceEventEmitter,
 } from 'react-native';
+import Reanimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSequence, 
+  withDelay, 
+  withRepeat,
+  Easing, 
+  cancelAnimation,
+  runOnJS
+} from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path, Circle, Rect, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Shadows, Typography, Radius } from '../theme';
 import { AppText } from '../components/typography/AppText';
 import { GlassBottomNavbar } from '../components/GlassBottomNavbar';
 import { useApp } from '../context/AppContext';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useThrottledNavBarScroll } from '../hooks/useThrottledNavBarScroll';
 import { BlurView } from 'expo-blur';
-import { LiquidGlassView } from 'react-native-liquid-glassmorphism';
 import AISearchIcon from '../components/icons/AISearchIcon';
-import { showNavBar, hideNavBar } from '../components/GlassNavBarBridge';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = Math.round(width * 0.78);
@@ -64,7 +74,7 @@ function MBShieldCheckIcon({ size = 22 }: { size?: number }) {
 
 // Crown Icon cho Badge Basic
 function MBCrownIcon({ size = 14 }: { size?: number }) {
-  return <FontAwesome5 name="crown" size={size} color="#94A3B8" />;
+  return <MaterialCommunityIcons name="crown" size={size} color="#94A3B8" />;
 }
 
 // Quick Actions Data with exact badges
@@ -178,7 +188,7 @@ const BASE_CAROUSEL_DATA = [
 ];
 
 // Tạo danh sách lặp tuần hoàn vô tận (Infinite Looping Array)
-const LOOP_MULTIPLIER = 12;
+const LOOP_MULTIPLIER = 6;
 const CAROUSEL_DATA = Array.from({ length: LOOP_MULTIPLIER }).flatMap((_, loopIdx) =>
   BASE_CAROUSEL_DATA.map((item, itemIdx) => ({
     ...item,
@@ -186,7 +196,8 @@ const CAROUSEL_DATA = Array.from({ length: LOOP_MULTIPLIER }).flatMap((_, loopId
   }))
 );
 const TOTAL_CAROUSEL_ITEMS = CAROUSEL_DATA.length;
-const INITIAL_CAROUSEL_INDEX = BASE_CAROUSEL_DATA.length * 5; // Bắt đầu ở giữa dải lặp
+const LOOP_CENTER_INDEX = BASE_CAROUSEL_DATA.length * Math.floor(LOOP_MULTIPLIER / 2);
+const INITIAL_CAROUSEL_INDEX = LOOP_CENTER_INDEX;
 
 const SERVICES = [
   { id: '1', title: 'Vua Xổ Số', iconBg: '#FFF1F2', iconColor: '#E11D48', icon: 'ticket', badgeText: '9' },
@@ -200,51 +211,41 @@ const SERVICES = [
 ];
 
 // --- ANIMATED SEARCH BUTTON ---
-const AnimatedSearchButton = ({ onPress }: { onPress: () => void }) => {
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+const AnimatedSearchButton = ({ onPress, paused = false }: { onPress: () => void; paused?: boolean }) => {
+  const rotation = useSharedValue(0);
 
   useEffect(() => {
-    let isActive = true;
+    if (paused) {
+      cancelAnimation(rotation);
+      return;
+    }
 
-    const runAnimation = () => {
-      if (!isActive) return;
-      // Randomize speed: fast (1000ms) or slow/soft (3000ms)
-      const duration = Math.random() > 0.5 ? 1000 : 3000;
-      // Occasional delay: wait 1 to 4 seconds before next spin
-      const delay = Math.random() * 3000 + 1000;
-
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: duration,
-          useNativeDriver: true,
-        })
-      ]).start(({ finished }) => {
-        if (finished && isActive) {
-          rotateAnim.setValue(0);
-          runAnimation(); // Loop continuously
-        }
-      });
-    };
-
-    runAnimation();
+    // Tối ưu an toàn 100%: Dùng withRepeat thay vì runOnJS đệ quy để tránh gây treo JS thread/UI thread
+    // Radar xoay liên tục 1 vòng trong 2s, sau đó dừng 2s, rồi lặp lại mãi mãi.
+    rotation.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.cubic) }),
+        withTiming(1, { duration: 2000 }) // pause at 1 for 2s
+      ),
+      -1,
+      false
+    );
 
     return () => {
-      isActive = false;
-      rotateAnim.stopAnimation();
+      cancelAnimation(rotation);
     };
-  }, []);
+  }, [rotation, paused]);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value * 360}deg` }],
+    };
   });
 
   return (
     <TouchableOpacity style={styles.glassHeaderBtn} activeOpacity={0.7} onPress={onPress}>
       {/* Lớp viền chạy (Running sweeping border) */}
-      <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate: spin }] }]}>
+      <Reanimated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
         <Svg width={36} height={36} viewBox="0 0 36 36">
           <Circle
             cx="18" cy="18" r="17"
@@ -255,7 +256,7 @@ const AnimatedSearchButton = ({ onPress }: { onPress: () => void }) => {
             fill="none"
           />
         </Svg>
-      </Animated.View>
+      </Reanimated.View>
 
       {/* Icon kính lúp AI */}
       <AISearchIcon size={26} color="#FFFFFF" />
@@ -395,8 +396,10 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
 
 export default function HomeScreen({ navigation }: any) {
   const { user, wallet, refreshBalance, isBalanceLoading, customBackgroundUri } = useApp();
+  const isFocused = useIsFocused();
+  const throttledNavBarScroll = useThrottledNavBarScroll();
+  const lastBalanceRefreshRef = useRef(0);
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(INITIAL_CAROUSEL_INDEX);
   const scrollX = useRef(new Animated.Value(INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL)).current;
   const scrollY = useRef(new Animated.Value(0)).current; // Theo dõi vị trí cuộn dọc
   const flatListRef = useRef<FlatList>(null);
@@ -411,33 +414,70 @@ export default function HomeScreen({ navigation }: any) {
     )
   ).current;
 
-  // Lắng nghe cuộn để ẩn/hiện Bottom Navbar (tối ưu mượt mà)
-  const lastScrollY = useRef(0);
-  const scrollOffset = useRef(0);
-  useEffect(() => {
-    const listenerId = scrollY.addListener(({ value }) => {
-      const diff = value - lastScrollY.current;
-      scrollOffset.current += diff;
+  // Lắng nghe cuộn để ẩn/hiện Bottom Navbar (throttled — không đổi ngưỡng UX)
+  const navBarScrollRef = useRef(throttledNavBarScroll);
+  navBarScrollRef.current = throttledNavBarScroll;
 
-      // Reset gia tốc nếu đổi chiều cuộn
-      if (diff > 0 && scrollOffset.current < 0) scrollOffset.current = 0;
-      if (diff < 0 && scrollOffset.current > 0) scrollOffset.current = 0;
-
-      // Chỉ kích hoạt khi cuộn một quãng đủ dài (ví dụ > 25px liên tục)
-      if (scrollOffset.current > 25 && value > 100) {
-        hideNavBar();
-      } else if (scrollOffset.current < -25 || value <= 100) {
-        showNavBar();
+  const handleVerticalScroll = useRef(
+    Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+      {
+        useNativeDriver: true,
+        listener: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => navBarScrollRef.current(event),
       }
+    )
+  ).current;
 
-      lastScrollY.current = value;
-    });
-    return () => {
-      scrollY.removeListener(listenerId);
-    };
-  }, [scrollY]);
+  useFocusEffect(
+    useCallback(() => {
+      const now = Date.now();
+      if (now - lastBalanceRefreshRef.current > 30000) {
+        lastBalanceRefreshRef.current = now;
+        refreshBalance();
+      }
+    }, [refreshBalance])
+  );
 
-  // Hiệu ứng xuất hiện thanh nổi "Dán chuyển tiền AI" khi kéo cuộn xuống dưới
+  useEffect(() => {
+    if (!isFocused) return;
+
+    // Cuộn tới vị trí giữa ban đầu và thiết lập scrollX chuẩn xác
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({
+        offset: INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL,
+        animated: false,
+      });
+      scrollX.setValue(INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL);
+      currentIndexRef.current = INITIAL_CAROUSEL_INDEX;
+    }, 100);
+
+    // Vòng lặp chuyển động tự động vô tận không bao giờ đứt gãy
+    const timer = setInterval(() => {
+      if (!isUserInteracting.current && flatListRef.current) {
+        let nextIndex = currentIndexRef.current + 1;
+
+        // Khi gần chạm đuôi, tự động dịch chuyển âm thầm về giữa mượt mà
+        if (nextIndex >= TOTAL_CAROUSEL_ITEMS - BASE_CAROUSEL_DATA.length * 2) {
+          const resetIndex = LOOP_CENTER_INDEX;
+          flatListRef.current.scrollToOffset({
+            offset: resetIndex * SNAP_INTERVAL,
+            animated: false,
+          });
+          scrollX.setValue(resetIndex * SNAP_INTERVAL);
+          currentIndexRef.current = resetIndex;
+          nextIndex = resetIndex + 1;
+        }
+
+        flatListRef.current.scrollToOffset({
+          offset: nextIndex * SNAP_INTERVAL,
+          animated: true,
+        });
+        currentIndexRef.current = nextIndex;
+      }
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [isFocused]);
   const stickyHeaderOpacity = scrollY.interpolate({
     inputRange: [40, 85],
     outputRange: [0, 1],
@@ -463,52 +503,6 @@ export default function HomeScreen({ navigation }: any) {
     extrapolate: 'clamp',
   });
 
-  useFocusEffect(
-    useCallback(() => {
-      refreshBalance();
-    }, [refreshBalance])
-  );
-
-  useEffect(() => {
-    // Cuộn tới vị trí giữa ban đầu và thiết lập scrollX chuẩn xác
-    setTimeout(() => {
-      flatListRef.current?.scrollToOffset({
-        offset: INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL,
-        animated: false,
-      });
-      scrollX.setValue(INITIAL_CAROUSEL_INDEX * SNAP_INTERVAL);
-      currentIndexRef.current = INITIAL_CAROUSEL_INDEX;
-    }, 100);
-
-    // Vòng lặp chuyển động tự động vô tận không bao giờ đứt gãy
-    const timer = setInterval(() => {
-      if (!isUserInteracting.current && flatListRef.current) {
-        let nextIndex = currentIndexRef.current + 1;
-
-        // Khi gần chạm đuôi, tự động dịch chuyển âm thầm về giữa mượt mà
-        if (nextIndex >= TOTAL_CAROUSEL_ITEMS - BASE_CAROUSEL_DATA.length * 2) {
-          const resetIndex = BASE_CAROUSEL_DATA.length * 5;
-          flatListRef.current.scrollToOffset({
-            offset: resetIndex * SNAP_INTERVAL,
-            animated: false,
-          });
-          scrollX.setValue(resetIndex * SNAP_INTERVAL);
-          currentIndexRef.current = resetIndex;
-          nextIndex = resetIndex + 1;
-        }
-
-        flatListRef.current.scrollToOffset({
-          offset: nextIndex * SNAP_INTERVAL,
-          animated: true,
-        });
-        currentIndexRef.current = nextIndex;
-        setActiveIndex(nextIndex);
-      }
-    }, 3500);
-
-    return () => clearInterval(timer);
-  }, []);
-
   const renderBannerItem = useCallback(({ item, index }: { item: any; index: number }) => {
     return <MemoizedBannerItem item={item} index={index} scrollX={scrollX} />;
   }, [scrollX]);
@@ -533,16 +527,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.stickyHeaderShadow} />
 
         <View style={styles.stickyHeaderWrapper}>
-          <LiquidGlassView 
-            style={StyleSheet.absoluteFill} 
-            tintColor="rgba(255, 255, 255, 0.1)" // Để màu trong để lộ gradient bên trên
-            thickness={1.8} // Giữ nguyên độ sâu thấu kính
-            refraction={true} // Vẫn giữ khúc xạ
-            ior={1.8} // Giữ chiết suất
-            iridescence={0.15} // ĐÃ GIẢM TÁN SẮC MÀU
-            rim={true} // Viền Fresnel
-            specular={true} // Độ bóng ánh sáng
-          />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]} />
           {/* DẢI MÀU (GRADIENT) HỒNG ĐẬM HƠN PHỦ LÊN KÍNH */}
           <LinearGradient
             colors={['rgba(228, 172, 178, 0.6)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.9)']}
@@ -593,7 +578,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Background Gradient & Light Flares */}
       <View style={styles.headerBackground} pointerEvents="none">
         {customBackgroundUri ? (
-          <Image source={{ uri: customBackgroundUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <Image cachePolicy="memory-disk" source={{ uri: customBackgroundUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
         ) : (
           <LinearGradient
             colors={['#E4ACB2', '#D2519D', '#700F43']}
@@ -625,10 +610,7 @@ export default function HomeScreen({ navigation }: any) {
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={handleVerticalScroll}
         scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
@@ -647,14 +629,14 @@ export default function HomeScreen({ navigation }: any) {
               <Image
                 source={require('../../assets/icon.png')}
                 style={styles.customAppLogo}
-                resizeMode="contain"
+                contentFit="contain"
               />
             </View>
 
             {/* 3 Right Action Icons (Gap: 16px, kích thước 22-24px) */}
             <View style={styles.headerActions}>
               {/* Search Icon with Animated Sweeping Border */}
-              <AnimatedSearchButton onPress={() => navigation.navigate('Search')} />
+              <AnimatedSearchButton paused={!isFocused} onPress={() => navigation.navigate('Search')} />
 
               {/* Notification Bell */}
               <TouchableOpacity
@@ -692,7 +674,7 @@ export default function HomeScreen({ navigation }: any) {
                 {/* Left Column: Avatar (52px, viền trắng 2px, check xanh) + Badge Basic */}
                 <View style={styles.avatarColumn}>
                   <View style={styles.avatarWrapper}>
-                    <Image 
+                    <Image cachePolicy="memory-disk" 
                       source={user?.avatarUri ? { uri: user.avatarUri } : { uri: 'https://i.pravatar.cc/150?img=11' }} 
                       style={styles.avatar} 
                     />
@@ -709,21 +691,13 @@ export default function HomeScreen({ navigation }: any) {
                   </View>
 
                   {/* User Name below badge */}
-                  <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
-                    {user?.name ? user.name.split(' ').pop() : 'Bạn'}
+                  <AppText style={{ color: Colors.white, fontSize: 12, fontWeight: 'bold', marginTop: 4, maxWidth: 100, textAlign: 'center' }} numberOfLines={1} ellipsizeMode="tail">
+                    {user?.name || 'Bạn'}
                   </AppText>
                 </View>
                 {/* CARD 1: Tổng số dư VND (Kính mờ) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH, marginRight: BALANCE_CARD_GAP }]}>
                   <View style={styles.balanceCard}>
-                    <LiquidGlassView 
-                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]} 
-                      tintColor="rgba(255, 255, 255, 0.1)"
-                      thickness={1.5}
-                      refraction={true}
-                      ior={1.8}
-                      specular={true}
-                    />
                     {/* Dòng 1: Label "Tổng số dư VND" + chevron > + icon con mắt */}
                     <View style={styles.balanceHeader}>
                       <AppText style={styles.balanceTitle}>Tổng số dư VND</AppText>
@@ -763,14 +737,6 @@ export default function HomeScreen({ navigation }: any) {
                 {/* CARD 2: Thẻ MB Visa (Kính mờ) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH }]}>
                   <View style={styles.balanceCard}>
-                    <LiquidGlassView 
-                      style={[StyleSheet.absoluteFill, { borderRadius: 20 }]} 
-                      tintColor="rgba(255, 255, 255, 0.1)"
-                      thickness={1.5}
-                      refraction={true}
-                      ior={1.8}
-                      specular={true}
-                    />
                     {/* Dòng 1: Label "Thẻ MB Hi Visa" + chevron > + icon thẻ */}
                     <View style={styles.balanceHeader}>
                       <AppText style={styles.balanceTitle}>Thẻ MB Hi Visa</AppText>
@@ -895,23 +861,25 @@ export default function HomeScreen({ navigation }: any) {
               onMomentumScrollEnd={(e) => {
                 const rawIdx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
                 currentIndexRef.current = rawIdx;
-                setActiveIndex(rawIdx);
                 isUserInteracting.current = false;
 
                 // Tự động căn vị trí về giữa dải lặp nếu người dùng vuốt về quá gần mép
                 if (rawIdx < BASE_CAROUSEL_DATA.length * 2 || rawIdx >= TOTAL_CAROUSEL_ITEMS - BASE_CAROUSEL_DATA.length * 2) {
-                  const normalizedIdx = (rawIdx % BASE_CAROUSEL_DATA.length) + BASE_CAROUSEL_DATA.length * 5;
+                  const normalizedIdx = (rawIdx % BASE_CAROUSEL_DATA.length) + LOOP_CENTER_INDEX;
                   flatListRef.current?.scrollToOffset({
                     offset: normalizedIdx * SNAP_INTERVAL,
                     animated: false,
                   });
                   scrollX.setValue(normalizedIdx * SNAP_INTERVAL);
                   currentIndexRef.current = normalizedIdx;
-                  setActiveIndex(normalizedIdx);
                 }
               }}
               onScroll={handleScroll}
               scrollEventThrottle={16}
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
+              removeClippedSubviews={Platform.OS === 'android'}
               renderItem={renderBannerItem}
             />
           </View>
@@ -961,7 +929,7 @@ export default function HomeScreen({ navigation }: any) {
               contentContainerStyle={styles.horizontalAdsContainer}
             >
               <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#FCE7F3' }]} activeOpacity={0.85}>
-                <Image source={{ uri: 'https://images.unsplash.com/photo-1557821552-171051530dcb?w=400&q=80' }} style={styles.miniAdImage} />
+                <Image cachePolicy="memory-disk" source={{ uri: 'https://images.unsplash.com/photo-1557821552-171051530dcb?w=400&q=80' }} style={styles.miniAdImage} />
                 <LinearGradient colors={['transparent', 'rgba(112, 15, 67, 0.85)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.miniAdOverlay}>
                   <AppText style={styles.miniAdTitle}>Hoàn tiền 50%</AppText>
@@ -970,7 +938,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#E0F2FE' }]} activeOpacity={0.85}>
-                <Image source={{ uri: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&q=80' }} style={styles.miniAdImage} />
+                <Image cachePolicy="memory-disk" source={{ uri: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&q=80' }} style={styles.miniAdImage} />
                 <LinearGradient colors={['transparent', 'rgba(2, 132, 199, 0.85)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.miniAdOverlay}>
                   <AppText style={styles.miniAdTitle}>Săn Sale Đậm</AppText>
@@ -979,7 +947,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#FEF3C7' }]} activeOpacity={0.85}>
-                <Image source={{ uri: 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=400&q=80' }} style={styles.miniAdImage} />
+                <Image cachePolicy="memory-disk" source={{ uri: 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=400&q=80' }} style={styles.miniAdImage} />
                 <LinearGradient colors={['transparent', 'rgba(217, 119, 6, 0.85)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.miniAdOverlay}>
                   <AppText style={styles.miniAdTitle}>Mở Thẻ Tín Dụng</AppText>
@@ -1227,7 +1195,9 @@ const styles = StyleSheet.create({
     minHeight: 125,       // 👈 Chiều cao tối thiểu của thẻ số dư (tăng/giảm độ cao thẻ)
     borderRadius: 20,     // 👈 Độ bo cong 4 góc của thẻ
     overflow: 'hidden',
-    ...Shadows.elevated,  // 👈 Đổ bóng nổi khối 3D cho thẻ
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   balanceCard: {
     flex: 1,
@@ -1397,12 +1367,12 @@ const styles = StyleSheet.create({
   bannerItemWrapper: {
     height: 190,
     justifyContent: 'center',
+    ...Shadows.elevated,
   },
   bannerItem: {
     flex: 1,
     borderRadius: 18,
     overflow: 'hidden',
-    ...Shadows.elevated,
   },
   bannerBackground: {
     flex: 1,

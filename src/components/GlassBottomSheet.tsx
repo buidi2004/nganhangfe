@@ -197,8 +197,8 @@ export function GlassBottomSheet({
             style={[styles.backdropOverlay, { opacity: fadeAnim }]}
           >
             <BlurView
-              intensity={Platform.OS === 'ios' ? 25 : 35}
-              tint="dark"
+              intensity={80}
+              tint="light"
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.backdropDimmer} />
@@ -217,7 +217,7 @@ export function GlassBottomSheet({
 
           {/* 2. Frosted Blur Layer (vibrancy + blur 4dp) */}
           <BlurView
-            intensity={Platform.OS === 'ios' ? 85 : 100}
+            intensity={100}
             tint="light"
             style={StyleSheet.absoluteFill}
           />

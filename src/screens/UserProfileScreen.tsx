@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  StatusBar,
-  Dimensions,
-  Alert,
-} from 'react-native';
+import { Image } from 'expo-image';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
+import { WalletApi } from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
@@ -25,6 +18,18 @@ interface UserProfileScreenProps {
 
 export default function UserProfileScreen({ navigation }: UserProfileScreenProps) {
   const { user, updateAvatar } = useApp();
+  const [realName, setRealName] = useState(user?.name || 'Tên người dùng');
+
+  useEffect(() => {
+    setRealName(user?.name || 'Tên người dùng');
+    if (user?.name === user?.phoneNumber || user?.name === 'Tên người dùng') {
+      WalletApi.getMe().then(res => {
+        if (res.data?.fullName) setRealName(res.data.fullName);
+        else if ((res.data as any)?.name) setRealName((res.data as any).name);
+      }).catch(() => {});
+    }
+  }, [user]);
+
 
   // Use avatar from AppContext, fallback to default if not set
   const avatarSource = user?.avatarUri
@@ -88,7 +93,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
           {/* Avatar with Edit Pencil */}
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: avatarUri }}
+              source={avatarSource}
               style={styles.avatarImage}
             />
             <TouchableOpacity
@@ -101,7 +106,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
           </View>
 
           {/* User Name & User ID */}
-          <AppText style={styles.userNameText}>{user?.name || 'Tên người dùng'}</AppText>
+          <AppText style={styles.userNameText}>{realName}</AppText>
           <AppText style={styles.userIdText}>
             User ID: <AppText style={{ color: '#700F43', fontWeight: '800' }}>{user?.phoneNumber || '0000000000'}</AppText>
           </AppText>
@@ -126,7 +131,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
               activeOpacity={0.8}
               onPress={() => navigation.navigate('KycLevel')}
             >
-              <FontAwesome5 name="crown" size={22} color="#94A3B8" />
+              <MaterialCommunityIcons name="crown" size={22} color="#94A3B8" />
               <View>
                 <AppText style={styles.subCardLabel}>Gói hội viên MB</AppText>
                 <AppText style={styles.subCardValue}>Basic</AppText>
@@ -140,7 +145,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
               <AppText style={styles.loyaltySmallLabel}>ĐIỂM LOYALTY</AppText>
               <View style={styles.loyaltyScoreRow}>
                 <AppText style={styles.loyaltyScoreNumber}>0</AppText>
-                <FontAwesome5 name="crown" size={16} color="#F59E0B" style={{ marginLeft: 6 }} />
+                <MaterialCommunityIcons name="crown" size={16} color="#F59E0B" style={{ marginLeft: 6 }} />
               </View>
 
               <TouchableOpacity
@@ -281,7 +286,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   userMainCard: {
     backgroundColor: '#FFFFFF',

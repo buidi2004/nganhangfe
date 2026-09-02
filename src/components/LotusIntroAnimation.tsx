@@ -147,7 +147,7 @@ type Props = {
   /** Called once the crossfade to the real logo has finished */
   onFinish?: () => void;
   /** Called once the animation has visually mounted/started */
-  onReady?: () => void;
+  onReady?: () => void | Promise<void>;
 };
 
 export default function LotusIntroAnimation({
@@ -176,34 +176,48 @@ export default function LotusIntroAnimation({
   const rawValues = [r0, r1, r2, r3, r4, r5, r6];
 
   useEffect(() => {
-    // Notify parent that the animation component has mounted and is ready to start playing.
-    // We delay slightly to ensure Reanimated has mounted on the native thread, avoiding black screen flickers.
-    const readyTimer = setTimeout(() => {
-      if (onReady) onReady();
-    }, 50);
+    let isMounted = true;
+    let timer: ReturnType<typeof setTimeout>;
 
-    const smoothGlide = { duration: PETAL_DURATION_MS, easing: Easing.linear };
-    rawValues.forEach((r, i) => {
-      r.value = withDelay(i * STAGGER_MS, withTiming(1, smoothGlide));
-    });
+    const start = async () => {
+      // Delay slightly to ensure Reanimated views have mounted natively
+      await new Promise((res) => setTimeout(res, 50));
+      if (!isMounted) return;
 
-    // Exact, not guessed: last petal starts at (COUNT-1)*STAGGER and runs
-    // for PETAL_DURATION_MS.
-    const totalPetalTime = (PETAL_COUNT - 1) * STAGGER_MS + PETAL_DURATION_MS;
-    const crossfadeStart = Math.max(totalPetalTime - CROSSFADE_OVERLAP_MS, 0);
+      if (onReady) {
+        await onReady(); // Calls SplashScreen.hideAsync()
+        // Wait an extra 200ms to ensure the native splash screen has fully faded out
+        // before we start expanding the petals, otherwise the animation is hidden behind it.
+        await new Promise((res) => setTimeout(res, 200));
+      }
+      if (!isMounted) return;
 
-    const timer = setTimeout(() => {
-      setShowLogo(true);
-      const smoothFade = { duration: CROSSFADE_MS, easing: Easing.out(Easing.cubic) };
-      logoOpacity.value = withTiming(1, smoothFade);
-      logoScale.value = withTiming(1, smoothFade);
-      petalsOpacity.value = withTiming(0, smoothFade, (finished) => {
-        if (finished && onFinish) runOnJS(onFinish)();
+      const smoothGlide = { duration: PETAL_DURATION_MS, easing: Easing.linear };
+      rawValues.forEach((r, i) => {
+        r.value = withDelay(i * STAGGER_MS, withTiming(1, smoothGlide));
       });
-    }, crossfadeStart);
+
+      // Exact, not guessed: last petal starts at (COUNT-1)*STAGGER and runs
+      // for PETAL_DURATION_MS.
+      const totalPetalTime = (PETAL_COUNT - 1) * STAGGER_MS + PETAL_DURATION_MS;
+      const crossfadeStart = Math.max(totalPetalTime - CROSSFADE_OVERLAP_MS, 0);
+
+      timer = setTimeout(() => {
+        if (!isMounted) return;
+        setShowLogo(true);
+        const smoothFade = { duration: CROSSFADE_MS, easing: Easing.out(Easing.cubic) };
+        logoOpacity.value = withTiming(1, smoothFade);
+        logoScale.value = withTiming(1, smoothFade);
+        petalsOpacity.value = withTiming(0, smoothFade, (finished) => {
+          if (finished && onFinish) runOnJS(onFinish)();
+        });
+      }, crossfadeStart);
+    };
+
+    start();
 
     return () => {
-      clearTimeout(readyTimer);
+      isMounted = false;
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

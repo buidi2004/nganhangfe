@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import {
   View,
   StyleSheet,
@@ -27,9 +28,11 @@ const { width } = Dimensions.get('window');
 const SCANNER_SIZE = Math.round(width * 0.88);
 
 export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
+  const isFocused = useIsFocused();
   const [flashlightOn, setFlashlightOn] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const scanAnim = useRef(new Animated.Value(0)).current;
+  const scanLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mediaPermission, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
@@ -122,9 +125,15 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
     }
   };
 
-  // Running Laser Scan Beam Effect
+  // Running Laser Scan Beam Effect — pause when tab/screen not focused
   useEffect(() => {
-    Animated.loop(
+    if (!isFocused) {
+      scanLoopRef.current?.stop();
+      scanLoopRef.current = null;
+      return;
+    }
+
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(scanAnim, {
           toValue: 1,
@@ -137,8 +146,15 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
           useNativeDriver: true,
         }),
       ])
-    ).start();
-  }, [scanAnim]);
+    );
+    scanLoopRef.current = loop;
+    loop.start();
+
+    return () => {
+      loop.stop();
+      scanLoopRef.current = null;
+    };
+  }, [isFocused, scanAnim]);
 
   const translateY = scanAnim.interpolate({
     inputRange: [0, 1],
@@ -190,7 +206,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
           {/* 2. SCANNER VIEWFINDER BOX WITH LASER BEAM */}
           <View style={styles.scannerWrapper}>
             <View style={styles.scannerBox}>
-              {cameraPermission?.granted ? (
+              {isFocused && cameraPermission?.granted ? (
                 <CameraView
                   style={StyleSheet.absoluteFill}
                   facing="back"
@@ -200,10 +216,12 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
                     barcodeTypes: ["qr"],
                   }}
                 />
-              ) : (
+              ) : !cameraPermission?.granted ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                   <AppText style={{ color: '#FFF' }}>Đang chờ cấp quyền Camera...</AppText>
                 </View>
+              ) : (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]} />
               )}
 
               {/* Corner Brackets */}
@@ -219,7 +237,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
                 </View>
               )}
 
-              {!isScanning && cameraPermission?.granted && (
+              {!isScanning && isFocused && cameraPermission?.granted && (
                 /* Animated Laser Beam */
                 <Animated.View
                   style={[

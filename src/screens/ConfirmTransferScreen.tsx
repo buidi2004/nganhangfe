@@ -42,11 +42,32 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
     amount = '0',
     selectedBank = 'Ngân hàng Nội bộ',
     notes = 'Chuyển tiền',
+    bankCode = '',
   } = route.params || {};
 
   const [isOtpModalVisible, setIsOtpModalVisible] = useState(false);
   const [pinDigits, setPinDigits] = useState<string[]>([]);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [feeAmount, setFeeAmount] = useState<number | null>(null);
+  const [isFetchingFee, setIsFetchingFee] = useState(true);
+
+  const rawNumAmount = parseInt(String(amount).replace(/[^0-9]/g, ''), 10) || 0;
+
+  React.useEffect(() => {
+    const fetchFee = async () => {
+      try {
+        if (!user?.walletId) return;
+        const res = await WalletApi.estimateFees(user.walletId, rawNumAmount, 'TRANSFER', 'VND');
+        setFeeAmount(res.data?.feeAmount ?? 0);
+      } catch (error) {
+        console.warn('Lỗi tính phí:', error);
+        setFeeAmount(0); // fallback to 0 if failed
+      } finally {
+        setIsFetchingFee(false);
+      }
+    };
+    fetchFee();
+  }, []);
 
   const displayAmount = amount.includes('VND') || amount.includes('đ') ? amount : `${amount} VND`;
 
@@ -63,13 +84,13 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
         
         try {
           if (!user?.walletId) throw new Error('Không tìm thấy ví nguồn');
-          const rawNumAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
+          const rawNumAmount = parseInt(String(amount).replace(/[^0-9]/g, ''), 10) || 0;
           
           // 1. Init Transfer
-          const initRes = await WalletApi.initTransfer(user.walletId, recipient.walletId || recipient.phone, rawNumAmount, notes, 'VND');
+          const initRes = await WalletApi.initTransfer(user.walletId, recipient.walletId || recipient.phone, bankCode, rawNumAmount, notes, 'VND');
           
           // 2. Confirm Transfer
-          await WalletApi.confirmTransfer(initRes.data.transactionId, pin, '');
+          const confirmRes = await WalletApi.confirmTransfer(initRes.data.transactionId, pin);
           
           // 3. Auto-save Beneficiary
           try {
@@ -89,12 +110,15 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
           
           navigation.navigate('TransferResult', {
             success: true,
-            amount: displayAmount,
-            recipient,
-            selectedBank,
-            notes,
-            transactionId: initRes.data.transactionId,
-            timestamp: new Date().toISOString(),
+            receipt: confirmRes.data,
+            amount: `${confirmRes.data.amount} ${confirmRes.data.currency || 'VND'}`,
+            recipient: { name: confirmRes.data.recipientName, phone: confirmRes.data.recipientAccount },
+            selectedBank: confirmRes.data.bankCode,
+            notes: confirmRes.data.note,
+            transactionId: confirmRes.data.transactionId,
+            timestamp: confirmRes.data.timestamp,
+            feeAmount: confirmRes.data.feeAmount,
+            runningBalance: confirmRes.data.runningBalance
           });
         } catch (e: any) {
           setIsTransferring(false);
@@ -212,6 +236,18 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
             <View style={[styles.extraInfoRow, { marginTop: 10 }]}>
               <AppText style={styles.extraInfoLabel}>Hình thức chuyển tiền</AppText>
               <AppText style={styles.extraInfoValue}>Chuyển nhanh</AppText>
+            </View>
+
+            {/* Phí giao dịch */}
+            <View style={[styles.extraInfoRow, { marginTop: 10 }]}>
+              <AppText style={styles.extraInfoLabel}>Phí giao dịch</AppText>
+              {isFetchingFee ? (
+                <ActivityIndicator size="small" color="#D2519D" />
+              ) : (
+                <AppText style={styles.extraInfoValue}>
+                  {feeAmount === 0 ? 'Miễn phí' : `${feeAmount?.toLocaleString('vi-VN')} đ`}
+                </AppText>
+              )}
             </View>
           </View>
         </View>

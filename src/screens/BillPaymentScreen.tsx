@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';

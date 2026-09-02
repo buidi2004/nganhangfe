@@ -218,7 +218,7 @@ export function GlassSlider({
 
           {/* Frosted Blur Layer (Khúc xạ thanh ray và hình nền phía sau) */}
           <BlurView
-            intensity={Platform.OS === 'ios' ? 70 : 90}
+            intensity={40}
             tint="light"
             style={StyleSheet.absoluteFill}
           />

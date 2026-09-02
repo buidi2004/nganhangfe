@@ -8,6 +8,8 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -91,8 +93,12 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* HERO ICON */}
@@ -223,7 +229,8 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
             {isLoading ? 'Đang xử lý...' : 'Xác nhận đổi mật khẩu'}
           </AppText>
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

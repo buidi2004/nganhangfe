@@ -5,9 +5,10 @@ import HomeScreen from "../screens/HomeScreen";
 import CardsScreen from "../screens/CardsScreen";
 import ScanQRScreen from "../screens/ScanQRScreen";
 import PromotionsScreen from "../screens/PromotionsScreen";
+import MoreScreen from "../screens/MoreScreen";
 import { GlassBottomNavbar } from "../components/GlassBottomNavbar";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { SideMenuDrawer } from "../components/SideMenuDrawer";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator();
@@ -17,13 +18,11 @@ function GlassTabBar(props: BottomTabBarProps) {
 }
 
 export default function MainTabs() {
+  const navigation = useNavigation<any>();
   const [menuVisible, setMenuVisible] = useState(false);
-  const navigation = useNavigation();
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('openSideMenu', () => {
-      setMenuVisible(true);
-    });
+    const sub = DeviceEventEmitter.addListener('openSideMenu', () => setMenuVisible(true));
     return () => sub.remove();
   }, []);
 
@@ -43,27 +42,23 @@ export default function MainTabs() {
       >
         <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Trang chu" }} />
         <Tab.Screen name="Card" component={CardsScreen} options={{ title: "The" }} />
-        <Tab.Screen name="QR" component={ScanQRScreen} options={{ tabBarStyle: { display: "none" } }} />
+        <Tab.Screen
+          name="QR"
+          component={ScanQRScreen}
+          options={{ tabBarStyle: { display: "none" } }}
+        />
         <Tab.Screen name="Gift" component={PromotionsScreen} options={{ title: "Uu dai" }} />
         <Tab.Screen 
           name="Menu" 
-          component={HomeScreen} // Dummy component, never actually rendered
-          options={{ title: "Menu" }} 
-          listeners={{
-            tabPress: (e) => {
-              // Prevent default action (navigation)
-              e.preventDefault();
-              // Emit event to open side menu drawer globally
-              DeviceEventEmitter.emit('openSideMenu');
-            },
-          }}
+          component={MoreScreen} 
+          options={{ title: "Thêm" }} 
         />
       </Tab.Navigator>
 
-      <SideMenuDrawer 
-        visible={menuVisible} 
-        onClose={() => setMenuVisible(false)} 
-        navigation={navigation} 
+      <SideMenuDrawer
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        navigation={navigation}
       />
     </View>
   );

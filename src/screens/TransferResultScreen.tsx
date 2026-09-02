@@ -9,7 +9,7 @@ import {
   Share,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
@@ -27,6 +27,7 @@ import * as Sharing from 'expo-sharing';
 import { WalletApi, getAuthToken } from '../services/api';
 
 export default function TransferResultScreen({ route, navigation }: TransferResultScreenProps) {
+  const insets = useSafeAreaInsets();
   const {
     amount = '0 VND',
     recipient = { name: 'Người nhận', phone: '' },
@@ -166,7 +167,7 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
             </View>
 
             {/* Account Number */}
-            <AppText style={styles.accountNumberText}>{recipient?.phone}</AppText>
+            <AppText style={styles.accountNumberText}>{recipient?.counterpartyAccount || recipient?.recipientAccount || recipient?.targetWalletId || recipient?.phone || ''}</AppText>
 
             {/* Transfer Message */}
             <AppText style={styles.transferMessageText}>{notes}</AppText>
@@ -238,7 +239,7 @@ export default function TransferResultScreen({ route, navigation }: TransferResu
       </ScrollView>
 
       {/* 6. BOTTOM FULL-WIDTH CTA BUTTON */}
-      <View style={styles.bottomFooter}>
+      <View style={[styles.bottomFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity
           style={styles.anotherTransactionBtn}
           activeOpacity={0.9}

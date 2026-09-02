@@ -1,30 +1,21 @@
-import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Dimensions,
-  StatusBar,
-  Modal,
-  DeviceEventEmitter,
-} from 'react-native';
+import { Image } from 'expo-image';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar, Modal, DeviceEventEmitter, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
-import { useHideOnScroll } from '../hooks/useHideOnScroll';
+import { useThrottledNavBarScroll } from '../hooks/useThrottledNavBarScroll';
 
 const { width } = Dimensions.get('window');
 
 // 1. Hot Deal 3D Center Graphics with Gift Boxes & Lightning
-function HotDealGraphic({ width: bannerW = width - 32, height: bannerH = 140 }: { width?: number; height?: number }) {
+const HotDealGraphic = React.memo(function HotDealGraphic({ width: bannerW = width - 32, height: bannerH = 140 }: { width?: number; height?: number }) {
   return (
     <Svg width={bannerW} height={bannerH} viewBox="0 0 340 140" fill="none">
       <Defs>
@@ -65,10 +56,10 @@ function HotDealGraphic({ width: bannerW = width - 32, height: bannerH = 140 }: 
       />
     </Svg>
   );
-}
+});
 
 // 2. Hero Visual Art for Cashback Plus Modal
-function CashbackHeroArt() {
+const CashbackHeroArt = React.memo(function CashbackHeroArt() {
   return (
     <Svg width={140} height={110} viewBox="0 0 140 110" fill="none">
       {/* 3D Shopping Bag Lotus Pink */}
@@ -79,7 +70,7 @@ function CashbackHeroArt() {
         <G transform="translate(0, 30) rotate(-15)">
           <Rect x="0" y="0" width="26" height="34" rx="4" fill="#10B981" />
           <Circle cx="13" cy="6" r="2" fill="#FFFFFF" />
-          <AppText style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '900', textAlign: 'center', marginTop: 10 }}>%</AppText>
+          <SvgText x="13" y="24" fontSize="13" fill="#FFFFFF" fontWeight="900" textAnchor="middle">%</SvgText>
         </G>
       </G>
 
@@ -105,14 +96,14 @@ function CashbackHeroArt() {
       </G>
     </Svg>
   );
-}
+});
 
 // 3. Voucher Card Component
-function PromoVoucherCard({ imageUri, title, category, percent, expiry }: { imageUri: string; title: string; category: string; percent: string; expiry: string }) {
+const PromoVoucherCard = React.memo(function PromoVoucherCard({ imageUri, title, category, percent, expiry }: { imageUri: string; title: string; category: string; percent: string; expiry: string }) {
   return (
     <TouchableOpacity style={styles.voucherCard} activeOpacity={0.9}>
       <View style={styles.voucherTopRow}>
-        <Image source={{ uri: imageUri }} style={styles.voucherImage} />
+        <Image cachePolicy="memory-disk" source={{ uri: imageUri }} style={styles.voucherImage} />
         <View style={styles.voucherInfo}>
           <View style={styles.voucherBrandRow}>
             <View style={styles.miniMbStar}>
@@ -138,35 +129,49 @@ function PromoVoucherCard({ imageUri, title, category, percent, expiry }: { imag
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 // 4. Advertisement Banner Component
-function AdBannerCard() {
+const AdBannerCard = React.memo(function AdBannerCard() {
   return (
     <TouchableOpacity style={styles.adBannerCard} activeOpacity={0.95}>
-      <Image 
+      <Image cachePolicy="memory-disk" 
         source={{ uri: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&auto=format&fit=crop&q=80' }} 
         style={styles.adBannerImage} 
       />
       <LinearGradient
         colors={['transparent', 'rgba(112, 15, 67, 0.9)']}
-        style={styles.adBannerOverlay}
+        style={StyleSheet.absoluteFill}
       />
-      <View style={styles.adBannerTextContainer}>
+      <View style={styles.adBannerOverlay}>
         <View style={styles.adBadge}>
           <AppText style={styles.adBadgeText}>TÀI TRỢ</AppText>
         </View>
-        <AppText style={styles.adBannerTitle}>Đón Siêu Sale Cuối Tuần</AppText>
-        <AppText style={styles.adBannerDesc}>Nhập mã SIEUSALE giảm ngay 50K cho đơn từ 200K</AppText>
+        <AppText style={styles.adBannerTitle}>Shopee x MBBank</AppText>
+        <AppText style={styles.adBannerDesc}>Hoàn tiền 10% khi thanh toán bằng thẻ MB Visa</AppText>
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export default function PromotionsScreen({ navigation }: any) {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const [isPromoModalVisible, setIsPromoModalVisible] = useState(true);
-  const { onScroll } = useHideOnScroll();
+  const [isPromoModalVisible, setIsPromoModalVisible] = useState(false);
+  const throttledNavBarScroll = useThrottledNavBarScroll();
+  const navBarScrollRef = useRef(throttledNavBarScroll);
+  navBarScrollRef.current = throttledNavBarScroll;
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const handleVerticalScroll = useRef(
+    Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+      {
+        useNativeDriver: true,
+        listener: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => navBarScrollRef.current(event),
+      }
+    )
+  ).current;
 
   return (
     <View style={styles.container}>
@@ -215,10 +220,10 @@ export default function PromotionsScreen({ navigation }: any) {
         </SafeAreaView>
       </View>
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        onScroll={onScroll}
+        onScroll={handleVerticalScroll}
         scrollEventThrottle={16}
       >
         {/* 2. PAGE TITLE */}
@@ -246,7 +251,7 @@ export default function PromotionsScreen({ navigation }: any) {
             <View style={styles.loyaltyBottomRow}>
               <AppText style={styles.loyaltyScore}>0</AppText>
               <View style={styles.crownShieldWrapper}>
-                <FontAwesome5 name="crown" size={30} color="#F59E0B" />
+                <MaterialCommunityIcons name="crown" size={30} color="#F59E0B" />
               </View>
             </View>
           </TouchableOpacity>
@@ -364,175 +369,183 @@ export default function PromotionsScreen({ navigation }: any) {
           <AdBannerCard />
         </View>
 
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* 6. POPUP QUẢNG CÁO CASHBACK PLUS */}
+      {isPromoModalVisible && (
       <Modal
         visible={isPromoModalVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setIsPromoModalVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            {/* Top Bar: Logo MB + Close X Button */}
-            <View style={styles.modalTopRow}>
-              <View style={styles.modalLogoRow}>
-                <View style={styles.modalStarIcon}>
-                  <AppText style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>★</AppText>
-                </View>
-                <AppText style={styles.modalLogoText}>MB</AppText>
-              </View>
-
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                activeOpacity={0.7}
-                onPress={() => setIsPromoModalVisible(false)}
-              >
-                <Ionicons name="close" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Hero Title & 3D Illustration Area */}
-            <View style={styles.modalHeroRow}>
-              <View style={styles.modalHeroLeft}>
-                <AppText style={styles.cashbackPlusWord1}>CASHBACK</AppText>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <AppText style={styles.cashbackPlusWord2}>PLUS</AppText>
-                  <AppText style={styles.cashbackPlusGreen}>+</AppText>
-                </View>
-
-                <View style={styles.mua1Nhan3Pill}>
-                  <AppText style={styles.mua1Nhan3Text}>
-                    MUA 1, NHẬN <AppText style={{ color: '#059669', fontWeight: '900' }}>3</AppText> LỢI ÍCH
-                  </AppText>
-                </View>
-              </View>
-
-              <CashbackHeroArt />
-            </View>
-
-            {/* 3 BENEFIT BLOCKS */}
-            <View style={styles.benefitsContainer}>
-              {/* BENEFIT 1: 100% ĐƯỢC HOÀN TIỀN */}
-              <View style={styles.benefitBox1}>
-                <View style={styles.benefit1HeaderRow}>
-                  <View style={styles.numberBadgePink}>
-                    <AppText style={styles.numberBadgeText}>1</AppText>
+        <TouchableOpacity 
+          style={styles.modalBackdrop} 
+          activeOpacity={1} 
+          onPress={() => setIsPromoModalVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={{ width: '100%' }}>
+            <View style={styles.modalCard}>
+              {/* Top Bar: Logo MB + Close X Button */}
+              <View style={styles.modalTopRow}>
+                <View style={styles.modalLogoRow}>
+                  <View style={styles.modalStarIcon}>
+                    <AppText style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>★</AppText>
                   </View>
-                  <AppText style={styles.benefit1Title}>100% ĐƯỢC HOÀN TIỀN</AppText>
+                  <AppText style={styles.modalLogoText}>MB</AppText>
                 </View>
 
-                <View style={styles.benefit1ContentRow}>
-                  <View style={styles.benefit1LeftCol}>
-                    <View style={styles.brandTagsRow}>
-                      <View style={[styles.brandPill, { borderColor: '#FDBA74', backgroundColor: '#FFF7ED' }]}>
-                        <Ionicons name="bag-handle" size={11} color="#EA580C" />
-                        <View style={{ marginLeft: 3 }}>
-                          <AppText style={{ fontSize: 7.5, fontWeight: '800', color: '#EA580C' }}>Shopee</AppText>
-                          <AppText style={{ fontSize: 7, fontWeight: '700', color: '#EA580C' }}>đến 30%</AppText>
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  activeOpacity={0.7}
+                  onPress={() => setIsPromoModalVisible(false)}
+                >
+                  <Ionicons name="close" size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Hero Title & 3D Illustration Area */}
+              <View style={styles.modalHeroRow}>
+                <View style={styles.modalHeroLeft}>
+                  <AppText style={styles.cashbackPlusWord1}>CASHBACK</AppText>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <AppText style={styles.cashbackPlusWord2}>PLUS</AppText>
+                    <AppText style={styles.cashbackPlusGreen}>+</AppText>
+                  </View>
+
+                  <View style={styles.mua1Nhan3Pill}>
+                    <AppText style={styles.mua1Nhan3Text}>
+                      MUA 1, NHẬN <AppText style={{ color: '#059669', fontWeight: '900' }}>3</AppText> LỢI ÍCH
+                    </AppText>
+                  </View>
+                </View>
+
+                <CashbackHeroArt />
+              </View>
+
+              {/* 3 BENEFIT BLOCKS */}
+              <View style={styles.benefitsContainer}>
+                {/* BENEFIT 1: 100% ĐƯỢC HOÀN TIỀN */}
+                <View style={styles.benefitBox1}>
+                  <View style={styles.benefit1HeaderRow}>
+                    <View style={styles.numberBadgePink}>
+                      <AppText style={styles.numberBadgeText}>1</AppText>
+                    </View>
+                    <AppText style={styles.benefit1Title}>100% ĐƯỢC HOÀN TIỀN</AppText>
+                  </View>
+
+                  <View style={styles.benefit1ContentRow}>
+                    <View style={styles.benefit1LeftCol}>
+                      <View style={styles.brandTagsRow}>
+                        <View style={[styles.brandPill, { borderColor: '#FDBA74', backgroundColor: '#FFF7ED' }]}>
+                          <Ionicons name="bag-handle" size={11} color="#EA580C" />
+                          <View style={{ marginLeft: 3 }}>
+                            <AppText style={{ fontSize: 7.5, fontWeight: '800', color: '#EA580C' }}>Shopee</AppText>
+                            <AppText style={{ fontSize: 7, fontWeight: '700', color: '#EA580C' }}>đến 30%</AppText>
+                          </View>
+                        </View>
+
+                        <View style={[styles.brandPill, { borderColor: '#CBD5E1', backgroundColor: '#F8FAFC' }]}>
+                          <Ionicons name="musical-notes" size={11} color="#0F172A" />
+                          <View style={{ marginLeft: 3 }}>
+                            <AppText style={{ fontSize: 7.5, fontWeight: '800', color: '#0F172A' }}>TikTok Shop</AppText>
+                            <AppText style={{ fontSize: 7, fontWeight: '700', color: '#0F172A' }}>đến 20%</AppText>
+                          </View>
                         </View>
                       </View>
 
-                      <View style={[styles.brandPill, { borderColor: '#CBD5E1', backgroundColor: '#F8FAFC' }]}>
-                        <Ionicons name="musical-notes" size={11} color="#0F172A" />
-                        <View style={{ marginLeft: 3 }}>
-                          <AppText style={{ fontSize: 7.5, fontWeight: '800', color: '#0F172A' }}>TikTok Shop</AppText>
-                          <AppText style={{ fontSize: 7, fontWeight: '700', color: '#0F172A' }}>đến 20%</AppText>
+                      <View style={styles.otherBrandsRow}>
+                        <Ionicons name="star" size={10} color="#D2519D" />
+                        <AppText style={styles.otherBrandsText}> Hơn <AppText style={{ fontWeight: '800' }}>1000</AppText> thương hiệu khác</AppText>
+                      </View>
+
+                      <View style={styles.partnerLogosStrip}>
+                        <AppText style={styles.partnerLogoSmall}>Trip.com</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: '#059669' }]}>agoda</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: '#1E1B4B' }]}>Lazada</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: '#EC4899' }]}>concung</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: '#D2519D' }]}>KidsPlaza</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: '#0F172A' }]}>Nike</AppText>
+                        <AppText style={styles.partnerLogoSmall}>...</AppText>
+                      </View>
+                    </View>
+
+                    <View style={styles.benefit1Art}>
+                      <View style={styles.miniPhoneMock}>
+                        <View style={styles.mini100Badge}>
+                          <AppText style={{ color: '#FFFFFF', fontSize: 7, fontWeight: '900' }}>100%</AppText>
                         </View>
+                        <Ionicons name="cart" size={18} color="#0284C7" />
                       </View>
                     </View>
+                  </View>
+                </View>
 
-                    <View style={styles.otherBrandsRow}>
-                      <Ionicons name="star" size={10} color="#D2519D" />
-                      <AppText style={styles.otherBrandsText}> Hơn <AppText style={{ fontWeight: '800' }}>1000</AppText> thương hiệu khác</AppText>
+                {/* BENEFIT 2: HOÀN THEO ĐƠN VỀ VÍ TIẾT KIỆM TIỀN LẺ */}
+                <View style={styles.benefitBox2}>
+                  <View style={styles.benefitRowLeft}>
+                    <View style={styles.numberBadgePlum}>
+                      <AppText style={styles.numberBadgeText}>2</AppText>
                     </View>
-
-                    <View style={styles.partnerLogosStrip}>
-                      <AppText style={styles.partnerLogoSmall}>Trip.com</AppText>
-                      <AppText style={[styles.partnerLogoSmall, { color: '#059669' }]}>agoda</AppText>
-                      <AppText style={[styles.partnerLogoSmall, { color: '#1E1B4B' }]}>Lazada</AppText>
-                      <AppText style={[styles.partnerLogoSmall, { color: '#EC4899' }]}>concung</AppText>
-                      <AppText style={[styles.partnerLogoSmall, { color: '#D2519D' }]}>KidsPlaza</AppText>
-                      <AppText style={[styles.partnerLogoSmall, { color: '#0F172A' }]}>Nike</AppText>
-                      <AppText style={styles.partnerLogoSmall}>...</AppText>
-                    </View>
+                    <AppText style={styles.benefit2Title}>
+                      HOÀN THEO ĐƠN{'\n'}VỀ VÍ TIẾT KIỆM TIỀN LẺ
+                    </AppText>
                   </View>
 
-                  <View style={styles.benefit1Art}>
-                    <View style={styles.miniPhoneMock}>
-                      <View style={styles.mini100Badge}>
-                        <AppText style={{ color: '#FFFFFF', fontSize: 7, fontWeight: '900' }}>100%</AppText>
+                  <View style={styles.benefit2RightArt}>
+                    <View style={styles.purpleWallet}>
+                      <Ionicons name="wallet" size={18} color="#FFFFFF" />
+                    </View>
+
+                    <View style={styles.orderVerifiedTag}>
+                      <AppText style={styles.orderVerifiedText}>Đơn hàng{'\n'}đã xác nhận</AppText>
+                      <View style={styles.checkCirclePink}>
+                        <Ionicons name="checkmark" size={9} color="#FFFFFF" />
                       </View>
-                      <Ionicons name="cart" size={18} color="#0284C7" />
                     </View>
                   </View>
                 </View>
-              </View>
 
-              {/* BENEFIT 2: HOÀN THEO ĐƠN VỀ VÍ TIẾT KIỆM TIỀN LẺ */}
-              <View style={styles.benefitBox2}>
-                <View style={styles.benefitRowLeft}>
-                  <View style={styles.numberBadgePlum}>
-                    <AppText style={styles.numberBadgeText}>2</AppText>
-                  </View>
-                  <AppText style={styles.benefit2Title}>
-                    HOÀN THEO ĐƠN{'\n'}VỀ VÍ TIẾT KIỆM TIỀN LẺ
-                  </AppText>
-                </View>
-
-                <View style={styles.benefit2RightArt}>
-                  <View style={styles.purpleWallet}>
-                    <Ionicons name="wallet" size={18} color="#FFFFFF" />
-                  </View>
-
-                  <View style={styles.orderVerifiedTag}>
-                    <AppText style={styles.orderVerifiedText}>Đơn hàng{'\n'}đã xác nhận</AppText>
-                    <View style={styles.checkCirclePink}>
-                      <Ionicons name="checkmark" size={9} color="#FFFFFF" />
+                {/* BENEFIT 3: SINH LỜI TRÊN TIỀN HOÀN VỚI LÃI SUẤT CAO */}
+                <View style={styles.benefitBox3}>
+                  <View style={styles.benefitRowLeft}>
+                    <View style={styles.numberBadgeGreen}>
+                      <AppText style={styles.numberBadgeText}>3</AppText>
                     </View>
+                    <AppText style={styles.benefit3Title}>
+                      SINH LỜI TRÊN{'\n'}TIỀN HOÀN VỚI{'\n'}LÃI SUẤT CAO
+                    </AppText>
                   </View>
-                </View>
-              </View>
 
-              {/* BENEFIT 3: SINH LỜI TRÊN TIỀN HOÀN VỚI LÃI SUẤT CAO */}
-              <View style={styles.benefitBox3}>
-                <View style={styles.benefitRowLeft}>
-                  <View style={styles.numberBadgeGreen}>
-                    <AppText style={styles.numberBadgeText}>3</AppText>
-                  </View>
-                  <AppText style={styles.benefit3Title}>
-                    SINH LỜI TRÊN{'\n'}TIỀN HOÀN VỚI{'\n'}LÃI SUẤT CAO
-                  </AppText>
-                </View>
+                  <View style={styles.benefit3RightArt}>
+                    <MaterialCommunityIcons name="trending-up" size={28} color="#10B981" />
 
-                <View style={styles.benefit3RightArt}>
-                  <MaterialCommunityIcons name="trending-up" size={28} color="#10B981" />
-
-                  <View style={styles.interestShield}>
-                    <AppText style={styles.interestShieldText}>LÃI SUẤT{'\n'}CAO</AppText>
+                    <View style={styles.interestShield}>
+                      <AppText style={styles.interestShieldText}>LÃI SUẤT{'\n'}CAO</AppText>
+                    </View>
                   </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          {/* Bottom Floating CTA Button */}
-          <TouchableOpacity
-            style={styles.modalCtaBtn}
-            activeOpacity={0.85}
-            onPress={() => setIsPromoModalVisible(false)}
-          >
-            <LinearGradient
-              colors={['#D2519D', '#700F43']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <AppText style={styles.modalCtaText}>Mua sắm hoàn tiền ngay</AppText>
+            {/* Bottom Floating CTA Button */}
+            <TouchableOpacity
+              style={styles.modalCtaBtn}
+              activeOpacity={0.85}
+              onPress={() => setIsPromoModalVisible(false)}
+            >
+              <LinearGradient
+                colors={['#D2519D', '#700F43']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <AppText style={styles.modalCtaText}>Mua sắm hoàn tiền ngay</AppText>
+            </TouchableOpacity>
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       </Modal>
+      )}
 
       {/* Side Menu Drawer - Moved to MainTabs */}
     </View>

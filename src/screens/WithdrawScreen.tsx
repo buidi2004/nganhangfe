@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Radius, Shadows, Spacing } from '../theme';
 import { Typography } from '../theme';
@@ -18,11 +17,26 @@ interface WithdrawScreenProps {
 }
 
 import { useApp } from '../context/AppContext';
+import { WalletApi } from '../services/api';
 
 export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
   const { wallet } = useApp();
   const [amount, setAmount] = useState('');
-  const [selectedBank] = useState('');
+  const [fundingSources, setFundingSources] = useState<any[]>([]);
+  const [selectedBankId, setSelectedBankId] = useState<string>('');
+  
+  React.useEffect(() => {
+    WalletApi.getFundingSources().then(res => {
+      if (res.data && res.data.length > 0) {
+        setFundingSources(res.data);
+        const defaultSrc = res.data.find((c: any) => c.isDefault || c.current) || res.data[0];
+        setSelectedBankId(defaultSrc.id);
+      }
+    }).catch(e => console.warn(e));
+  }, []);
+
+  const selectedBankInfo = fundingSources.find(c => c.id === selectedBankId);
+  const selectedBankName = selectedBankInfo ? `${selectedBankInfo.provider || 'Ngân hàng'} ****${selectedBankInfo.number?.slice(-4) || ''}` : 'Chưa liên kết thẻ';
   
   const balance = wallet?.balance || 0;
   const amountNum = parseInt(amount.replace(/\./g, '') || '0');
@@ -40,12 +54,12 @@ export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         {/* Target bank card */}
-        <TouchableOpacity style={styles.sourceCard} onPress={() => navigation.navigate('BankCardManagement')}>
+        <TouchableOpacity style={styles.sourceCard} onPress={() => navigation.navigate('PaymentMethods')}>
           <View style={styles.sourceLeft}>
             <AppIcon name="card" size="lg" color={Colors.primary} />
             <View style={styles.sourceInfo}>
               <AppText style={styles.sourceLabel}>Ngân hàng nhận</AppText>
-              <AppText style={styles.sourceValue}>{selectedBank}</AppText>
+              <AppText style={styles.sourceValue}>{selectedBankName}</AppText>
             </View>
           </View>
           <AppIcon name="chevronRight" size="md" color={Colors.textSecondary} />
@@ -97,8 +111,8 @@ export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
       <View style={styles.footer}>
         <PrimaryButton
           title="Xác nhận rút tiền"
-          onPress={() => navigation.navigate('WithdrawConfirm', { amount, selectedBank })}
-          disabled={!amount || amountNum === 0 || isExceedBalance}
+          onPress={() => navigation.navigate('WithdrawConfirm', { amount, bankAccountId: selectedBankId, selectedBankName })}
+          disabled={!amount || amountNum === 0 || isExceedBalance || !selectedBankId}
         />
         <SecondaryButton title="Hủy" onPress={() => navigation.goBack()} style={styles.secondaryBtn} />
       </View>
@@ -119,7 +133,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   headerTitle: {
-    
+    fontSize: 17.5,
+    fontWeight: '800',
     color: Colors.textPrimary,
   },
   spacer: {

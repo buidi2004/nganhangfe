@@ -20,6 +20,7 @@ type Props = {
   palettes?: ColorTuple[];
   holdDuration?: number;
   transitionDuration?: number;
+  paused?: boolean;
 };
 
 // Sử dụng các tông màu pastel trắng, hồng, xanh siêu nhạt như thiết kế
@@ -43,6 +44,7 @@ export default function AnimatedGradientQRIcon({
   palettes = DEFAULT_PALETTES,
   holdDuration = 2200,
   transitionDuration = 1400,
+  paused = false,
 }: Props) {
   const radius = borderRadius ?? size * 0.28;
   
@@ -57,8 +59,15 @@ export default function AnimatedGradientQRIcon({
   }
   
   const opacities = opacitiesRef.current;
+  const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
+    if (paused) {
+      loopRef.current?.stop();
+      loopRef.current = null;
+      return;
+    }
+
     const n = palettes.length;
     const steps: Animated.CompositeAnimation[] = [];
 
@@ -84,9 +93,13 @@ export default function AnimatedGradientQRIcon({
     }
 
     const loop = Animated.loop(Animated.sequence(steps));
+    loopRef.current = loop;
     loop.start();
-    return () => loop.stop();
-  }, [palettes, holdDuration, transitionDuration, opacities]);
+    return () => {
+      loop.stop();
+      loopRef.current = null;
+    };
+  }, [palettes, holdDuration, transitionDuration, opacities, paused]);
 
   return (
     <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden' }}>

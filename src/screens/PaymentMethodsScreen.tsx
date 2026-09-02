@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,17 +7,36 @@ import { Colors, Radius, Shadows, Spacing, Opacity } from '../theme';
 import { Typography } from '../theme';
 import { StatusChip } from '../components/StatusChip';
 import { AppText } from '../components/typography/AppText';
+import { WalletApi } from '../services/api';
+import { useApp } from '../context/AppContext';
 
 interface PaymentMethodsScreenProps {
   navigation: any;
 }
 
-const mockCards = [
-  { id: '1', type: 'visa' as const, last4: '8888', expiry: '12/26', current: true },
-  { id: '2', type: 'mastercard' as const, last4: '1234', expiry: '06/25', current: false },
-];
-
 export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScreenProps) {
+  const { user } = useApp();
+  const [cards, setCards] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const res = await WalletApi.getFundingSources();
+        if (res.data) {
+          setCards(res.data);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch funding sources', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCards();
+  }, []);
+
+  const defaultCard = cards.find(c => c.isDefault || c.current) || cards[0];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -39,18 +58,22 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
           style={styles.cardDisplay}
         >
           <View style={styles.cardHeader}>
-            <AppText variant="headingSm" style={styles.cardType}>VISA</AppText>
+            <AppText variant="headingSm" style={styles.cardType}>
+              {defaultCard?.provider?.toUpperCase() || 'VISA'}
+            </AppText>
               <AppIcon name="wifi" size="md" color={Colors.white} />
           </View>
-          <AppText variant="headingSm" style={styles.cardNumber}>**** **** **** 8888</AppText>
+          <AppText variant="headingSm" style={styles.cardNumber}>
+            **** **** **** {defaultCard?.number ? defaultCard.number.slice(-4) : '8888'}
+          </AppText>
           <View style={styles.cardFooter}>
             <View>
               <AppText variant="captionXs" style={styles.cardLabel}>Chủ thẻ</AppText>
-              <AppText style={styles.cardName}>NGUYEN VAN A</AppText>
+              <AppText style={styles.cardName}>{defaultCard?.cardHolderName || user?.name?.toUpperCase() || 'NGUYEN VAN A'}</AppText>
             </View>
             <View>
               <AppText variant="captionXs" style={styles.cardLabel}>Hết hạn</AppText>
-              <AppText style={styles.cardExpiry}>12/26</AppText>
+              <AppText style={styles.cardExpiry}>{defaultCard?.expiryDate || '12/26'}</AppText>
             </View>
           </View>
         </LinearGradient>
@@ -58,26 +81,32 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
         {/* Card list */}
         <AppText style={styles.sectionTitle}>Thẻ đã lưu</AppText>
         <View style={styles.cardList}>
-          {mockCards.map((card) => (
-            <View key={card.id} style={styles.cardItem}>
-              <View style={styles.cardItemLeft}>
-                <View style={styles.cardIconBg}>
-                  <AppIcon
-                    name={card.type === 'visa' ? 'card' : 'card-outline'}
-                    size="sm"
-                    color={Colors.primary}
-                  />
+          {isLoading ? (
+            <ActivityIndicator style={{ padding: 20 }} color={Colors.primary} />
+          ) : cards.length > 0 ? (
+            cards.map((card, idx) => (
+              <View key={card.id || idx} style={styles.cardItem}>
+                <View style={styles.cardItemLeft}>
+                  <View style={styles.cardIconBg}>
+                    <AppIcon
+                      name={card.provider?.toLowerCase() === 'visa' ? 'card' : 'card-outline'}
+                      size="sm"
+                      color={Colors.primary}
+                    />
+                  </View>
+                  <View>
+                    <AppText style={styles.cardItemName}>
+                      {card.provider || 'Thẻ'} ****{card.number?.slice(-4) || 'XXXX'}
+                    </AppText>
+                    <AppText style={styles.cardItemExpiry}>Hết hạn: {card.expiryDate || 'N/A'}</AppText>
+                  </View>
                 </View>
-                <View>
-                  <AppText style={styles.cardItemName}>
-                    {card.type === 'visa' ? 'Visa' : 'Mastercard'} ****{card.last4}
-                  </AppText>
-                  <AppText style={styles.cardItemExpiry}>Hết hạn: {card.expiry}</AppText>
-                </View>
+                {(card.isDefault || card.current) && <StatusChip text="Mặc định" type="success" size="sm" />}
               </View>
-              {card.current && <StatusChip text="Mặc định" type="success" size="sm" />}
-            </View>
-          ))}
+            ))
+          ) : (
+            <AppText style={{ padding: 20, textAlign: 'center', color: Colors.textSecondary }}>Chưa có thẻ nào được liên kết.</AppText>
+          )}
         </View>
 
         {/* Other payment methods */}

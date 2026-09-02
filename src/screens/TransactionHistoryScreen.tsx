@@ -17,15 +17,98 @@ import { useApp } from '../context/AppContext';
 import { Linking } from 'react-native';
 
 interface Transaction {
-  id: string;
+  id?: string;
+  transactionId?: string;
   type: string;
   amount: number;
-  currency: string;
+  currency?: string;
   status: string;
-  referenceId: string;
-  description: string;
-  createdAt: string;
+  referenceId?: string;
+  description?: string;
+  note?: string;
+  createdAt?: string;
+  timestamp?: string;
+  feeAmount?: number;
+  runningBalance?: number;
+  isInternal?: boolean;
+  bankCode?: string;
+  senderName?: string;
+  recipientName?: string;
+  counterpartyName?: string;
+  counterpartyAccount?: string;
+  senderAccount?: string;
+  recipientAccount?: string;
+  counterpartyBankName?: string;
 }
+
+const MemoizedTransactionItem = React.memo(({ item, onPress }: { item: Transaction, onPress: (id: string) => void }) => {
+  const isPositive = ['DEPOSIT', 'TRANSFER_IN', 'REWARD'].includes(item.type);
+  const amountPrefix = isPositive ? '+' : '-';
+  const amountColor = isPositive ? '#10B981' : '#0F172A';
+  
+  let typeIcon = 'swap-horizontal';
+  let iconBg = '#F1F5F9';
+  let iconColor = '#64748B';
+
+  if (item.type === 'DEPOSIT') {
+    typeIcon = 'arrow-down';
+    iconBg = '#DCFCE7';
+    iconColor = '#10B981';
+  } else if (item.type === 'WITHDRAWAL') {
+    typeIcon = 'arrow-up';
+    iconBg = '#FEE2E2';
+    iconColor = '#EF4444';
+  } else if (item.type === 'BILL_PAYMENT') {
+    typeIcon = 'receipt-outline';
+    iconBg = '#FEF3C7';
+    iconColor = '#D97706';
+  } else if (item.type === 'TOPUP') {
+    typeIcon = 'phone-portrait-outline';
+    iconBg = '#F3E8FF';
+    iconColor = '#9333EA';
+  } else if (item.type.includes('TRANSFER')) {
+    typeIcon = 'swap-horizontal';
+    iconBg = '#E0F2FE';
+    iconColor = '#0EA5E9';
+  }
+
+  return (
+    <TouchableOpacity 
+      style={styles.txCard} 
+      activeOpacity={0.7}
+      onPress={() => onPress(item.transactionId || item.id || '')}
+    >
+      <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
+        <Ionicons name={typeIcon as any} size={20} color={iconColor} />
+      </View>
+      
+      <View style={styles.txInfo}>
+        <AppText style={styles.txDesc} numberOfLines={1}>
+          {item.description || item.note || item.type}
+        </AppText>
+        <AppText style={styles.txDate}>
+          {new Date(item.timestamp || item.createdAt || '').toLocaleString('vi-VN')}
+        </AppText>
+        {item.counterpartyName && (
+          <AppText style={{fontSize: 12, color: '#64748B', marginTop: 2}} numberOfLines={1}>
+            {item.counterpartyName} {item.counterpartyBankName ? `(${item.counterpartyBankName})` : ''} - {item.counterpartyAccount || item.referenceId || ''}
+          </AppText>
+        )}
+      </View>
+
+      <View style={styles.txAmountCol}>
+        <AppText style={[styles.txAmount, { color: amountColor }]}>
+          {amountPrefix}{item.amount.toLocaleString('vi-VN')} {item.currency || 'VND'}
+        </AppText>
+        {item.runningBalance !== undefined && (
+          <AppText style={{fontSize: 11, color: '#94A3B8', marginTop: 2, textAlign: 'right'}}>
+            SD: {item.runningBalance.toLocaleString('vi-VN')}
+          </AppText>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 export default function TransactionHistoryScreen({ navigation }: any) {
   const { wallet } = useApp();
@@ -33,6 +116,7 @@ export default function TransactionHistoryScreen({ navigation }: any) {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
@@ -43,22 +127,26 @@ export default function TransactionHistoryScreen({ navigation }: any) {
 
   const loadTransactions = async (pageIndex: number, reset = false) => {
     if (!wallet?.walletId) return;
+    
+    if (reset) setIsLoading(true);
+    else setIsFetchingMore(true);
+
     try {
       const res = await WalletApi.getTransactionHistory(wallet.walletId, pageIndex, 20);
-      // In api.ts getTransactionHistory returns any[] directly but handle paginated struct if returned by BE
-      const data = res.data as any;
-      const newItems = data?.content || data || [];
+      const data = res.data;
+      const newItems = data.content || [];
       if (reset) {
         setTransactions(newItems);
       } else {
         setTransactions(prev => [...prev, ...newItems]);
       }
-      setHasMore(newItems.length === 20);
+      setHasMore(!data.isLast);
       setPage(pageIndex);
     } catch (error) {
       console.warn('Failed to load transactions:', error);
     } finally {
       setIsLoading(false);
+      setIsFetchingMore(false);
     }
   };
 
@@ -80,59 +168,13 @@ export default function TransactionHistoryScreen({ navigation }: any) {
     }
   };
 
-  const renderItem = ({ item }: { item: Transaction }) => {
-    const isPositive = ['DEPOSIT', 'TRANSFER_IN', 'REWARD'].includes(item.type);
-    const amountPrefix = isPositive ? '+' : '-';
-    const amountColor = isPositive ? '#10B981' : '#0F172A';
-    
-    let typeIcon = 'swap-horizontal';
-    let iconBg = '#F1F5F9';
-    let iconColor = '#64748B';
+  const handleTxPress = React.useCallback((id: string) => {
+    navigation.navigate('TransactionDetail', { transactionId: id });
+  }, [navigation]);
 
-    if (item.type === 'DEPOSIT') {
-      typeIcon = 'arrow-down';
-      iconBg = '#DCFCE7';
-      iconColor = '#10B981';
-    } else if (item.type === 'WITHDRAWAL') {
-      typeIcon = 'arrow-up';
-      iconBg = '#FEE2E2';
-      iconColor = '#EF4444';
-    } else if (item.type.includes('TRANSFER')) {
-      typeIcon = 'swap-horizontal';
-      iconBg = '#E0F2FE';
-      iconColor = '#0EA5E9';
-    }
-
-    return (
-      <TouchableOpacity 
-        style={styles.txCard} 
-        activeOpacity={0.7}
-        onPress={() => navigation.navigate('TransactionDetail', { transactionId: item.id })}
-      >
-        <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
-          <Ionicons name={typeIcon as any} size={20} color={iconColor} />
-        </View>
-        
-        <View style={styles.txInfo}>
-          <AppText style={styles.txDesc} numberOfLines={1}>
-            {item.description || item.type}
-          </AppText>
-          <AppText style={styles.txDate}>
-            {new Date(item.createdAt).toLocaleString('vi-VN')}
-          </AppText>
-        </View>
-
-        <View style={styles.txAmountCol}>
-          <AppText style={[styles.txAmount, { color: amountColor }]}>
-            {amountPrefix}{item.amount.toLocaleString('vi-VN')} {item.currency}
-          </AppText>
-          <AppText style={[styles.txStatus, item.status === 'SUCCESS' ? { color: '#10B981' } : { color: '#F59E0B' }]}>
-            {item.status === 'SUCCESS' ? 'Thành công' : item.status}
-          </AppText>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const renderItem = React.useCallback(({ item }: { item: Transaction }) => {
+    return <MemoizedTransactionItem item={item} onPress={handleTxPress} />;
+  }, [handleTxPress]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -164,12 +206,16 @@ export default function TransactionHistoryScreen({ navigation }: any) {
         ) : (
           <FlatList
             data={transactions}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => item.transactionId || item.id || index.toString()}
             renderItem={renderItem}
             contentContainerStyle={styles.flatListContent}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
             onEndReached={() => {
-              if (hasMore && !isLoading) {
+              if (hasMore && !isLoading && !isFetchingMore) {
                 loadTransactions(page + 1);
               }
             }}

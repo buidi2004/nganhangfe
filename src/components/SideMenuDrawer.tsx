@@ -1,16 +1,6 @@
+import { Image } from 'expo-image';
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Animated,
-  Dimensions,
-  Image,
-  TouchableWithoutFeedback,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, Animated, Dimensions, TouchableWithoutFeedback, SafeAreaView, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from './typography/AppText';
 import { Colors } from '../theme';

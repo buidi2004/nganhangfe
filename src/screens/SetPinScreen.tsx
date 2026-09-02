@@ -8,40 +8,81 @@ import { AppText } from '../components/typography/AppText';
 import { GlassHeader } from '../components/GlassHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { WalletApi } from '../services/api';
 
 interface SetPinScreenProps {
   navigation: any;
 }
 
-import { WalletApi } from '../services/api';
+const NumericKeypad = React.memo(({ onPress, onDelete }: { onPress: (num: string) => void, onDelete: () => void }) => {
+  return (
+    <View style={styles.keypadWrapper}>
+      <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+      <View style={styles.keypad}>
+        {[
+          ['1', '2', '3'],
+          ['4', '5', '6'],
+          ['7', '8', '9'],
+          ['', '0', 'del'],
+        ].map((row, rIdx) => (
+          <View key={rIdx} style={styles.keypadRow}>
+            {row.map((key, kIdx) => (
+              <TouchableOpacity
+                key={kIdx}
+                style={[styles.key, key === '' && styles.emptyKey]}
+                onPress={() => {
+                  if (key === 'del') onDelete();
+                  else if (key) onPress(key);
+                }}
+                activeOpacity={0.7}
+                disabled={!key}
+              >
+                {key === 'del' ? (
+                  <Ionicons name="backspace-outline" size={28} color="#700F43" />
+                ) : key !== '' ? (
+                  <AppText style={styles.keyText}>{key}</AppText>
+                ) : null}
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+});
 
 export default function SetPinScreen({ navigation }: SetPinScreenProps) {
   const [pin, setPin] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePress = async (num: string) => {
-    if (pin.length < 6 && !isLoading) {
-      const newPin = pin + num;
-      setPin(newPin);
-      
-      if (newPin.length === 6) {
-        try {
-          setIsLoading(true);
-          await WalletApi.setPin(newPin);
-          setIsLoading(false);
-          navigation.navigate('Home');
-        } catch (error: any) {
-          setIsLoading(false);
-          setPin('');
-          Alert.alert('Lỗi', error.message || 'Không thể thiết lập mã PIN');
-        }
-      }
+  const submitPin = async (finalPin: string) => {
+    try {
+      setIsLoading(true);
+      await WalletApi.setPin(finalPin);
+      setIsLoading(false);
+      navigation.navigate('Home');
+    } catch (error: any) {
+      setIsLoading(false);
+      setPin('');
+      Alert.alert('Lỗi', error.message || 'Không thể thiết lập mã PIN');
     }
   };
 
-  const handleDelete = () => {
+  const handlePress = React.useCallback((num: string) => {
+    if (isLoading) return;
+    setPin(prev => {
+      if (prev.length >= 6) return prev;
+      const newPin = prev + num;
+      if (newPin.length === 6) {
+        submitPin(newPin);
+      }
+      return newPin;
+    });
+  }, [isLoading]);
+
+  const handleDelete = React.useCallback(() => {
     setPin(prev => prev.slice(0, -1));
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -75,38 +116,7 @@ export default function SetPinScreen({ navigation }: SetPinScreenProps) {
           })}
         </View>
 
-        <View style={styles.keypadWrapper}>
-          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
-          <View style={styles.keypad}>
-            {[
-              ['1', '2', '3'],
-              ['4', '5', '6'],
-              ['7', '8', '9'],
-              ['', '0', 'del'],
-            ].map((row, rIdx) => (
-              <View key={rIdx} style={styles.keypadRow}>
-                {row.map((key, kIdx) => (
-                  <TouchableOpacity
-                    key={kIdx}
-                    style={[styles.key, key === '' && styles.emptyKey]}
-                    onPress={() => {
-                      if (key === 'del') handleDelete();
-                      else if (key) handlePress(key);
-                    }}
-                    activeOpacity={0.7}
-                    disabled={!key}
-                  >
-                    {key === 'del' ? (
-                      <Ionicons name="backspace-outline" size={28} color="#700F43" />
-                    ) : key !== '' ? (
-                      <AppText style={styles.keyText}>{key}</AppText>
-                    ) : null}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </View>
-        </View>
+        <NumericKeypad onPress={handlePress} onDelete={handleDelete} />
       </View>
     </View>
   );

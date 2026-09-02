@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,17 +8,23 @@ import {
   Image,
   Dimensions,
   StatusBar,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
+import { useApp } from '../context/AppContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ChooseRecipientScreen({ navigation }: any) {
+  const { user } = useApp();
   const [keyword, setKeyword] = useState('');
+  const [savedRecipients, setSavedRecipients] = useState<any[]>([]);
+  
+  const isSelfTransfer = keyword.trim() === user?.phoneNumber;
 
   // 5 Danh mục chuyển tiền ngang với Icon chuẩn từ Expo Vector Icons
   const TRANSFER_METHODS = [
@@ -28,6 +34,248 @@ export default function ChooseRecipientScreen({ navigation }: any) {
     { id: '4', title: 'Mẫu\nchuyển', icon: <Ionicons name="receipt-outline" size={25} color="#D2519D" /> },
     { id: '5', title: 'Thẻ\nquốc tế', icon: <MaterialCommunityIcons name="earth" size={26} color="#D2519D" /> },
   ];
+
+  const renderHeader = useCallback(() => (
+    <>
+      {/* 2. PAGE TITLE */}
+      <AppText style={styles.pageHeading}>Siêu chuyển tiền</AppText>
+
+      {/* 3. HORIZONTAL METHODS CAROUSEL */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginHorizontal: -16 }} // Phá vỡ padding của thẻ cha để cuộn tràn viền
+        contentContainerStyle={[styles.methodsScroll, { paddingHorizontal: 16 }]} // Bù lại padding
+      >
+        {TRANSFER_METHODS.map((method) => (
+          <TouchableOpacity
+            key={method.id}
+            style={styles.methodCard}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('EnterAmount', { method: method.title })}
+          >
+            <View style={styles.methodIconCircle}>
+              {method.icon}
+            </View>
+            <AppText style={styles.methodTitle}>{method.title}</AppText>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* 4. MBAI SMART TRANSFER CARD */}
+      <View style={styles.mbaiCard}>
+        {/* Top-Left MBAI Pill Badge */}
+        <View style={styles.mbaiBadge}>
+          <Ionicons name="sparkles" size={11} color="#FFFFFF" />
+          <AppText style={styles.mbaiBadgeText}>MBAI</AppText>
+        </View>
+
+        {/* Input & QR Scanner Viewfinder Row */}
+        <View style={styles.mbaiInputRow}>
+          <TextInput
+            style={styles.mbaiTextInput}
+            placeholder="Nhập số điện thoại cần chuyển"
+            placeholderTextColor="#94A3B8"
+            value={keyword}
+            onChangeText={setKeyword}
+            keyboardType="numeric"
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (isSelfTransfer) return;
+              if (keyword.trim()) {
+                navigation.navigate('EnterAmount', { phone: keyword.trim() });
+              }
+            }}
+          />
+
+          <TouchableOpacity
+            style={styles.qrScanBtn}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('QR')}
+          >
+            <MaterialCommunityIcons name="qrcode-scan" size={22} color="#D2519D" />
+          </TouchableOpacity>
+        </View>
+
+        {isSelfTransfer && (
+          <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+            <AppText style={{ color: Colors.danger, fontSize: 13 }}>Không thể chuyển tiền cho chính mình</AppText>
+          </View>
+        )}
+
+        {/* Divider */}
+        <View style={styles.cardDivider} />
+
+        {/* 3 Action Buttons (Chụp ảnh | Tải ảnh | Dán) */}
+        <View style={styles.mbaiActionsRow}>
+          {/* Chụp ảnh */}
+          <TouchableOpacity
+            style={styles.actionCol}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('QR')}
+          >
+            <View style={styles.actionIconWrap}>
+              <Ionicons name="sparkles" size={11} color="#D2519D" />
+              <Ionicons name="camera-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+            </View>
+            <AppText style={styles.actionBtnLabel}>Chụp ảnh</AppText>
+          </TouchableOpacity>
+
+          <View style={styles.verticalDivider} />
+
+          {/* Tải ảnh */}
+          <TouchableOpacity
+            style={styles.actionCol}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('QR')}
+          >
+            <View style={styles.actionIconWrap}>
+              <Ionicons name="sparkles" size={11} color="#D2519D" />
+              <Ionicons name="images-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+            </View>
+            <AppText style={styles.actionBtnLabel}>Tải ảnh</AppText>
+          </TouchableOpacity>
+
+          <View style={styles.verticalDivider} />
+
+          {/* Dán */}
+          <TouchableOpacity
+            style={styles.actionCol}
+            activeOpacity={0.7}
+            onPress={() => setKeyword('0923158725')}
+          >
+            <View style={styles.actionIconWrap}>
+              <Ionicons name="sparkles" size={11} color="#D2519D" />
+              <Ionicons name="clipboard-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+            </View>
+            <AppText style={styles.actionBtnLabel}>Dán</AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 5. 2 QUICK ACCESS CARDS (Gần đây | Ví điện tử & đối tác) */}
+      <View style={styles.twoCardsRow}>
+        {/* Card Trái: Gần đây */}
+        <TouchableOpacity
+          style={styles.quickCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('EnterAmount')}
+        >
+          <View style={styles.quickCardHeader}>
+            <AppText style={styles.quickCardTitle}>Gần đây</AppText>
+            <Ionicons name="chevron-forward" size={16} color="#D2519D" />
+          </View>
+
+          <View style={styles.quickCardLogosRow}>
+            {/* MB Star mini */}
+            <View style={[styles.miniBrandLogo, { backgroundColor: '#E11D48' }]}>
+              <AppText style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>★</AppText>
+            </View>
+
+            {/* MoMo mini */}
+            <View style={[styles.miniBrandLogo, { backgroundColor: '#D82D8B' }]}>
+              <AppText style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '900', textAlign: 'center' }}>mo{'\n'}mo</AppText>
+            </View>
+
+            {/* Badge +8 */}
+            <View style={styles.plusCountBadge}>
+              <AppText style={styles.plusCountText}>+8</AppText>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Card Phải: Ví điện tử & đối tác */}
+        <TouchableOpacity
+          style={styles.quickCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('PaymentMethods')}
+        >
+          <View style={styles.quickCardHeader}>
+            <AppText style={styles.quickCardTitle} numberOfLines={1}>Ví điện tử & đối tác</AppText>
+            <Ionicons name="chevron-forward" size={16} color="#D2519D" />
+          </View>
+
+          <View style={styles.quickCardLogosRow}>
+            {/* Viettel Money Red Circle */}
+            <View style={[styles.miniBrandLogo, { backgroundColor: '#EF4444', borderRadius: 12 }]}>
+              <AppText style={{ color: '#FFFFFF', fontSize: 10 }}>📱</AppText>
+            </View>
+
+            {/* ZaloPay Green Text */}
+            <View style={[styles.miniBrandLogo, { backgroundColor: '#ECFDF5' }]}>
+              <AppText style={{ color: '#059669', fontSize: 7.5, fontWeight: '900', textAlign: 'center' }}>Zalo{'\n'}pay</AppText>
+            </View>
+
+            {/* MoMo mini */}
+            <View style={[styles.miniBrandLogo, { backgroundColor: '#D82D8B' }]}>
+              <AppText style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '900', textAlign: 'center' }}>mo{'\n'}mo</AppText>
+            </View>
+
+            {/* Badge +3 */}
+            <View style={styles.plusCountBadge}>
+              <AppText style={styles.plusCountText}>+3</AppText>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* 6. MONEY CHAT SECTION */}
+      <View style={styles.moneyChatHeader}>
+        <AppText style={styles.moneyChatTitle}>Money Chat</AppText>
+
+        <View style={styles.moneyChatActions}>
+          <TouchableOpacity style={styles.searchCircleBtn} activeOpacity={0.7}>
+            <Ionicons name="search-outline" size={18} color="#700F43" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.newChatPillBtn} activeOpacity={0.8}>
+            <AppText style={styles.newChatPillText}>+ Chat mới</AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 7. RECENT MONEY CHAT ITEM */}
+      <View style={styles.emptyContainer}>
+        <AppText style={styles.emptySub}>Chưa có giao dịch gần đây</AppText>
+      </View>
+
+      {/* 8. SAVED RECIPIENTS SECTION */}
+      <View style={styles.moneyChatHeader}>
+        <AppText style={styles.moneyChatTitle}>Người nhận đã lưu</AppText>
+      </View>
+    </>
+  ), [navigation, user?.phoneNumber, keyword, isSelfTransfer]);
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <View style={styles.emptyIconHalo}>
+        <MaterialCommunityIcons name="account-search-outline" size={48} color="#D2519D" />
+      </View>
+      <AppText style={styles.emptyTitle}>Chưa có người nhận đã lưu</AppText>
+      <AppText style={styles.emptySub}>
+        Thực hiện chuyển tiền để lưu người nhận và dễ dàng quản lý các giao dịch lần sau.
+      </AppText>
+    </View>
+  );
+
+  const renderRecipient = ({ item: recipient }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.chatUserCard}
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('EnterAmount', { name: recipient.name, phone: recipient.phone })}
+    >
+      <Image
+        source={{ uri: recipient.avatar }}
+        style={styles.chatUserAvatar}
+      />
+      <View style={styles.chatUserInfo}>
+        <AppText style={styles.chatUserName}>{recipient.name}</AppText>
+        <AppText style={styles.chatUserSub}>
+          {recipient.phone} | <AppText style={{ color: '#64748B' }}>{recipient.type}</AppText>
+        </AppText>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -70,228 +318,19 @@ export default function ChooseRecipientScreen({ navigation }: any) {
         </View>
       </View>
 
-      <ScrollView
+      <FlatList
+        data={savedRecipients}
+        keyExtractor={(item, index) => item.id || index.toString()}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        renderItem={renderRecipient}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-      >
-        {/* 2. PAGE TITLE */}
-        <AppText style={styles.pageHeading}>Siêu chuyển tiền</AppText>
-
-        {/* 3. HORIZONTAL METHODS CAROUSEL */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.methodsScroll}
-        >
-          {TRANSFER_METHODS.map((method) => (
-            <TouchableOpacity
-              key={method.id}
-              style={styles.methodCard}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('EnterAmount', { method: method.title })}
-            >
-              <View style={styles.methodIconCircle}>
-                {method.icon}
-              </View>
-              <AppText style={styles.methodTitle}>{method.title}</AppText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* 4. MBAI SMART TRANSFER CARD */}
-        <View style={styles.mbaiCard}>
-          {/* Top-Left MBAI Pill Badge */}
-          <View style={styles.mbaiBadge}>
-            <Ionicons name="sparkles" size={11} color="#FFFFFF" />
-            <AppText style={styles.mbaiBadgeText}>MBAI</AppText>
-          </View>
-
-          {/* Input & QR Scanner Viewfinder Row */}
-          <View style={styles.mbaiInputRow}>
-            <TextInput
-              style={styles.mbaiTextInput}
-              placeholder="Nhập số điện thoại cần chuyển"
-              placeholderTextColor="#94A3B8"
-              value={keyword}
-              onChangeText={setKeyword}
-              keyboardType="numeric"
-              returnKeyType="done"
-              onSubmitEditing={() => {
-                if (keyword.trim()) {
-                  navigation.navigate('EnterAmount', { phone: keyword.trim() });
-                }
-              }}
-            />
-
-            <TouchableOpacity
-              style={styles.qrScanBtn}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('QR')}
-            >
-              <MaterialCommunityIcons name="qrcode-scan" size={22} color="#D2519D" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.cardDivider} />
-
-          {/* 3 Action Buttons (Chụp ảnh | Tải ảnh | Dán) */}
-          <View style={styles.mbaiActionsRow}>
-            {/* Chụp ảnh */}
-            <TouchableOpacity
-              style={styles.actionCol}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('QR')}
-            >
-              <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="camera-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
-              </View>
-              <AppText style={styles.actionBtnLabel}>Chụp ảnh</AppText>
-            </TouchableOpacity>
-
-            <View style={styles.verticalDivider} />
-
-            {/* Tải ảnh */}
-            <TouchableOpacity
-              style={styles.actionCol}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('QR')}
-            >
-              <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="images-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
-              </View>
-              <AppText style={styles.actionBtnLabel}>Tải ảnh</AppText>
-            </TouchableOpacity>
-
-            <View style={styles.verticalDivider} />
-
-            {/* Dán */}
-            <TouchableOpacity
-              style={styles.actionCol}
-              activeOpacity={0.7}
-              onPress={() => setKeyword('0923158725')}
-            >
-              <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="clipboard-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
-              </View>
-              <AppText style={styles.actionBtnLabel}>Dán</AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 5. 2 QUICK ACCESS CARDS (Gần đây | Ví điện tử & đối tác) */}
-        <View style={styles.twoCardsRow}>
-          {/* Card Trái: Gần đây */}
-          <TouchableOpacity
-            style={styles.quickCard}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('EnterAmount')}
-          >
-            <View style={styles.quickCardHeader}>
-              <AppText style={styles.quickCardTitle}>Gần đây</AppText>
-              <Ionicons name="chevron-forward" size={16} color="#D2519D" />
-            </View>
-
-            <View style={styles.quickCardLogosRow}>
-              {/* MB Star mini */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#E11D48' }]}>
-                <AppText style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>★</AppText>
-              </View>
-
-              {/* MoMo mini */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#D82D8B' }]}>
-                <AppText style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '900', textAlign: 'center' }}>mo{'\n'}mo</AppText>
-              </View>
-
-              {/* Badge +8 */}
-              <View style={styles.plusCountBadge}>
-                <AppText style={styles.plusCountText}>+8</AppText>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* Card Phải: Ví điện tử & đối tác */}
-          <TouchableOpacity
-            style={styles.quickCard}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('PaymentMethods')}
-          >
-            <View style={styles.quickCardHeader}>
-              <AppText style={styles.quickCardTitle} numberOfLines={1}>Ví điện tử & đối tác</AppText>
-              <Ionicons name="chevron-forward" size={16} color="#D2519D" />
-            </View>
-
-            <View style={styles.quickCardLogosRow}>
-              {/* Viettel Money Red Circle */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#EF4444', borderRadius: 12 }]}>
-                <AppText style={{ color: '#FFFFFF', fontSize: 10 }}>📱</AppText>
-              </View>
-
-              {/* ZaloPay Green Text */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#ECFDF5' }]}>
-                <AppText style={{ color: '#059669', fontSize: 7.5, fontWeight: '900', textAlign: 'center' }}>Zalo{'\n'}pay</AppText>
-              </View>
-
-              {/* MoMo mini */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#D82D8B' }]}>
-                <AppText style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '900', textAlign: 'center' }}>mo{'\n'}mo</AppText>
-              </View>
-
-              {/* Badge +3 */}
-              <View style={styles.plusCountBadge}>
-                <AppText style={styles.plusCountText}>+3</AppText>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* 6. MONEY CHAT SECTION */}
-        <View style={styles.moneyChatHeader}>
-          <AppText style={styles.moneyChatTitle}>Money Chat</AppText>
-
-          <View style={styles.moneyChatActions}>
-            <TouchableOpacity style={styles.searchCircleBtn} activeOpacity={0.7}>
-              <Ionicons name="search-outline" size={18} color="#700F43" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.newChatPillBtn} activeOpacity={0.8}>
-              <AppText style={styles.newChatPillText}>+ Chat mới</AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 7. RECENT MONEY CHAT ITEM (BUI VAN DI) */}
-        <TouchableOpacity
-          style={styles.chatUserCard}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('EnterAmount', { name: 'BUI VAN DI', phone: '0923158725' })}
-        >
-          <Image
-            source={{ uri: 'https://i.pravatar.cc/150?img=11' }}
-            style={styles.chatUserAvatar}
-          />
-          <View style={styles.chatUserInfo}>
-            <AppText style={styles.chatUserName}>BUI VAN DI</AppText>
-            <AppText style={styles.chatUserSub}>
-              0923158725 | <AppText style={{ color: '#64748B' }}>Tài khoản thanh toán</AppText>
-            </AppText>
-          </View>
-        </TouchableOpacity>
-
-        {/* 8. EMPTY SAVED RECIPIENTS SECTION (OFFICIAL VECTOR ICONS) */}
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconHalo}>
-            <MaterialCommunityIcons name="account-search-outline" size={48} color="#D2519D" />
-          </View>
-          <AppText style={styles.emptyTitle}>Chưa có người nhận đã lưu</AppText>
-          <AppText style={styles.emptySub}>
-            Thực hiện chuyển tiền để lưu người nhận và dễ dàng quản lý các giao dịch lần sau.
-          </AppText>
-        </View>
-      </ScrollView>
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+      />
     </SafeAreaView>
   );
 }
@@ -340,7 +379,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   methodsScroll: {
-    paddingRight: 10,
     gap: 16,
     marginBottom: 20,
   },

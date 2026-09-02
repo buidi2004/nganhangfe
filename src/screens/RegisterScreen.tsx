@@ -7,6 +7,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +39,7 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
     try {
-      await register(phone, password);
+      await register(phone, password, fullName);
       // Wait for 500ms to show success before navigating to KYC or SetPin
       setTimeout(() => {
         navigation.navigate('SetPin');
@@ -74,8 +75,12 @@ export default function RegisterScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* HERO BADGE */}
@@ -213,7 +218,8 @@ export default function RegisterScreen({ navigation }: any) {
 
         {/* DUMMY SPACER ĐỂ KÉO DÀI MÀN HÌNH GIÚP TRƯỢT LÊN KHỎI BÀN PHÍM */}
         <View style={{ height: Platform.OS === 'ios' ? 40 : 250 }} />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

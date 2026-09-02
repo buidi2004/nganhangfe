@@ -44,6 +44,31 @@ interface ApiResponse<T> {
   errorCode?: string;
 }
 
+export interface TransferResponse {
+  transactionId: string;
+  requestId: string;
+  sourceWalletId: string;
+  targetWalletId: string;
+  amount: number;
+  currency: string;
+  type: string;
+  status: string;
+  timestamp: string;
+  note: string;
+  bankCode: string;
+  isInternal: boolean;
+  feeAmount: number;
+  balance: number;
+  runningBalance: number;
+  senderName?: string;
+  senderAccount?: string;
+  recipientName?: string;
+  recipientAccount?: string;
+  counterpartyName?: string;
+  counterpartyAccount?: string;
+  counterpartyBankName?: string;
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -135,10 +160,10 @@ async function request<T>(
 
 export const WalletApi = {
   // --- Auth & Security ---
-  register: (phoneNumber: string, password: string) =>
+  register: (phoneNumber: string, password: string, fullName: string) =>
     request<{ userId: string; accessToken: string; refreshToken: string }>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, password }),
+      body: JSON.stringify({ phoneNumber, password, fullName }),
     }),
 
   login: (phoneNumber: string, password: string) =>
@@ -181,10 +206,12 @@ export const WalletApi = {
     const params = new URLSearchParams();
     if (walletId) params.append('walletId', walletId);
     if (phoneNumber) params.append('phoneNumber', phoneNumber);
-    return request<{ walletId: string; phoneNumber: string; maskedName: string }>(
+    return request<{ walletId: string; phoneNumber: string; maskedName: string; fullName?: string; recipientName?: string }>(
       `/wallets/recipient-info?${params.toString()}`
     );
   },
+
+  getBanks: () => request<any[]>('/banks'),
 
   deposit: (walletId: string, amount: number, currency = 'VND') =>
     request<{ id: string; status: string; amount: number }>(
@@ -227,22 +254,18 @@ export const WalletApi = {
       true
     ),
 
-  initTransfer: (sourceWalletId: string, targetWalletId: string, amount: number, note?: string, currency = 'VND') =>
-    request<{ transactionId: string; status: string; requiresConfirmation: boolean }>(
+  initTransfer: (sourceWalletId: string, targetWalletId: string, bankCode: string, amount: number, note?: string, currency = 'VND') =>
+    request<TransferResponse>(
       '/wallets/transfer/init',
-      { method: 'POST', body: JSON.stringify({ requestId: generateUUID(), sourceWalletId, targetWalletId, amount, currency, note }) },
+      { method: 'POST', body: JSON.stringify({ requestId: generateUUID(), sourceWalletId, targetWalletId, amount, currency, bankCode, note }) },
       true
     ),
 
-  confirmTransfer: (transactionId: string, pin: string, otp: string) => {
+  confirmTransfer: (transactionId: string, pin: string, otp?: string) => {
     const params = new URLSearchParams();
     if (pin) params.append('pin', pin);
     if (otp) params.append('otp', otp);
-    return request<{ transactionId: string; status: string }>(
-      `/wallets/transfer/${transactionId}/confirm?${params.toString()}`,
-      { method: 'POST' },
-      true
-    );
+    return request<TransferResponse>(`/wallets/transfer/${transactionId}/confirm?${params.toString()}`, { method: 'POST' }, true);
   },
 
   initTransferQr: (qrCode: string, amount?: number) =>
@@ -356,9 +379,8 @@ export const WalletApi = {
     request<void>(`/sessions/${deviceId}`, { method: 'DELETE' }),
 
   registerFcmToken: (deviceId: string, token: string) =>
-    request<void>(`/sessions/${deviceId}/fcm`, {
+    request<void>(`/sessions/${deviceId}/fcm?fcmToken=${encodeURIComponent(token)}`, {
       method: 'POST',
-      body: JSON.stringify({ token }),
     }),
 
   // --- Bill Payment ---

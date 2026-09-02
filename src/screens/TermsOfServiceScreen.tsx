@@ -7,6 +7,8 @@ import {
   StatusBar,
   Dimensions,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -73,7 +75,11 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
         </TouchableOpacity>
       </View>
 
-      {/* 2. SEARCH BAR */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        {/* 2. SEARCH BAR */}
       <View style={styles.searchBarWrapper}>
         <Ionicons name="search-outline" size={20} color="#94A3B8" />
         <TextInput
@@ -165,7 +171,8 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
           <Ionicons name="shield-checkmark" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
           <AppText style={styles.acceptBtnText}>Tôi đã hiểu và đồng ý</AppText>
         </TouchableOpacity>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

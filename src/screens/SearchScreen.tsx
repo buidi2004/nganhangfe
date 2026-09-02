@@ -13,11 +13,7 @@ interface SearchScreenProps {
 }
 
 const recentSearches = ['Starbucks', 'Grab', 'Tiền điện'];
-const suggestedContacts = [
-  { id: '1', name: 'Nguyễn Văn A', avatar: 'https://i.pravatar.cc/100?img=1' },
-  { id: '2', name: 'Trần Thị B', avatar: 'https://i.pravatar.cc/100?img=2' },
-  { id: '3', name: 'Lê Văn C', avatar: 'https://i.pravatar.cc/100?img=3' },
-];
+
 
 export default function SearchScreen({ navigation }: SearchScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,18 +56,7 @@ export default function SearchScreen({ navigation }: SearchScreenProps) {
               </ScrollView>
             </View>
 
-            {/* Suggested contacts */}
-            <View style={styles.section}>
-              <AppText style={styles.sectionTitle}>Liên hệ gợi ý</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.contactsScroll}>
-                {suggestedContacts.map((contact) => (
-                  <TouchableOpacity key={contact.id} style={styles.contactItem}>
-                    <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
-                    <AppText style={styles.contactName}>{contact.name}</AppText>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+
 
             {/* Quick actions */}
             <View style={styles.section}>

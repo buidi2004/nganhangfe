@@ -13,11 +13,6 @@ interface RequestTransferScreenProps {
   navigation: any;
 }
 
-const mockRequests = [
-  { id: '1', from: 'Trần Thị B', amount: '200.000đ', status: 'pending' as const, date: '12/10/2024' },
-  { id: '2', from: 'Lê Văn C', amount: '100.000đ', status: 'accepted' as const, date: '11/10/2024' },
-  { id: '3', from: 'Phạm Thị D', amount: '50.000đ', status: 'expired' as const, date: '08/10/2024' },
-];
 
 export default function RequestTransferScreen({ navigation }: RequestTransferScreenProps) {
   const [showQR, setShowQR] = useState(false);
@@ -113,27 +108,9 @@ export default function RequestTransferScreen({ navigation }: RequestTransferScr
         {/* Recent requests */}
         <AppText style={styles.sectionTitle}>Yêu cầu gần đây</AppText>
         <View style={styles.requestsList}>
-          {mockRequests.map((req, index) => (
-            <View key={req.id} style={[styles.requestItem, index === mockRequests.length - 1 && styles.requestItemLast]}>
-              <View style={styles.requestLeft}>
-                <View style={styles.requestAvatar}>
-                    <AppIcon name="person" size="sm" color={Colors.primary} />
-                </View>
-                <View style={styles.requestInfo}>
-                  <AppText style={styles.requestFrom}>{req.from}</AppText>
-                  <AppText style={styles.requestDate}>{req.date}</AppText>
-                </View>
-              </View>
-              <View style={styles.requestRight}>
-                <AppText style={styles.requestAmount}>{req.amount}</AppText>
-                <StatusChip
-                  text={req.status === 'pending' ? 'Chờ' : req.status === 'accepted' ? 'Đã nhận' : 'Hết hạn'}
-                  type={req.status === 'accepted' ? 'success' : req.status === 'pending' ? 'warning' : 'danger'}
-                  size="sm"
-                />
-              </View>
-            </View>
-          ))}
+          <View style={{ padding: Spacing.xl, alignItems: 'center' }}>
+            <AppText style={{ color: Colors.textSecondary, textAlign: 'center' }}>Chưa có yêu cầu nào</AppText>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

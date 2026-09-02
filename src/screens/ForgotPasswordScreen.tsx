@@ -6,6 +6,8 @@ import {
   TextInput,
   StatusBar,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,8 +64,12 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* HERO ICON */}
@@ -117,7 +123,8 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         >
           <AppText style={styles.backLoginText}>Quay lại</AppText>
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

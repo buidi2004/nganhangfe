@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
 import { Colors, Radius, Shadows, Spacing } from '../theme';
@@ -29,7 +29,11 @@ export default function DepositScreen({ navigation }: DepositScreenProps) {
         <View style={styles.spacer} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         {/* Source card */}
         <TouchableOpacity style={styles.sourceCard} onPress={() => navigation.navigate('BankCardManagement')}>
           <View style={styles.sourceLeft}>
@@ -73,7 +77,8 @@ export default function DepositScreen({ navigation }: DepositScreenProps) {
             Nạp từ 500.000đ nhận ngay voucher giảm giá 50.000đ
           </AppText>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.footer}>
         <PrimaryButton

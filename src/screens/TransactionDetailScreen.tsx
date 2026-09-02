@@ -54,18 +54,19 @@ export default function TransactionDetailScreen({ route, navigation }: Transacti
         <View style={styles.detailCard}>
           {[
             { label: 'Loại giao dịch', value: typeText },
-            { label: 'Người nhận/Gửi', value: transaction?.targetWalletId || 'N/A' },
+            { label: 'Người nhận/Gửi', value: transaction?.counterpartyName ? `${transaction.counterpartyName} (${transaction?.counterpartyAccount || transaction?.targetWalletId || 'N/A'})` : (transaction?.counterpartyAccount || transaction?.targetWalletId || 'N/A') },
             { label: 'Số tiền', value: amountStr },
             { label: 'Thời gian', value: dateStr },
+            { label: 'Số dư sau GD', value: transaction?.runningBalance ? `${transaction.runningBalance.toLocaleString('vi-VN')} đ` : '—' },
             { label: 'Mã giao dịch', value: txId },
             { label: 'Phí', value: transaction?.feeAmount ? `${transaction.feeAmount.toLocaleString('vi-VN')} đ` : 'Miễn phí' },
-          ].map((item, i) => (
+          ].map((item, i, arr) => (
             <View key={i} style={styles.detailRow}>
               <AppText style={styles.detailLabel}>{item.label}</AppText>
               <AppText style={[styles.detailValue, item.label === 'Số tiền' && styles.amountValue]}>
                 {item.value}
               </AppText>
-              {i < 5 && <View style={styles.divider} />}
+              {i < arr.length - 1 && <View style={styles.divider} />}
             </View>
           ))}
         </View>

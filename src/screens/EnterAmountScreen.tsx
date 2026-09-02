@@ -9,10 +9,13 @@ import {
   StatusBar,
   Modal,
   FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -23,98 +26,14 @@ const { width, height } = Dimensions.get('window');
 // Bank Definition Interface
 interface BankItem {
   id: string;
+  code?: string;
   shortName: string;
   fullName: string;
   displayName: string;
   iconType: string;
 }
 
-const BANK_LIST: BankItem[] = [
-  {
-    id: 'senbank',
-    shortName: 'SenBank (Nội bộ)',
-    fullName: 'Ngân hàng SenBank (Chuyển nội bộ 24/7 siêu tốc)',
-    displayName: 'SenBank\n(Nội bộ)',
-    iconType: 'senbank',
-  },
-  {
-    id: 'mb',
-    shortName: 'MBBank (MB)',
-    fullName: 'Ngân hàng TMCP Quân đội',
-    displayName: 'Quân đội\n(MBBank)',
-    iconType: 'mb',
-  },
-  {
-    id: 'mbv',
-    shortName: 'Việt Nam Hiện Đại (MBV)',
-    fullName: 'Ngân hàng TNHH MTV Việt Nam Hiện Đại (MBV)',
-    displayName: 'Việt Nam Hiện Đại\n(MBV)',
-    iconType: 'mbv',
-  },
-  {
-    id: 'vba',
-    shortName: 'Agribank (VBA)',
-    fullName: 'Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam',
-    displayName: 'Nông nghiệp\n(Agribank)',
-    iconType: 'vba',
-  },
-  {
-    id: 'vcb',
-    shortName: 'Vietcombank (VCB)',
-    fullName: 'Ngân hàng TMCP Ngoại thương Việt Nam',
-    displayName: 'Ngoại thương Việt Nam\n(VCB)',
-    iconType: 'vcb',
-  },
-  {
-    id: 'ctg',
-    shortName: 'Vietinbank (CTG)',
-    fullName: 'Ngân hàng TMCP Công thương Việt Nam',
-    displayName: 'Công thương Việt Nam\n(Vietinbank)',
-    iconType: 'ctg',
-  },
-  {
-    id: 'bidv',
-    shortName: 'BIDV',
-    fullName: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam',
-    displayName: 'Đầu tư & Phát triển\n(BIDV)',
-    iconType: 'bidv',
-  },
-  {
-    id: 'tcb',
-    shortName: 'Techcombank (TCB)',
-    fullName: 'Ngân hàng TMCP Kỹ thương Việt Nam',
-    displayName: 'Kỹ thương Việt Nam\n(Techcombank)',
-    iconType: 'tcb',
-  },
-  {
-    id: 'vpb',
-    shortName: 'VPBank (VPB)',
-    fullName: 'Ngân hàng TMCP Việt Nam Thịnh Vượng',
-    displayName: 'Việt Nam Thịnh Vượng\n(VPBank)',
-    iconType: 'vpb',
-  },
-  {
-    id: 'acb',
-    shortName: 'ACB',
-    fullName: 'Ngân hàng TMCP Á Châu',
-    displayName: 'Á Châu\n(ACB)',
-    iconType: 'acb',
-  },
-  {
-    id: 'tpb',
-    shortName: 'TPBank (TPB)',
-    fullName: 'Ngân hàng TMCP Tiên Phong',
-    displayName: 'Tiên Phong\n(TPBank)',
-    iconType: 'tpb',
-  },
-  {
-    id: 'stb',
-    shortName: 'Sacombank (STB)',
-    fullName: 'Ngân hàng TMCP Sài Gòn Thương Tín',
-    displayName: 'Sài Gòn Thương Tín\n(Sacombank)',
-    iconType: 'stb',
-  },
-];
+
 
 // Bank Logo Component (100% Crisp Vector & Official Branding Badges)
 function BankLogoBadge({ type, size = 38 }: { type: string; size?: number }) {
@@ -204,7 +123,11 @@ function BankLogoBadge({ type, size = 38 }: { type: string; size?: number }) {
   }
   return (
     <View style={[styles.bankLogoBase, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
-      <MaterialCommunityIcons name="bank-outline" size={18} color="#700F43" />
+      <Image 
+        source={require('../assets/images/bank_icon.png')} 
+        style={{ width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }} 
+        resizeMode="contain" 
+      />
     </View>
   );
 }
@@ -281,7 +204,46 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
   const params = route.params || {};
   
   const [accountNumber, setAccountNumber] = useState(params.phone || '');
-  const [selectedBankItem, setSelectedBankItem] = useState<BankItem>(BANK_LIST[0]); // Default: SenBank (Nội bộ)
+  const [bankList, setBankList] = useState<BankItem[]>([]);
+  const [selectedBankItem, setSelectedBankItem] = useState<BankItem | null>(null);
+  
+  React.useEffect(() => {
+    const FALLBACK_BANKS: BankItem[] = [
+      { id: 'senbank', code: 'SENHONG', shortName: 'SenBank (Nội bộ)', fullName: 'Ngân hàng SenBank', displayName: 'SenBank\n(Nội bộ)', iconType: 'senbank' },
+      { id: 'mb', code: '970422', shortName: 'MBBank', fullName: 'Ngân hàng TMCP Quân đội', displayName: 'MBBank', iconType: 'mb' },
+      { id: 'vcb', code: '970436', shortName: 'Vietcombank', fullName: 'Ngân hàng TMCP Ngoại thương VN', displayName: 'Vietcombank', iconType: 'vcb' },
+    ];
+
+    const fetchBanks = async () => {
+      try {
+        const res = await WalletApi.getBanks();
+        if (res.data && res.data.length > 0) {
+          const mappedBanks: BankItem[] = res.data.map((b: any) => ({
+            id: b.id,
+            code: b.code || '',
+            shortName: b.shortName || b.code || '',
+            fullName: b.fullName || b.shortName || b.code || '',
+            displayName: b.shortName || b.code || '',
+            iconType: b.code ? b.code.toLowerCase() : 'generic',
+          }));
+          setBankList(mappedBanks);
+          
+          let defaultBank = null;
+          if (params.selectedBank) {
+             defaultBank = mappedBanks.find(b => b.shortName === params.selectedBank || b.displayName.includes(params.selectedBank)) || null;
+          }
+          setSelectedBankItem(defaultBank);
+        } else {
+          setBankList(FALLBACK_BANKS);
+        }
+      } catch (error) {
+        console.warn("Failed to fetch banks", error);
+        setBankList(FALLBACK_BANKS);
+      }
+    };
+    fetchBanks();
+  }, []);
+
   const [recipientName, setRecipientName] = useState(params.name || '');
   const [recipientWalletId, setRecipientWalletId] = useState(params.walletId || '');
   const [amount, setAmount] = useState('');
@@ -301,12 +263,22 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
       const fetchInfo = async () => {
         try {
           const res = await WalletApi.getRecipientInfo(undefined, accountNumber);
-          if (res.data && res.data.maskedName) {
-            setRecipientName(res.data.maskedName);
-            setRecipientWalletId(res.data.walletId);
+          if (res.data) {
+            // Prefer full unmasked name if Backend provides it, otherwise use maskedName
+            const displayName = res.data.fullName || res.data.recipientName || res.data.maskedName || '';
+            if (displayName) {
+              setRecipientName(displayName);
+              setRecipientWalletId(res.data.walletId);
+            } else {
+              throw new Error('No data');
+            }
+          } else {
+            throw new Error('No data');
           }
         } catch (e) {
-          // If not found or error, keep it empty
+          // Remove mock as requested by user. If API fails (e.g. 404 Not Found), clear the name.
+          setRecipientName('');
+          setRecipientWalletId('');
         }
       };
       
@@ -320,6 +292,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
 
   // Raw numeric amount & Balance validation
   const rawNumAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
+  const amountInWords = useMemo(() => numberToVietnameseWords(amount), [amount]);
   const currentBalance = wallet?.balance || 0;
   const isInsufficient = rawNumAmount > currentBalance;
   const isContinueEnabled = rawNumAmount >= 2000 && !isInsufficient && accountNumber.length >= 8;
@@ -330,12 +303,12 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
 
   // Filtered banks by search
   const filteredBanks = useMemo(() => {
-    if (!bankSearchQuery.trim()) return BANK_LIST;
+    if (!bankSearchQuery.trim()) return bankList;
     const q = bankSearchQuery.toLowerCase();
-    return BANK_LIST.filter(
-      (b) => b.shortName.toLowerCase().includes(q) || b.fullName.toLowerCase().includes(q)
+    return bankList.filter(
+      (b) => (b.shortName || '').toLowerCase().includes(q) || (b.fullName || '').toLowerCase().includes(q)
     );
-  }, [bankSearchQuery]);
+  }, [bankSearchQuery, bankList]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -389,12 +362,12 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               onPress={() => setIsBankModalVisible(true)}
             >
               <View style={styles.bankLogoWrap}>
-                <BankLogoBadge type={selectedBankItem.iconType} size={38} />
+                <BankLogoBadge type={selectedBankItem?.iconType || 'generic'} size={38} />
               </View>
 
               <View style={styles.bankTextCol}>
                 <AppText style={styles.cardSubLabel}>Ngân hàng</AppText>
-                <AppText style={styles.bankNameText}>{selectedBankItem.displayName}</AppText>
+                <AppText style={styles.bankNameText}>{selectedBankItem?.displayName || 'Chọn ngân hàng'}</AppText>
               </View>
               
               <Ionicons name="chevron-down" size={20} color="#D2519D" />
@@ -408,12 +381,14 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               <View style={{ flex: 1 }}>
                 <AppText style={styles.cardSubLabel}>Số tài khoản / Số điện thoại</AppText>
                 <TextInput
-                  style={styles.accountNumberInput}
-                  placeholder="Nhập số tài khoản hoặc SĐT"
+                  style={[styles.accountNumberInput, !selectedBankItem && { color: '#94A3B8' }]}
+                  placeholder={selectedBankItem ? "Nhập số tài khoản hoặc SĐT" : "Vui lòng chọn ngân hàng trước"}
                   placeholderTextColor="#94A3B8"
                   keyboardType="numeric"
                   value={accountNumber}
                   onChangeText={handleAccountChange}
+                  editable={!!selectedBankItem}
+                  selectTextOnFocus={!!selectedBankItem}
                 />
               </View>
 
@@ -498,7 +473,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             </View>
           ) : (
             <AppText style={styles.amountInWordsText}>
-              {numberToVietnameseWords(amount)}
+              {amountInWords}
             </AppText>
           )}
         </View>
@@ -547,7 +522,8 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             onPress={() => navigation.navigate('ConfirmTransfer', {
               amount: amount || '0',
               accountNumber,
-              selectedBank: selectedBankItem.shortName,
+              selectedBank: selectedBankItem?.shortName || '',
+              bankCode: selectedBankItem?.code || 'SENHONG',
               notes: transferMessage,
               recipient: { name: recipientName, phone: accountNumber, walletId: recipientWalletId }
             })}
@@ -594,7 +570,10 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
         animationType="slide"
         onRequestClose={() => setIsBankModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <TouchableOpacity
             style={styles.modalBackdropTap}
             activeOpacity={1}
@@ -620,12 +599,13 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               <Ionicons name="search-outline" size={20} color="#94A3B8" />
             </View>
 
-            {/* Bank Items List */}
+            {/* Bank Items List — flex: 1 để co giãn khi bàn phím bật */}
             <FlatList
               data={filteredBanks}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.bankListContent}
+              keyboardShouldPersistTaps="handled"
               ItemSeparatorComponent={() => <View style={styles.bankItemDivider} />}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -646,14 +626,14 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
                     </AppText>
                   </View>
 
-                  {selectedBankItem.id === item.id && (
+                  {selectedBankItem?.id === item.id && (
                     <Ionicons name="checkmark-circle" size={22} color="#D2519D" />
                   )}
                 </TouchableOpacity>
               )}
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -1029,9 +1009,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: height * 0.78,
+    // Dùng maxHeight thay height cứng để co giãn khi bàn phím bật
+    maxHeight: height * 0.82,
+    flex: 0,
     paddingTop: 12,
     paddingHorizontal: 16,
+    paddingBottom: 20,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,

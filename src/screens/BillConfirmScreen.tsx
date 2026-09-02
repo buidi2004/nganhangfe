@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, SafeAreaView, StatusBar, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, StatusBar, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { WalletApi } from '../services/api';
@@ -93,7 +94,7 @@ export default function BillConfirmScreen({ route, navigation }: BillConfirmScre
           ].map((row, rowIndex) => (
             <View key={rowIndex} style={styles.keyboardRow}>
               {row.map((key) => (
-                <TouchableOpacity key={key} style={styles.keyBtn} onPress={() => handleKeyPress(key)}>
+                <TouchableOpacity key={key} style={styles.keyBtn} disabled={isProcessing} onPress={() => handleKeyPress(key)}>
                   <AppText style={styles.keyText}>{key}</AppText>
                 </TouchableOpacity>
               ))}
@@ -101,10 +102,10 @@ export default function BillConfirmScreen({ route, navigation }: BillConfirmScre
           ))}
           <View style={styles.keyboardRow}>
             <View style={styles.keyBtn} />
-            <TouchableOpacity style={styles.keyBtn} onPress={() => handleKeyPress('0')}>
+            <TouchableOpacity style={styles.keyBtn} disabled={isProcessing} onPress={() => handleKeyPress('0')}>
               <AppText style={styles.keyText}>0</AppText>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.keyBtn} onPress={handleDelete}>
+            <TouchableOpacity style={styles.keyBtn} disabled={isProcessing} onPress={handleDelete}>
               <Ionicons name="backspace-outline" size={28} color="#0F172A" />
             </TouchableOpacity>
           </View>
@@ -115,7 +116,7 @@ export default function BillConfirmScreen({ route, navigation }: BillConfirmScre
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, height: 56, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
   backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },

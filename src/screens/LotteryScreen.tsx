@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  ScrollView,
-  Dimensions,
-  Image,
-} from 'react-native';
+import { Image } from 'expo-image';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import { View, StyleSheet, TouchableOpacity, StatusBar, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +12,7 @@ import Animated, {
   withRepeat,
   withSequence,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { AppText } from '../components/typography/AppText';
 
@@ -63,14 +58,24 @@ const LATEST_RESULTS = [
 ];
 
 export default function LotteryScreen({ navigation }: LotteryScreenProps) {
+  const isFocused = useIsFocused();
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([0, 0, 0, 0, 0, 0]);
   const [isSpinning, setIsSpinning] = useState(false);
+  const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Animation values
   const scaleAnim = useSharedValue(1);
   const glowOpacity = useSharedValue(0.5);
 
   useEffect(() => {
+    if (!isFocused) {
+      cancelAnimation(scaleAnim);
+      cancelAnimation(glowOpacity);
+      scaleAnim.value = 1;
+      glowOpacity.value = 0.5;
+      return;
+    }
+
     scaleAnim.value = withRepeat(
       withSequence(
         withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
@@ -88,24 +93,43 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
       -1,
       true
     );
+
+    return () => {
+      cancelAnimation(scaleAnim);
+      cancelAnimation(glowOpacity);
+    };
+  }, [isFocused, scaleAnim, glowOpacity]);
+
+  useEffect(() => () => {
+    if (spinIntervalRef.current) {
+      clearInterval(spinIntervalRef.current);
+      spinIntervalRef.current = null;
+    }
   }, []);
 
   const generateLuckyNumbers = () => {
     if (isSpinning) return;
     setIsSpinning(true);
-    
+
+    if (spinIntervalRef.current) {
+      clearInterval(spinIntervalRef.current);
+    }
+
     let counter = 0;
-    const interval = setInterval(() => {
+    spinIntervalRef.current = setInterval(() => {
       setLuckyNumbers(Array.from({ length: 6 }, () => Math.floor(Math.random() * 45) + 1));
       counter++;
       if (counter > 15) {
-        clearInterval(interval);
-        let nums: number[] = [];
-        while(nums.length < 6){
-            var r = Math.floor(Math.random() * 45) + 1;
-            if(nums.indexOf(r) === -1) nums.push(r);
+        if (spinIntervalRef.current) {
+          clearInterval(spinIntervalRef.current);
+          spinIntervalRef.current = null;
         }
-        setLuckyNumbers(nums.sort((a,b) => a - b));
+        const nums: number[] = [];
+        while (nums.length < 6) {
+          const r = Math.floor(Math.random() * 45) + 1;
+          if (nums.indexOf(r) === -1) nums.push(r);
+        }
+        setLuckyNumbers(nums.sort((a, b) => a - b));
         setIsSpinning(false);
       }
     }, 100);

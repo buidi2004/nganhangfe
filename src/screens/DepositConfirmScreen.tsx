@@ -45,6 +45,26 @@ export default function DepositConfirmScreen({ route, navigation }: DepositConfi
   const [isOtpModalVisible, setIsOtpModalVisible] = useState(false);
   const [pinDigits, setPinDigits] = useState<string[]>([]);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [feeAmount, setFeeAmount] = useState<number | null>(null);
+  const [isFetchingFee, setIsFetchingFee] = useState(true);
+
+  const rawNumAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
+
+  React.useEffect(() => {
+    const fetchFee = async () => {
+      try {
+        if (!user?.walletId) return;
+        const res = await WalletApi.estimateFees(user.walletId, rawNumAmount, 'TOPUP', 'VND');
+        setFeeAmount(res.data?.feeAmount ?? 0);
+      } catch (error) {
+        console.warn('Lỗi tính phí:', error);
+        setFeeAmount(0);
+      } finally {
+        setIsFetchingFee(false);
+      }
+    };
+    fetchFee();
+  }, []);
 
   const displayAmount = amount.includes('VND') || amount.includes('đ') ? amount : `${amount} VND`;
 
@@ -148,7 +168,13 @@ export default function DepositConfirmScreen({ route, navigation }: DepositConfi
           <View style={styles.extraInfoBlock}>
             <View style={styles.extraInfoRow}>
               <AppText style={styles.extraInfoLabel}>Phí giao dịch</AppText>
-              <AppText style={styles.extraInfoValue}>Miễn phí</AppText>
+              {isFetchingFee ? (
+                <ActivityIndicator size="small" color="#D2519D" />
+              ) : (
+                <AppText style={styles.extraInfoValue}>
+                  {feeAmount === 0 ? 'Miễn phí' : `${feeAmount?.toLocaleString('vi-VN')} đ`}
+                </AppText>
+              )}
             </View>
           </View>
         </View>

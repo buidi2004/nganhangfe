@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import Svg, { Rect, G, Defs, LinearGradient as SvgLinearGradient, Stop, Path } from 'react-native-svg';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { AppText } from '../components/typography/AppText';
 import { Colors } from '../theme';
 import { useApp } from '../context/AppContext';
@@ -25,47 +25,68 @@ import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
-// 3D Floating Stadium Capsules Background (Atmosphere)
-function Floating3DCapsules() {
-  return (
-    <Svg width={width} height={520} viewBox="0 0 380 520" fill="none" style={StyleSheet.absoluteFill}>
-      <Defs>
-        <SvgLinearGradient id="capsuleGrad1" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0%" stopColor="#F472B6" stopOpacity="0.4" />
-          <Stop offset="50%" stopColor="#D2519D" stopOpacity="0.3" />
-          <Stop offset="100%" stopColor="#700F43" stopOpacity="0.15" />
-        </SvgLinearGradient>
-        <SvgLinearGradient id="capsuleGrad2" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0%" stopColor="#E4ACB2" stopOpacity="0.3" />
-          <Stop offset="100%" stopColor="#700F43" stopOpacity="0.12" />
-        </SvgLinearGradient>
-      </Defs>
-
-      {/* Upper Tilted Stadium Shape */}
-      <G transform="translate(100, 110) rotate(-16)">
-        <Rect x="0" y="0" width="300" height="75" rx="37.5" fill="url(#capsuleGrad1)" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-        <Path d="M37.5 12h225" stroke="rgba(255,255,255,0.3)" strokeWidth="3" strokeLinecap="round" />
-      </G>
-
-      {/* Lower Tilted Stadium Shape */}
-      <G transform="translate(110, 260) rotate(-16)">
-        <Rect x="0" y="0" width="280" height="70" rx="35" fill="url(#capsuleGrad2)" stroke="rgba(255,255,255,0.16)" strokeWidth="1.5" />
-        <Path d="M35 10h210" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" />
-      </G>
-    </Svg>
-  );
-}
-
 export default function LoginScreen({ navigation }: any) {
   const { login, isLoading, lastError, clearError, customBackgroundUri, setCustomBackgroundUri } = useApp();
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isBottomActionsExpanded, setIsBottomActionsExpanded] = useState(false);
   const [isRemembered, setIsRemembered] = useState(false);
   const [savedName, setSavedName] = useState('');
   const [hasBiometricsEnabled, setHasBiometricsEnabled] = useState(false);
   const passwordRef = React.useRef<TextInput>(null);
   const scrollViewRef = React.useRef<ScrollView>(null);
+
+  const extraQuickActions = [
+    {
+      key: 'register',
+      label: 'Đăng ký',
+      icon: 'person-add-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('Register'),
+    },
+    {
+      key: 'forgot-password',
+      label: 'Quên MK',
+      icon: 'key-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('ForgotPassword'),
+    },
+    {
+      key: 'promotions',
+      label: 'Ưu đãi',
+      icon: 'gift-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('Promotions'),
+    },
+    {
+      key: 'help',
+      label: 'Trợ giúp',
+      icon: 'help-buoy-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('HelpCenter'),
+    },
+    {
+      key: 'settings',
+      label: 'Cài đặt',
+      icon: 'settings-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('Settings'),
+    },
+    {
+      key: 'terms',
+      label: 'Điều khoản',
+      icon: 'document-text-outline' as const,
+      iconLib: 'ionicons' as const,
+      badge: null as string | null,
+      onPress: () => navigation.navigate('TermsOfService'),
+    },
+  ];
 
   React.useEffect(() => {
     checkInitialState();
@@ -220,7 +241,6 @@ export default function LoginScreen({ navigation }: any) {
             end={{ x: 0.9, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-          <Floating3DCapsules />
         </>
       )}
 
@@ -417,8 +437,8 @@ export default function LoginScreen({ navigation }: any) {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('QR')}
             >
-              <MaterialCommunityIcons name="qrcode-scan" size={24} color="#E4ACB2" />
-              <AppText style={styles.bottomActionLabel}>Quét QR</AppText>
+              <MaterialCommunityIcons name="qrcode-scan" size={24} color="#F472B6" />
+              <AppText style={styles.bottomActionLabelPink}>Quét QR</AppText>
             </TouchableOpacity>
 
             {/* Xác thực D-OTP */}
@@ -427,8 +447,8 @@ export default function LoginScreen({ navigation }: any) {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('OtpVerification')}
             >
-              <MaterialCommunityIcons name="shield-key-outline" size={25} color="#E4ACB2" />
-              <AppText style={styles.bottomActionLabel}>Xác thực D-OTP</AppText>
+              <MaterialCommunityIcons name="shield-key-outline" size={25} color="#F472B6" />
+              <AppText style={styles.bottomActionLabelPink}>Xác thực D-OTP</AppText>
             </TouchableOpacity>
 
             {/* Thay ảnh nền */}
@@ -438,18 +458,42 @@ export default function LoginScreen({ navigation }: any) {
               onPress={handlePickBackground}
             >
               <View style={styles.iconWithBadgeWrap}>
-                <Ionicons name="images-outline" size={24} color="#E4ACB2" />
+                <Ionicons name="images-outline" size={24} color="#F472B6" />
                 <View style={styles.newBadgePill}>
                   <AppText style={styles.newBadgeText}>NEW</AppText>
                 </View>
               </View>
-              <AppText style={styles.bottomActionLabel}>Thay ảnh nền</AppText>
+              <AppText style={styles.bottomActionLabelPink}>Thay ảnh nền</AppText>
             </TouchableOpacity>
           </View>
 
+          {isBottomActionsExpanded && (
+            <View style={styles.expandedActionsGrid}>
+              {extraQuickActions.map((action) => (
+                <TouchableOpacity
+                  key={action.key}
+                  style={styles.expandedActionItem}
+                  activeOpacity={0.85}
+                  onPress={action.onPress}
+                >
+                  <Ionicons name={action.icon} size={24} color="#F472B6" />
+                  <AppText style={styles.bottomActionLabelPink}>{action.label}</AppText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           {/* Bottom Expand Arrow Chevron */}
-          <TouchableOpacity style={styles.bottomExpandArrow} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="chevron-double-up" size={24} color="#E4ACB2" />
+          <TouchableOpacity
+            style={styles.bottomExpandArrow}
+            activeOpacity={0.7}
+            onPress={() => setIsBottomActionsExpanded((prev) => !prev)}
+          >
+            <MaterialCommunityIcons
+              name={isBottomActionsExpanded ? 'chevron-double-down' : 'chevron-double-up'}
+              size={24}
+              color="#F472B6"
+            />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -663,6 +707,7 @@ const styles = StyleSheet.create({
   bottomFooterContainer: {
     paddingBottom: 10,
     alignItems: 'center',
+    gap: 10,
   },
   bottomActionsRow: {
     flexDirection: 'row',
@@ -698,6 +743,24 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  bottomActionLabelPink: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: '#F472B6',
+  },
+  expandedActionsGrid: {
+    width: '100%',
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 14,
+  },
+  expandedActionItem: {
+    width: '31%',
+    alignItems: 'center',
+    gap: 6,
   },
   bottomExpandArrow: {
     alignItems: 'center',

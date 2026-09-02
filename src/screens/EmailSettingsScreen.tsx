@@ -8,6 +8,8 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,8 +66,12 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* CURRENT EMAIL CARD */}
@@ -161,7 +167,8 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
             <AppText style={styles.benefitItemText}>Cảnh báo bảo mật tài khoản tức thì khi đăng nhập lạ</AppText>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

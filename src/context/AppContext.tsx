@@ -3,8 +3,8 @@
  * Kết nối tất cả màn hình vào Spring Boot Backend
  * Quản lý: JWT auth, wallet balance, WebSocket real-time, notifications
  */
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { AppState, AppStateStatus, Platform, DeviceEventEmitter } from 'react-native';
 import { WalletApi, setAuthTokens, getAuthToken, API_BASE_URL } from '../services/api';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -14,10 +14,11 @@ import { clearCredentials } from '../services/secureStore';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    priority: Notifications.AndroidNotificationPriority.MAX,
   }),
 });
 
@@ -42,11 +43,14 @@ async function registerForPushNotificationsAsync() {
       console.warn('Failed to get push token for push notification!');
       return null;
     }
+    if (Constants.appOwnership === 'expo') {
+      return 'expo-dummy-token';
+    }
     try {
         const pushToken = await Notifications.getDevicePushTokenAsync();
         token = pushToken.data;
     } catch (e) {
-        console.warn('Could not get push token', e);
+        // Suppress warning in dev to avoid annoying yellow box
         return null;
     }
   } else {
@@ -84,7 +88,7 @@ interface AppContextValue {
   isLoggedIn: boolean;
   isLoading: boolean;
   login: (phone: string, password: string) => Promise<UserProfile>;
-  register: (phone: string, password: string) => Promise<{ walletId: string }>;
+  register: (phone: string, password: string, fullName: string) => Promise<{ walletId: string }>;
   logout: () => void;
   wallet: WalletData | null;
   refreshBalance: () => Promise<void>;
@@ -126,7 +130,8 @@ class NativeStompClient {
     try {
       this.ws = new WebSocket(url);
       this.ws.onopen = () => {
-        this._send(`CONNECT\naccept-version:1.2\nheart-beat:10000,10000\nAuthorization:Bearer ${token}\n\n\0`);
+        console.log('[WS] TCP Socket opened to:', url);
+        this._send(`CONNECT\naccept-version:1.2\nheart-beat:10000,10000\nAuthorization: Bearer ${token}\n\n\0`);
       };
       this.ws.onmessage = (evt) => this._onMessage(evt.data as string);
       this.ws.onclose = () => {
@@ -215,6 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const stomp = useRef(new NativeStompClient());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── connectWS ──────────────────────────────────────────────────────────
   const connectWS = useCallback((userId: string) => {
@@ -229,7 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         () => {
           setWsConnected(true);
           console.log('[WS] Connected to SenBank');
-          stomp.current.subscribe(`/topic/wallets/${userId}/notifications`, (msg) => {
+          stomp.current.subscribe(`/topic/users/${userId}/notifications`, (msg) => {
             if (typeof msg.newBalance === 'number') {
               setWallet(prev => prev ? { ...prev, balance: msg.newBalance } : prev);
             }
@@ -259,7 +265,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setWsConnected(false);
         if (appStateRef.current === 'active') {
           console.log('[WS] Disconnected, reconnecting in 5s...');
-          setTimeout(() => connectWS(userId), 5000);
+          if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+          reconnectTimerRef.current = setTimeout(() => {
+            reconnectTimerRef.current = null;
+            connectWS(userId);
+          }, 5000);
         }
       }
     );
@@ -326,7 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch(e) {
         setWallet({ walletId: realWalletId, balance: 0, currency: 'VND' });
       }
-      connectWS(realWalletId);
+      connectWS(profile.userId);
       await _loadNotifications();
       
       const pushToken = await registerForPushNotificationsAsync();
@@ -349,12 +359,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [connectWS]);
 
   // ── register ───────────────────────────────────────────────────────────
-  const register = useCallback(async (phone: string, password: string) => {
+  const register = useCallback(async (phone: string, password: string, fullName: string) => {
     setIsLoading(true);
     setLastError(null);
     const t0 = Date.now();
     try {
-      const res = await WalletApi.register(phone, password);
+      const res = await WalletApi.register(phone, password, fullName);
       console.log(`[PERF] Register: ${Date.now() - t0}ms`);
       const d = res.data as any;
       setAuthTokens(d.token || d.accessToken, d.refreshToken);
@@ -372,7 +382,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const profile: UserProfile = {
         userId: d.userId || phone,
         phoneNumber: phone,
-        name: phone,
+        name: fullName,
         walletId: realWalletId,
       };
       setUser(profile);
@@ -382,7 +392,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch(e) {
         setWallet({ walletId: realWalletId, balance: 0, currency: 'VND' });
       }
-      connectWS(realWalletId);
+      connectWS(profile.userId);
       
       const pushToken = await registerForPushNotificationsAsync();
       if (pushToken) {
@@ -407,6 +417,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try { await WalletApi.logout(); } catch {}
     try { await clearCredentials(); } catch {}
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
     stomp.current.disconnect();
     setAuthTokens(null);
     setUser(null);
@@ -452,36 +466,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (next) => {
       if (appStateRef.current === 'background' && next === 'active' && user) {
         refreshBalance();
-        if (!stomp.current.isConnected() && user.walletId) connectWS(user.walletId);
+        if (!stomp.current.isConnected() && user.userId) connectWS(user.userId);
       }
       appStateRef.current = next;
     });
     return () => sub.remove();
   }, [user, refreshBalance, connectWS]);
 
-  useEffect(() => () => stomp.current.disconnect(), []);
+  useEffect(() => () => {
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    stomp.current.disconnect();
+  }, []);
 
-  const updateAvatar = (uri: string) => {
-    if (user) {
-      setUser({ ...user, avatarUri: uri });
-    }
-  };
+  const updateAvatar = useCallback((uri: string) => {
+    setUser((prev) => (prev ? { ...prev, avatarUri: uri } : prev));
+  }, []);
+
+  const clearError = useCallback(() => setLastError(null), []);
+
+  const unreadCount = useMemo(
+    () => notifications.filter(n => n.isUnread).length,
+    [notifications]
+  );
+
+  const contextValue = useMemo<AppContextValue>(() => ({
+    user, isLoggedIn: !!user, isLoading,
+    login, register, logout,
+    wallet, refreshBalance, isBalanceLoading,
+    notifications, unreadCount,
+    markRead, markAllRead,
+    pendingTransactionId, setPendingTransactionId,
+    wsConnected,
+    lastError,
+    clearError,
+    customBackgroundUri,
+    setCustomBackgroundUri: updateCustomBackground,
+    updateAvatar,
+  }), [
+    user, isLoading, login, register, logout,
+    wallet, refreshBalance, isBalanceLoading,
+    notifications, unreadCount, markRead, markAllRead,
+    pendingTransactionId, wsConnected, lastError, clearError,
+    customBackgroundUri, updateCustomBackground, updateAvatar,
+  ]);
 
   return (
-    <AppContext.Provider value={{
-      user, isLoggedIn: !!user, isLoading,
-      login, register, logout,
-      wallet, refreshBalance, isBalanceLoading,
-      notifications, unreadCount: notifications.filter(n => n.isUnread).length,
-      markRead, markAllRead,
-      pendingTransactionId, setPendingTransactionId,
-      wsConnected,
-      lastError,
-      clearError: () => setLastError(null),
-      customBackgroundUri,
-      setCustomBackgroundUri: updateCustomBackground,
-      updateAvatar,
-    }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
