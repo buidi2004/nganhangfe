@@ -153,8 +153,8 @@ const AdBannerCard = React.memo(function AdBannerCard() {
         <View style={styles.adBadge}>
           <AppText style={styles.adBadgeText}>TÀI TRỢ</AppText>
         </View>
-        <AppText style={styles.adBannerTitle}>Shopee x MBBank</AppText>
-        <AppText style={styles.adBannerDesc}>Hoàn tiền 10% khi thanh toán bằng thẻ MB Visa</AppText>
+        <AppText style={styles.adBannerTitle}>Shopee x SenBank</AppText>
+        <AppText style={styles.adBannerDesc}>Hoàn tiền 10% khi thanh toán bằng thẻ SenBank Visa</AppText>
       </View>
     </TouchableOpacity>
   );

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #FFFFFF;
+    font-family: 'Consolas', 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: 2150px;
+    height: 1450px;
+  }
+  .diagram-container {
+    width: 2110px;
+    height: 1410px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div class="diagram-container">
+<svg width="2110" height="1410" viewBox="0 0 2110 1410" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Arrow & Markers -->
+    <marker id="navArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1E293B"/>
+    </marker>
+    <!-- Generalization (hollow triangle) -->
+    <marker id="hollowTriangle" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <polygon points="1,1 11,6 1,11" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    </marker>
+    <!-- Realization (hollow triangle for dashed line) -->
+    <marker id="realizeTriangle" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <polygon points="1,1 11,6 1,11" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.8"/>
+    </marker>
+    <!-- Composition (filled diamond) -->
+    <marker id="compDiamond" viewBox="0 0 16 10" refX="1" refY="5" markerWidth="12" markerHeight="8" orient="auto-start-reverse">
+      <polygon points="1,5 8,1 15,5 8,9" fill="#0F2C59" stroke="#0F2C59" stroke-width="1.2"/>
+    </marker>
+    <!-- Aggregation (hollow diamond) -->
+    <marker id="aggDiamond" viewBox="0 0 16 10" refX="1" refY="5" markerWidth="12" markerHeight="8" orient="auto-start-reverse">
+      <polygon points="1,5 8,1 15,5 8,9" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.5"/>
+    </marker>
+
+    <!-- Gradients -->
+    <linearGradient id="headerGrad2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0F2C59"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="0" y="0" width="2110" height="65" fill="url(#headerGrad2)"/>
+  <text x="30" y="42" fill="#FFFFFF" font-family="'Segoe UI', sans-serif" font-size="22" font-weight="bold" letter-spacing="0.5">SƠ ĐỒ LỚP TỔNG THỂ HỆ THỐNG CORE BANKING (UML CLASS DIAGRAM - Chuẩn UML 2.5 / Hexagonal Architecture)</text>
+  <text x="1720" y="42" fill="#E2E8F0" font-family="'Segoe UI', sans-serif" font-size="14">SenBank Domain Entities &amp; Hexagonal Ports</text>
+
+  <!-- Architecture Layer Groups -->
+  <!-- LAYER 1: Presentation (Top) -->
+  <rect x="25" y="80" width="2060" height="235" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+  <text x="45" y="105" fill="#0F2C59" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold">1. TẦNG TRÌNH DIỄN &amp; CỔNG GIAO TIẾP (PRESENTATION LAYER - REST CONTROLLERS &amp; WEBSOCKET ADAPTER)</text>
+
+  <!-- LAYER 2: Application Services / In-Ports (Middle-Top) -->
+  <rect x="25" y="330" width="2060" height="240" rx="10" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="45" y="355" fill="#166534" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold">2. TẦNG NGHIỆP VỤ &amp; CỔNG VÀO (APPLICATION LAYER - IN-PORTS USE CASES &amp; SERVICE IMPLEMENTATIONS)</text>
+
+  <!-- LAYER 3: Core Domain Model & Entities (Middle-Bottom) -->
+  <rect x="25" y="585" width="2060" height="565" rx="10" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.8"/>
+  <text x="45" y="610" fill="#1E40AF" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold">3. TẦNG MÔ HÌNH THỰC THỂ LÕI (CORE BANKING DOMAIN MODEL - AGGREGATE ROOTS &amp; ENTITIES 3NF)</text>
+
+  <!-- LAYER 4: Infrastructure Persistence & Outbox (Bottom) -->
+  <rect x="25" y="1165" width="2060" height="225" rx="10" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5"/>
+  <text x="45" y="1190" fill="#B45309" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold">4. TẦNG HẠ TẦNG DỮ LIỆU &amp; CỔNG RA (INFRASTRUCTURE LAYER - REPOSITORIES, OUTBOX RELAY &amp; PERSISTENCE)</text>
+
+
+  <!-- ============================================================== -->
+  <!-- LAYER 1 CLASSES: CONTROLLERS                                   -->
+  <!-- ============================================================== -->
+
+  <!-- AuthController -->
+  <g id="class-AuthController" transform="translate(45, 120)">
+    <rect x="0" y="0" width="460" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="460" height="40" rx="6" fill="#0F2C59"/>
+    <text x="230" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;RestController&gt;&gt;</text>
+    <text x="230" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">AuthController</text>
+    <!-- Attributes -->
+    <line x1="0" y1="40" x2="460" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- authService: AuthService</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- jwtProvider: JwtTokenProvider</text>
+    <!-- Methods -->
+    <line x1="0" y1="78" x2="460" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ register(req: RegisterRequest): ResponseEntity&lt;AuthResponse&gt;</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ login(req: LoginRequest): ResponseEntity&lt;AuthResponse&gt;</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ logout(bearerToken: String): ResponseEntity&lt;Void&gt;</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ refreshToken(refreshToken: String): ResponseEntity&lt;AuthResponse&gt;</text>
+    <text x="12" y="158" font-size="11" fill="#0F2C59">+ verifyOtp(phone: String, otp: String): ResponseEntity&lt;Boolean&gt;</text>
+  </g>
+
+  <!-- WalletController -->
+  <g id="class-WalletController" transform="translate(535, 120)">
+    <rect x="0" y="0" width="510" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="510" height="40" rx="6" fill="#0F2C59"/>
+    <text x="255" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;RestController&gt;&gt;</text>
+    <text x="255" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">WalletController</text>
+    <!-- Attributes -->
+    <line x1="0" y1="40" x2="510" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- walletUseCase: WalletUseCase</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- transferUseCase: TransferUseCase</text>
+    <!-- Methods -->
+    <line x1="0" y1="78" x2="510" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ getWallet(walletId: UUID): ResponseEntity&lt;WalletResponse&gt;</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ getRecipientInfo(phone: String): ResponseEntity&lt;RecipientInfoResponse&gt;</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ initTransfer(req: TransferInitRequest): ResponseEntity&lt;TransferResponse&gt;</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ confirmTransfer(txId: UUID, otp: String, pin: String): ResponseEntity&lt;TransferResponse&gt;</text>
+    <text x="12" y="158" font-size="11" fill="#0F2C59">+ estimateFee(type: String, amount: BigDecimal): ResponseEntity&lt;FeeEstimateResponse&gt;</text>
+  </g>
+
+  <!-- TransactionController -->
+  <g id="class-TransactionController" transform="translate(1075, 120)">
+    <rect x="0" y="0" width="480" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="480" height="40" rx="6" fill="#0F2C59"/>
+    <text x="240" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;RestController&gt;&gt;</text>
+    <text x="240" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">TransactionController</text>
+    <!-- Attributes -->
+    <line x1="0" y1="40" x2="480" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- txService: TransactionHistoryService</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- statementExporter: StatementExportPort</text>
+    <!-- Methods -->
+    <line x1="0" y1="78" x2="480" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ getHistory(walletId: UUID, type: String, page: int, size: int): List&lt;TransferResponse&gt;</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ getDetail(id: UUID): ResponseEntity&lt;TransferResponse&gt;</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ exportPdf(walletId: UUID, from: Instant, to: Instant): ResponseEntity&lt;byte[]&gt;</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ exportExcel(walletId: UUID, from: Instant, to: Instant): ResponseEntity&lt;byte[]&gt;</text>
+    <text x="12" y="158" font-size="11" fill="#0F2C59">+ getReceiptPdf(id: UUID): ResponseEntity&lt;byte[]&gt;</text>
+  </g>
+
+  <!-- BillController & WebSocket -->
+  <g id="class-BillController" transform="translate(1585, 120)">
+    <rect x="0" y="0" width="480" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="480" height="40" rx="6" fill="#0F2C59"/>
+    <text x="240" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;RestController&gt;&gt;</text>
+    <text x="240" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">BillController &amp; NotificationBroker</text>
+    <!-- Attributes -->
+    <line x1="0" y1="40" x2="480" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- billService: BillPaymentService</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- wsTemplate: SimpMessagingTemplate</text>
+    <!-- Methods -->
+    <line x1="0" y1="78" x2="480" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ lookup(type: BillType, customerCode: String): ResponseEntity&lt;Bill&gt;</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ pay(req: BillPayRequest): ResponseEntity&lt;TransferResponse&gt;</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ topup(req: TopupRequest): ResponseEntity&lt;TransferResponse&gt;</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ sendWsNotice(userId: UUID, payload: NotificationInfo): void</text>
+  </g>
+
+
+  <!-- ============================================================== -->
+  <!-- LAYER 2 CLASSES: APPLICATION PORTS & SERVICES                  -->
+  <!-- ============================================================== -->
+
+  <!-- Interface WalletUseCase -->
+  <g id="class-WalletUseCase" transform="translate(45, 370)">
+    <rect x="0" y="0" width="410" height="175" rx="6" fill="#FFFFFF" stroke="#059669" stroke-width="1.8"/>
+    <rect x="0" y="0" width="410" height="40" rx="6" fill="#059669"/>
+    <text x="205" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#A7F3D0">&lt;&lt;In-Port / Interface&gt;&gt;</text>
+    <text x="205" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">WalletUseCase</text>
+    <line x1="0" y1="40" x2="410" y2="40" stroke="#059669" stroke-width="1.2"/>
+    <text x="12" y="60" font-size="11" fill="#14532D">+ getWalletById(id: UUID): Wallet</text>
+    <text x="12" y="80" font-size="11" fill="#14532D">+ getWalletByUserId(userId: UUID): Wallet</text>
+    <text x="12" y="100" font-size="11" fill="#14532D">+ checkBalance(walletId: UUID, amount: BigDecimal): boolean</text>
+    <text x="12" y="120" font-size="11" fill="#14532D">+ lockWalletPair(srcId: UUID, tgtId: UUID): WalletPair</text>
+    <text x="12" y="140" font-size="11" fill="#14532D">+ checkLimit(walletId: UUID, amount: BigDecimal): boolean</text>
+  </g>
+
+  <!-- Class WalletServiceImpl -->
+  <g id="class-WalletServiceImpl" transform="translate(485, 370)">
+    <rect x="0" y="0" width="440" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="440" height="40" rx="6" fill="#0F2C59"/>
+    <text x="220" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Service / UseCaseImpl&gt;&gt;</text>
+    <text x="220" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">WalletServiceImpl</text>
+    <line x1="0" y1="40" x2="440" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- walletRepo: WalletRepository</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- redisLock: RedisDistributedLock</text>
+    <line x1="0" y1="78" x2="440" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ getWalletById(id: UUID): Wallet</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ lockWalletPair(srcId: UUID, tgtId: UUID): WalletPair</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ checkLimit(walletId: UUID, amt: BigDecimal): boolean</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ updateBalance(w: Wallet, amt: BigDecimal, isCredit: bool)</text>
+  </g>
+
+  <!-- Interface TransferUseCase -->
+  <g id="class-TransferUseCase" transform="translate(955, 370)">
+    <rect x="0" y="0" width="420" height="175" rx="6" fill="#FFFFFF" stroke="#059669" stroke-width="1.8"/>
+    <rect x="0" y="0" width="420" height="40" rx="6" fill="#059669"/>
+    <text x="210" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#A7F3D0">&lt;&lt;In-Port / Interface&gt;&gt;</text>
+    <text x="210" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">TransferUseCase</text>
+    <line x1="0" y1="40" x2="420" y2="40" stroke="#059669" stroke-width="1.2"/>
+    <text x="12" y="60" font-size="11" fill="#14532D">+ initTransfer(req: TransferInitRequest): TransferResponse</text>
+    <text x="12" y="80" font-size="11" fill="#14532D">+ confirmTransfer(txId: UUID, pinOtp: String): TransferResponse</text>
+    <text x="12" y="100" font-size="11" fill="#14532D">+ deposit(req: DepositRequest): TransferResponse</text>
+    <text x="12" y="120" font-size="11" fill="#14532D">+ withdraw(req: WithdrawRequest): TransferResponse</text>
+    <text x="12" y="140" font-size="11" fill="#14532D">+ reverseTransaction(txId: UUID, reason: String): TransferResponse</text>
+  </g>
+
+  <!-- Class TransferServiceImpl -->
+  <g id="class-TransferServiceImpl" transform="translate(1405, 370)">
+    <rect x="0" y="0" width="460" height="175" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="460" height="40" rx="6" fill="#0F2C59"/>
+    <text x="230" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Service / UseCaseImpl&gt;&gt;</text>
+    <text x="230" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">TransferServiceImpl</text>
+    <line x1="0" y1="40" x2="460" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- txRepo: TransactionRepository</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- outboxRepo: OutboxEventRepository</text>
+    <text x="240" y="70" font-size="11" fill="#334155">- ledgerService: LedgerUseCase</text>
+    <line x1="0" y1="78" x2="460" y2="78" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="94" font-size="11" fill="#0F2C59">+ initTransfer(req: TransferInitRequest): TransferResponse</text>
+    <text x="12" y="110" font-size="11" fill="#0F2C59">+ confirmTransfer(txId: UUID, pinOtp: String): TransferResponse</text>
+    <text x="12" y="126" font-size="11" fill="#0F2C59">+ executeDoubleEntryTransfer(src: Wallet, tgt: Wallet, amt: BigDecimal)</text>
+    <text x="12" y="142" font-size="11" fill="#0F2C59">+ publishOutboxEvent(aggId: UUID, type: String, payload: Object)</text>
+  </g>
+
+  <!-- Interface LedgerUseCase -->
+  <g id="class-LedgerUseCase" transform="translate(1890, 370)">
+    <rect x="0" y="0" width="180" height="175" rx="6" fill="#FFFFFF" stroke="#059669" stroke-width="1.8"/>
+    <rect x="0" y="0" width="180" height="40" rx="6" fill="#059669"/>
+    <text x="90" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#A7F3D0">&lt;&lt;In-Port&gt;&gt;</text>
+    <text x="90" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">LedgerUseCase</text>
+    <line x1="0" y1="40" x2="180" y2="40" stroke="#059669" stroke-width="1.2"/>
+    <text x="8" y="65" font-size="10.5" fill="#14532D">+ recordTransfer()</text>
+    <text x="8" y="85" font-size="10.5" fill="#14532D">+ postDebit()</text>
+    <text x="8" y="105" font-size="10.5" fill="#14532D">+ postCredit()</text>
+    <text x="8" y="125" font-size="10.5" fill="#14532D">+ reconcile()</text>
+  </g>
+
+
+  <!-- ============================================================== -->
+  <!-- LAYER 3 CLASSES: CORE DOMAIN ENTITIES (DDD AGGREGATE ROOTS)   -->
+  <!-- ============================================================== -->
+
+  <!-- User Entity -->
+  <g id="class-User" transform="translate(45, 630)">
+    <rect x="0" y="0" width="350" height="235" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="350" height="40" rx="6" fill="#0F2C59"/>
+    <text x="175" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / AggregateRoot&gt;&gt;</text>
+    <text x="175" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#FFFFFF">User</text>
+    <line x1="0" y1="40" x2="350" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- phoneNumber: String {unique}</text>
+    <text x="12" y="84" font-size="11" fill="#334155">- fullName: String</text>
+    <text x="12" y="98" font-size="11" fill="#334155">- email: String</text>
+    <text x="12" y="112" font-size="11" fill="#334155">- passwordHash: String</text>
+    <text x="12" y="126" font-size="11" fill="#334155">- pinHash: String</text>
+    <text x="12" y="140" font-size="11" fill="#334155">- kycStatus: KycStatus {UNVERIFIED, VERIFIED}</text>
+    <text x="12" y="154" font-size="11" fill="#334155">- createdAt: Instant</text>
+    <line x1="0" y1="162" x2="350" y2="162" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="178" font-size="11" fill="#0F2C59">+ verifyPassword(raw: String): boolean</text>
+    <text x="12" y="194" font-size="11" fill="#0F2C59">+ verifyPin(pin: String): boolean</text>
+    <text x="12" y="210" font-size="11" fill="#0F2C59">+ upgradeKyc(status: KycStatus): void</text>
+    <text x="12" y="226" font-size="11" fill="#0F2C59">+ updateProfile(name: String, mail: String)</text>
+  </g>
+
+  <!-- Wallet Entity -->
+  <g id="class-Wallet" transform="translate(470, 630)">
+    <rect x="0" y="0" width="380" height="235" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2.2"/>
+    <rect x="0" y="0" width="380" height="40" rx="6" fill="#0F2C59"/>
+    <text x="190" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / AggregateRoot&gt;&gt;</text>
+    <text x="190" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#FFFFFF">Wallet (Account)</text>
+    <line x1="0" y1="40" x2="380" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- ownerId: UUID [FK -&gt; User.id]</text>
+    <text x="12" y="84" font-size="11" fill="#334155">- balance: BigDecimal {numeric 19,4}</text>
+    <text x="12" y="98" font-size="11" fill="#334155">- currency: Currency {VND}</text>
+    <text x="12" y="112" font-size="11" fill="#334155">- status: WalletStatus {ACTIVE, LOCKED}</text>
+    <text x="12" y="126" font-size="11" fill="#334155">- version: Long {@Version OptimisticLock}</text>
+    <text x="12" y="140" font-size="11" fill="#334155">- dailySpent: BigDecimal</text>
+    <text x="12" y="154" font-size="11" fill="#334155">- monthlySpent: BigDecimal</text>
+    <line x1="0" y1="162" x2="380" y2="162" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="178" font-size="11" fill="#0F2C59">+ credit(amount: BigDecimal): void</text>
+    <text x="12" y="194" font-size="11" fill="#0F2C59">+ debit(amount: BigDecimal): void</text>
+    <text x="12" y="210" font-size="11" fill="#0F2C59">+ hasSufficientBalance(amt: BigDecimal): bool</text>
+    <text x="12" y="226" font-size="11" fill="#0F2C59">+ validateLimit(amt: BigDecimal, kyc: Kyc): bool</text>
+  </g>
+
+  <!-- Transaction Entity -->
+  <g id="class-Transaction" transform="translate(935, 630)">
+    <rect x="0" y="0" width="440" height="255" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2.2"/>
+    <rect x="0" y="0" width="440" height="40" rx="6" fill="#0F2C59"/>
+    <text x="220" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / AggregateRoot&gt;&gt;</text>
+    <text x="220" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#FFFFFF">Transaction</text>
+    <line x1="0" y1="40" x2="440" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- requestId: UUID {Idempotency-Key unique}</text>
+    <text x="12" y="84" font-size="11" fill="#334155">- sourceWalletId: UUID [FK -&gt; Wallet.id]</text>
+    <text x="12" y="98" font-size="11" fill="#334155">- targetWalletId: UUID [FK -&gt; Wallet.id]</text>
+    <text x="12" y="112" font-size="11" fill="#334155">- amount: BigDecimal {&gt; 0}</text>
+    <text x="12" y="126" font-size="11" fill="#334155">- feeAmount: BigDecimal</text>
+    <text x="12" y="140" font-size="11" fill="#334155">- type: TransactionType {TRANSFER_OUT, DEPOSIT...}</text>
+    <text x="12" y="154" font-size="11" fill="#334155">- status: TxStatus {PENDING, SUCCESS, FAILED}</text>
+    <text x="12" y="168" font-size="11" fill="#334155">- bankCode: String {SENHONG, VCB, BIDV...}</text>
+    <text x="12" y="182" font-size="11" fill="#334155">- balanceAfter: BigDecimal</text>
+    <line x1="0" y1="190" x2="440" y2="190" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="206" font-size="11" fill="#0F2C59">+ markSuccess(balance: BigDecimal): void</text>
+    <text x="12" y="222" font-size="11" fill="#0F2C59">+ markFailed(reason: String): void</text>
+    <text x="12" y="238" font-size="11" fill="#0F2C59">+ isInternal(): boolean</text>
+  </g>
+
+  <!-- JournalEntry Entity -->
+  <g id="class-JournalEntry" transform="translate(1450, 630)">
+    <rect x="0" y="0" width="340" height="235" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="340" height="40" rx="6" fill="#0F2C59"/>
+    <text x="170" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / DoubleEntry&gt;&gt;</text>
+    <text x="170" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#FFFFFF">JournalEntry</text>
+    <line x1="0" y1="40" x2="340" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- transactionId: UUID [FK -&gt; Tx.id]</text>
+    <text x="12" y="84" font-size="11" fill="#334155">- entryDate: LocalDate</text>
+    <text x="12" y="98" font-size="11" fill="#334155">- description: String</text>
+    <text x="12" y="112" font-size="11" fill="#334155">- totalDebit: BigDecimal</text>
+    <text x="12" y="126" font-size="11" fill="#334155">- totalCredit: BigDecimal</text>
+    <text x="12" y="140" font-size="11" fill="#334155">- createdAt: Instant</text>
+    <line x1="0" y1="148" x2="340" y2="148" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="166" font-size="11" fill="#0F2C59">+ addPosting(p: LedgerPosting): void</text>
+    <text x="12" y="184" font-size="11" fill="#0F2C59">+ validateDoubleEntry(): boolean</text>
+    <text x="12" y="202" font-size="11" fill="#0F2C59">  {assert totalDebit == totalCredit}</text>
+  </g>
+
+  <!-- LedgerPosting Entity -->
+  <g id="class-LedgerPosting" transform="translate(1830, 630)">
+    <rect x="0" y="0" width="235" height="235" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="235" height="40" rx="6" fill="#0F2C59"/>
+    <text x="117" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / PartOfEntry&gt;&gt;</text>
+    <text x="117" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#FFFFFF">LedgerPosting</text>
+    <line x1="0" y1="40" x2="235" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="10" y="74" font-size="11" fill="#334155">- journalEntryId: UUID</text>
+    <text x="10" y="92" font-size="11" fill="#334155">- accountId: UUID</text>
+    <text x="10" y="110" font-size="11" fill="#334155">- direction: EntryDirection</text>
+    <text x="25" y="126" font-size="10.5" fill="#1E40AF">{DEBIT, CREDIT}</text>
+    <text x="10" y="144" font-size="11" fill="#334155">- amount: BigDecimal</text>
+    <text x="10" y="162" font-size="11" fill="#334155">- sequenceNo: int</text>
+    <line x1="0" y1="172" x2="235" y2="172" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="194" font-size="11" fill="#0F2C59">+ isDebit(): boolean</text>
+    <text x="10" y="214" font-size="11" fill="#0F2C59">+ isCredit(): boolean</text>
+  </g>
+
+
+  <!-- SUB-ENTITIES: BankAccount, Beneficiary, Bill, DeviceSession -->
+  <!-- BankAccount -->
+  <g id="class-BankAccount" transform="translate(45, 900)">
+    <rect x="0" y="0" width="270" height="150" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="270" height="34" rx="6" fill="#0F2C59"/>
+    <text x="135" y="15" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#93C5FD">&lt;&lt;Entity&gt;&gt;</text>
+    <text x="135" y="28" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">BankAccount</text>
+    <line x1="0" y1="34" x2="270" y2="34" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="50" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="10" y="66" font-size="11" fill="#334155">- userId: UUID [FK]</text>
+    <text x="10" y="82" font-size="11" fill="#334155">- bankCode: String {VCB, BIDV}</text>
+    <text x="10" y="98" font-size="11" fill="#334155">- accountNumber: String</text>
+    <text x="10" y="114" font-size="11" fill="#334155">- accountHolderName: String</text>
+    <text x="10" y="130" font-size="11" fill="#334155">- isDefault: boolean</text>
+  </g>
+
+  <!-- Beneficiary -->
+  <g id="class-Beneficiary" transform="translate(340, 900)">
+    <rect x="0" y="0" width="270" height="150" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="270" height="34" rx="6" fill="#0F2C59"/>
+    <text x="135" y="15" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#93C5FD">&lt;&lt;Entity&gt;&gt;</text>
+    <text x="135" y="28" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">Beneficiary</text>
+    <line x1="0" y1="34" x2="270" y2="34" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="50" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="10" y="66" font-size="11" fill="#334155">- userId: UUID [FK]</text>
+    <text x="10" y="82" font-size="11" fill="#334155">- nickname: String</text>
+    <text x="10" y="98" font-size="11" fill="#334155">- targetWalletId: UUID</text>
+    <text x="10" y="114" font-size="11" fill="#334155">- bankCode: String</text>
+    <text x="10" y="130" font-size="11" fill="#334155">- accountNumber: String</text>
+  </g>
+
+  <!-- DeviceSession -->
+  <g id="class-DeviceSession" transform="translate(635, 900)">
+    <rect x="0" y="0" width="270" height="150" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="270" height="34" rx="6" fill="#0F2C59"/>
+    <text x="135" y="15" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#93C5FD">&lt;&lt;Entity&gt;&gt;</text>
+    <text x="135" y="28" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">DeviceSession</text>
+    <line x1="0" y1="34" x2="270" y2="34" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="50" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="10" y="66" font-size="11" fill="#334155">- userId: UUID [FK]</text>
+    <text x="10" y="82" font-size="11" fill="#334155">- deviceId: String</text>
+    <text x="10" y="98" font-size="11" fill="#334155">- deviceName: String</text>
+    <text x="10" y="114" font-size="11" fill="#334155">- fcmToken: String</text>
+    <text x="10" y="130" font-size="11" fill="#334155">- lastActiveAt: Instant</text>
+  </g>
+
+  <!-- Bill Entity -->
+  <g id="class-Bill" transform="translate(935, 905)">
+    <rect x="0" y="0" width="310" height="145" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="1.8"/>
+    <rect x="0" y="0" width="310" height="34" rx="6" fill="#0F2C59"/>
+    <text x="155" y="15" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#93C5FD">&lt;&lt;Entity&gt;&gt;</text>
+    <text x="155" y="28" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">Bill</text>
+    <line x1="0" y1="34" x2="310" y2="34" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="10" y="50" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="10" y="66" font-size="11" fill="#334155">- billType: BillType {ELECTRIC, WATER...}</text>
+    <text x="10" y="82" font-size="11" fill="#334155">- customerCode: String</text>
+    <text x="10" y="98" font-size="11" fill="#334155">- customerName: String</text>
+    <text x="10" y="114" font-size="11" fill="#334155">- amount: BigDecimal</text>
+    <text x="10" y="130" font-size="11" fill="#334155">- status: BillStatus {UNPAID, PAID}</text>
+  </g>
+
+  <!-- Value Object Money -->
+  <g id="class-Money" transform="translate(1275, 905)">
+    <rect x="0" y="0" width="220" height="145" rx="6" fill="#FFFFFF" stroke="#D97706" stroke-width="1.8"/>
+    <rect x="0" y="0" width="220" height="34" rx="6" fill="#D97706"/>
+    <text x="110" y="15" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#FEF3C7">&lt;&lt;ValueObject / Immutable&gt;&gt;</text>
+    <text x="110" y="28" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF">Money</text>
+    <line x1="0" y1="34" x2="220" y2="34" stroke="#D97706" stroke-width="1.2"/>
+    <text x="10" y="52" font-size="11" fill="#334155">- amount: BigDecimal</text>
+    <text x="10" y="70" font-size="11" fill="#334155">- currency: Currency</text>
+    <line x1="0" y1="80" x2="220" y2="80" stroke="#D97706" stroke-width="1.2"/>
+    <text x="10" y="98" font-size="11" fill="#92400E">+ add(other: Money): Money</text>
+    <text x="10" y="116" font-size="11" fill="#92400E">+ subtract(other: Money)</text>
+    <text x="10" y="134" font-size="11" fill="#92400E">+ isGreaterThanOrEqual()</text>
+  </g>
+
+
+  <!-- ============================================================== -->
+  <!-- LAYER 4 CLASSES: INFRASTRUCTURE & OUTBOX                      -->
+  <!-- ============================================================== -->
+
+  <!-- OutboxEvent Entity -->
+  <g id="class-OutboxEvent" transform="translate(45, 1205)">
+    <rect x="0" y="0" width="410" height="165" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="410" height="40" rx="6" fill="#0F2C59"/>
+    <text x="205" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Entity / OutboxPattern&gt;&gt;</text>
+    <text x="205" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">OutboxEvent</text>
+    <line x1="0" y1="40" x2="410" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="56" font-size="11" fill="#334155">- id: UUID [PK]</text>
+    <text x="12" y="70" font-size="11" fill="#334155">- aggregateType: String {"WALLET", "TRANSACTION"}</text>
+    <text x="12" y="84" font-size="11" fill="#334155">- aggregateId: String</text>
+    <text x="12" y="98" font-size="11" fill="#334155">- eventType: String {"MONEY_TRANSFERRED", "DEPOSIT_COMPLETED"}</text>
+    <text x="12" y="112" font-size="11" fill="#334155">- payload: String {JSONB}</text>
+    <text x="12" y="126" font-size="11" fill="#334155">- status: OutboxStatus {PENDING, PROCESSED, FAILED}</text>
+    <text x="12" y="140" font-size="11" fill="#334155">- retryCount: int</text>
+    <text x="12" y="154" font-size="11" fill="#334155">- createdAt: Instant</text>
+  </g>
+
+  <!-- OutboxRelayScheduler -->
+  <g id="class-OutboxRelayScheduler" transform="translate(485, 1205)">
+    <rect x="0" y="0" width="450" height="165" rx="6" fill="#FFFFFF" stroke="#0F2C59" stroke-width="2"/>
+    <rect x="0" y="0" width="450" height="40" rx="6" fill="#0F2C59"/>
+    <text x="225" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#93C5FD">&lt;&lt;Component / Poller&gt;&gt;</text>
+    <text x="225" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">OutboxRelayScheduler</text>
+    <line x1="0" y1="40" x2="450" y2="40" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="58" font-size="11" fill="#334155">- outboxRepo: OutboxEventRepository</text>
+    <text x="12" y="74" font-size="11" fill="#334155">- rabbitTemplate: RabbitTemplate</text>
+    <line x1="0" y1="84" x2="450" y2="84" stroke="#0F2C59" stroke-width="1.2"/>
+    <text x="12" y="104" font-size="11" fill="#0F2C59">+ processOutboxEvents(): void {@Scheduled(500ms)}</text>
+    <text x="12" y="122" font-size="11" fill="#0F2C59">  {SELECT FOR UPDATE SKIP LOCKED}</text>
+    <text x="12" y="140" font-size="11" fill="#0F2C59">+ publishToRabbitMQ(exchange: String, routing: String)</text>
+  </g>
+
+  <!-- Repositories -->
+  <g id="class-Repositories" transform="translate(965, 1205)">
+    <rect x="0" y="0" width="480" height="165" rx="6" fill="#FFFFFF" stroke="#B45309" stroke-width="1.8"/>
+    <rect x="0" y="0" width="480" height="40" rx="6" fill="#B45309"/>
+    <text x="240" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#FEF3C7">&lt;&lt;Out-Port / Spring Data JPA Repositories&gt;&gt;</text>
+    <text x="240" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">PostgreSQL Persistence Adapters</text>
+    <line x1="0" y1="40" x2="480" y2="40" stroke="#B45309" stroke-width="1.2"/>
+    <text x="12" y="60" font-size="11" fill="#78350F">+ UserRepository: JpaRepository&lt;User, UUID&gt;</text>
+    <text x="12" y="80" font-size="11" fill="#78350F">+ WalletRepository: JpaRepository&lt;Wallet, UUID&gt; {findWithPessimisticLock}</text>
+    <text x="12" y="100" font-size="11" fill="#78350F">+ TransactionRepository: JpaRepository&lt;Transaction, UUID&gt;</text>
+    <text x="12" y="120" font-size="11" fill="#78350F">+ JournalEntryRepository &amp; LedgerPostingRepository</text>
+    <text x="12" y="140" font-size="11" fill="#78350F">+ OutboxEventRepository {findTop50PendingWithLock}</text>
+  </g>
+
+  <!-- Distributed Lock -->
+  <g id="class-RedisLock" transform="translate(1480, 1205)">
+    <rect x="0" y="0" width="585" height="165" rx="6" fill="#FFFFFF" stroke="#B45309" stroke-width="1.8"/>
+    <rect x="0" y="0" width="585" height="40" rx="6" fill="#B45309"/>
+    <text x="292" y="18" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="11" fill="#FEF3C7">&lt;&lt;Adapter / Distributed Concurrency&gt;&gt;</text>
+    <text x="292" y="34" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">RedisLockService &amp; IdempotencyStore</text>
+    <line x1="0" y1="40" x2="585" y2="40" stroke="#B45309" stroke-width="1.2"/>
+    <text x="12" y="60" font-size="11" fill="#78350F">+ acquireLock(key: String, ttlMs: long): boolean {SET NX PX}</text>
+    <text x="12" y="80" font-size="11" fill="#78350F">+ releaseLock(key: String, token: String): boolean {Lua script atomicity}</text>
+    <text x="12" y="100" font-size="11" fill="#78350F">+ checkAndSetIdempotency(requestId: UUID, ttlSec: long): boolean</text>
+    <text x="12" y="120" font-size="11" fill="#78350F">+ cacheResponse(requestId: UUID, response: Object): void</text>
+    <text x="12" y="140" font-size="11" fill="#78350F">+ blackListToken(jwtHash: String, expiry: Instant): void</text>
+  </g>
+
+
+  <!-- ============================================================== -->
+  <!-- UML RELATIONSHIPS (LINES, MULTIPLICITY, STEROTYPES)             -->
+  <!-- ============================================================== -->
+
+  <!-- Realizations (Service -> Interface In-Port) -->
+  <!-- WalletServiceImpl ..|> WalletUseCase -->
+  <line x1="485" y1="450" x2="467" y2="450" stroke="#2563EB" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#realizeTriangle)"/>
+
+  <!-- TransferServiceImpl ..|> TransferUseCase -->
+  <line x1="1405" y1="450" x2="1387" y2="450" stroke="#2563EB" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#realizeTriangle)"/>
+
+  <!-- Presentation -> In-Ports (Dependencies ..>) -->
+  <line x1="750" y1="295" x2="750" y2="358" stroke="#0F2C59" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+  <text x="758" y="325" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">&lt;&lt;uses In-Port&gt;&gt;</text>
+
+  <!-- Service -> Entities Dependencies -->
+  <line x1="680" y1="545" x2="680" y2="618" stroke="#0F2C59" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+  <text x="688" y="580" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">&lt;&lt;operates&gt;&gt;</text>
+
+  <line x1="1450" y1="545" x2="1160" y2="618" stroke="#0F2C59" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+
+  <!-- User - Wallet: COMPOSITION (Filled Diamond) -->
+  <!-- User 1 *-- 1..* Wallet -->
+  <line x1="395" y1="710" x2="458" y2="710" stroke="#0F2C59" stroke-width="2" marker-start="url(#compDiamond)" marker-end="url(#navArrow)"/>
+  <text x="408" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1</text>
+  <text x="440" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1..*</text>
+  <text x="410" y="725" font-family="'Segoe UI', sans-serif" font-size="10" fill="#475569">owns &gt;</text>
+
+  <!-- User - BankAccount: AGGREGATION (Hollow Diamond) -->
+  <path d="M 120 865 L 120 888" stroke="#0F2C59" stroke-width="2" marker-start="url(#aggDiamond)" marker-end="url(#navArrow)"/>
+  <text x="128" y="875" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">0..*</text>
+
+  <!-- User - Beneficiary: AGGREGATION (Hollow Diamond) -->
+  <path d="M 280 865 L 280 885 L 360 885 L 360 890" stroke="#0F2C59" stroke-width="2" marker-start="url(#aggDiamond)" marker-end="url(#navArrow)"/>
+  <text x="290" y="878" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">0..*</text>
+
+  <!-- User - DeviceSession: COMPOSITION -->
+  <path d="M 395 780 L 770 780 L 770 888" stroke="#0F2C59" stroke-width="2" marker-start="url(#compDiamond)" marker-end="url(#navArrow)"/>
+  <text x="778" y="880" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">0..*</text>
+
+  <!-- Wallet - Transaction: ASSOCIATION -->
+  <!-- Wallet 1 -> 0..* Transaction -->
+  <line x1="850" y1="710" x2="923" y2="710" stroke="#0F2C59" stroke-width="2" marker-end="url(#navArrow)"/>
+  <text x="860" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1</text>
+  <text x="905" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">0..*</text>
+  <text x="860" y="725" font-family="'Segoe UI', sans-serif" font-size="10" fill="#475569">source/tgt &gt;</text>
+
+  <!-- Transaction - JournalEntry: COMPOSITION -->
+  <!-- Transaction 1 *-- 1 JournalEntry -->
+  <line x1="1375" y1="710" x2="1438" y2="710" stroke="#0F2C59" stroke-width="2" marker-start="url(#compDiamond)" marker-end="url(#navArrow)"/>
+  <text x="1390" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1</text>
+  <text x="1425" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1</text>
+  <text x="1395" y="725" font-family="'Segoe UI', sans-serif" font-size="10" fill="#475569">audited by</text>
+
+  <!-- JournalEntry - LedgerPosting: COMPOSITION -->
+  <!-- JournalEntry 1 *-- 2..* LedgerPosting -->
+  <line x1="1790" y1="710" x2="1818" y2="710" stroke="#0F2C59" stroke-width="2" marker-start="url(#compDiamond)" marker-end="url(#navArrow)"/>
+  <text x="1795" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">1</text>
+  <text x="1810" y="700" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#0F2C59">2..*</text>
+
+  <!-- Transaction - Money (Dependency) -->
+  <path d="M 1275 885 L 1275 895" stroke="#D97706" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+
+  <!-- Service -> Outbox Pattern -->
+  <path d="M 1480 545 L 1480 575 L 300 575 L 300 1195" stroke="#0F2C59" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+  <text x="310" y="590" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#0F2C59">&lt;&lt;writes event in same ACID tx&gt;&gt;</text>
+
+  <!-- OutboxRelayScheduler reads OutboxEvent -->
+  <line x1="485" y1="1285" x2="467" y2="1285" stroke="#0F2C59" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#navArrow)"/>
+  <text x="460" y="1275" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#475569">polls &gt;</text>
+
+  <!-- Legend Bottom -->
+  <g id="class-legend" transform="translate(1480, 1370)">
+    <rect x="0" y="0" width="585" height="26" rx="4" fill="#F1F5F9"/>
+    <text x="15" y="18" font-family="'Segoe UI', sans-serif" font-size="12" font-weight="bold" fill="#334155">Chú thích UML:</text>
+    <polygon points="120,18 126,14 132,18 126,22" fill="#0F2C59"/>
+    <line x1="132" y1="18" x2="155" y2="18" stroke="#0F2C59" stroke-width="1.5"/>
+    <text x="160" y="18" font-family="'Segoe UI', sans-serif" font-size="11" fill="#334155">Composition</text>
+    <polygon points="240,18 246,14 252,18 246,22" fill="#FFF" stroke="#0F2C59"/>
+    <line x1="252" y1="18" x2="275" y2="18" stroke="#0F2C59" stroke-width="1.5"/>
+    <text x="280" y="18" font-family="'Segoe UI', sans-serif" font-size="11" fill="#334155">Aggregation</text>
+    <line x1="360" y1="18" x2="385" y2="18" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="390" y="18" font-family="'Segoe UI', sans-serif" font-size="11" fill="#2563EB">Realization (..|&gt;)</text>
+    <line x1="490" y1="18" x2="515" y2="18" stroke="#0F2C59" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="520" y="18" font-family="'Segoe UI', sans-serif" font-size="11" fill="#0F2C59">Dependency</text>
+  </g>
+</svg>
+</div>
+</body>
+</html>

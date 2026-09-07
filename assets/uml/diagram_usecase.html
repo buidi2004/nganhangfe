@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #FFFFFF;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: 2000px;
+    height: 1350px;
+  }
+  .diagram-container {
+    width: 1960px;
+    height: 1310px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div class="diagram-container">
+<svg width="1960" height="1310" viewBox="0 0 1960 1310" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Arrow marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1E293B"/>
+    </marker>
+    <marker id="dashArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563EB"/>
+    </marker>
+    <marker id="dashArrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#D97706"/>
+    </marker>
+
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0F2C59"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="ucGrad1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="ucGrad2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F0FDF4"/>
+      <stop offset="100%" stop-color="#DCFCE7"/>
+    </linearGradient>
+    <linearGradient id="ucGrad3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#FDE68A"/>
+    </linearGradient>
+    <linearGradient id="ucGradCore" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#BFDBFE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="0" y="0" width="1960" height="65" fill="url(#headerGrad)"/>
+  <text x="30" y="42" fill="#FFFFFF" font-size="22" font-weight="bold" letter-spacing="0.5">SƠ ĐỒ CA SỬ DỤNG TỔNG THỂ HỆ THỐNG SENBANK (UML USE CASE DIAGRAM - Chuẩn IEEE 830 / UML 2.5)</text>
+  <text x="1600" y="42" fill="#E2E8F0" font-size="14">Sen Hồng Bank Core Banking &amp; Mobile App</text>
+
+  <!-- System Boundary Box -->
+  <rect x="330" y="85" width="1280" height="1200" rx="14" fill="#FAFAFA" stroke="#0F2C59" stroke-width="2.5"/>
+  <rect x="330" y="85" width="600" height="36" rx="6" fill="#0F2C59"/>
+  <text x="350" y="109" fill="#FFFFFF" font-size="16" font-weight="bold">Hệ thống Ngân hàng Số Sen Hồng Bank (System Boundary)</text>
+
+  <!-- Subsystem Packages Boundaries -->
+  <!-- Package 1: IAM & Security -->
+  <rect x="350" y="135" width="380" height="340" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="365" y="158" fill="#1E3A8A" font-size="14" font-weight="bold">1. Định danh &amp; Xác thực (IAM &amp; eKYC)</text>
+
+  <!-- Package 2: Account & Limits -->
+  <rect x="350" y="490" width="380" height="230" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="365" y="513" fill="#1E3A8A" font-size="14" font-weight="bold">2. Tài khoản &amp; Số dư (Account Mgmt)</text>
+
+  <!-- Package 3: Core Transfer & Napas -->
+  <rect x="750" y="135" width="460" height="585" rx="8" fill="#F8FAFC" stroke="#93C5FD" stroke-width="1.8" stroke-dasharray="4,4"/>
+  <text x="765" y="158" fill="#1E3A8A" font-size="14" font-weight="bold">3. Giao dịch Chuyển tiền &amp; Napas 24/7 (Core Payment)</text>
+
+  <!-- Package 4: Billing & Financial Services -->
+  <rect x="350" y="735" width="860" height="310" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="365" y="758" fill="#1E3A8A" font-size="14" font-weight="bold">4. Thanh toán Hóa đơn, Nạp/Rút &amp; Tiện ích Tài chính (Billing &amp; Services)</text>
+
+  <!-- Package 5: Statement & Support -->
+  <rect x="350" y="1060" width="860" height="210" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="365" y="1083" fill="#1E3A8A" font-size="14" font-weight="bold">5. Báo cáo Sao kê, Hỗ trợ &amp; Hệ thống (Statement, Help &amp; Config)</text>
+
+  <!-- Package 6: Back-Office Admin -->
+  <rect x="1230" y="135" width="360" height="420" rx="8" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="1245" y="158" fill="#991B1B" font-size="14" font-weight="bold">6. Nghiệp vụ Quản trị Vận hành (Admin / Back-Office)</text>
+
+  <!-- Package 7: System Background / Common Included -->
+  <rect x="1230" y="570" width="360" height="700" rx="8" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="1245" y="593" fill="#166534" font-size="14" font-weight="bold">7. Các Ca Sử dụng Bổ trợ &amp; Hạch toán lõi (&lt;&lt;include&gt;&gt;)</text>
+
+
+  <!-- ==================== ACTORS ==================== -->
+  <!-- LEFT: Primary Actor Customer -->
+  <g id="actor-customer" transform="translate(140, 480)">
+    <circle cx="30" cy="20" r="18" fill="#EFF6FF" stroke="#1E40AF" stroke-width="2.5"/>
+    <line x1="30" y1="38" x2="30" y2="90" stroke="#1E40AF" stroke-width="2.5"/>
+    <line x1="0" y1="56" x2="60" y2="56" stroke="#1E40AF" stroke-width="2.5"/>
+    <line x1="30" y1="90" x2="5" y2="140" stroke="#1E40AF" stroke-width="2.5"/>
+    <line x1="30" y1="90" x2="55" y2="140" stroke="#1E40AF" stroke-width="2.5"/>
+    <text x="30" y="170" text-anchor="middle" font-size="15" font-weight="bold" fill="#0F2C59">&lt;&lt;Primary Actor&gt;&gt;</text>
+    <text x="30" y="190" text-anchor="middle" font-size="16" font-weight="bold" fill="#1E40AF">Khách hàng</text>
+    <text x="30" y="210" text-anchor="middle" font-size="13" fill="#475569">(Mobile App User)</text>
+  </g>
+
+  <!-- RIGHT ACTORS -->
+  <!-- Actor 1: Bank Teller / Admin -->
+  <g id="actor-admin" transform="translate(1760, 200)">
+    <circle cx="30" cy="20" r="18" fill="#FEF2F2" stroke="#B91C1C" stroke-width="2.5"/>
+    <line x1="30" y1="38" x2="30" y2="90" stroke="#B91C1C" stroke-width="2.5"/>
+    <line x1="0" y1="56" x2="60" y2="56" stroke="#B91C1C" stroke-width="2.5"/>
+    <line x1="30" y1="90" x2="5" y2="140" stroke="#B91C1C" stroke-width="2.5"/>
+    <line x1="30" y1="90" x2="55" y2="140" stroke="#B91C1C" stroke-width="2.5"/>
+    <text x="30" y="168" text-anchor="middle" font-size="14" font-weight="bold" fill="#991B1B">Quản trị viên /</text>
+    <text x="30" y="188" text-anchor="middle" font-size="14" font-weight="bold" fill="#991B1B">Giao dịch viên</text>
+    <text x="30" y="206" text-anchor="middle" font-size="12" fill="#64748B">(Bank Admin)</text>
+  </g>
+
+  <!-- System Actor 2: Core Banking -->
+  <g id="actor-core" transform="translate(1690, 600)">
+    <rect x="0" y="0" width="160" height="60" rx="8" fill="#F1F5F9" stroke="#0F2C59" stroke-width="2"/>
+    <text x="80" y="24" text-anchor="middle" font-size="13" fill="#475569">&lt;&lt;System Actor&gt;&gt;</text>
+    <text x="80" y="44" text-anchor="middle" font-size="14" font-weight="bold" fill="#0F2C59">Core Banking System</text>
+  </g>
+
+  <!-- System Actor 3: NAPAS / VietQR -->
+  <g id="actor-napas" transform="translate(1690, 720)">
+    <rect x="0" y="0" width="160" height="60" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+    <text x="80" y="24" text-anchor="middle" font-size="13" fill="#475569">&lt;&lt;External System&gt;&gt;</text>
+    <text x="80" y="44" text-anchor="middle" font-size="14" font-weight="bold" fill="#1D4ED8">Cổng NAPAS / VietQR</text>
+  </g>
+
+  <!-- System Actor 4: SMS Telecom Gateway -->
+  <g id="actor-sms" transform="translate(1690, 840)">
+    <rect x="0" y="0" width="160" height="60" rx="8" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+    <text x="80" y="24" text-anchor="middle" font-size="13" fill="#475569">&lt;&lt;External System&gt;&gt;</text>
+    <text x="80" y="44" text-anchor="middle" font-size="14" font-weight="bold" fill="#B45309">Cổng SMS OTP / Telco</text>
+  </g>
+
+  <!-- System Actor 5: Biller Partners -->
+  <g id="actor-biller" transform="translate(1690, 960)">
+    <rect x="0" y="0" width="160" height="60" rx="8" fill="#F0FDF4" stroke="#16A34A" stroke-width="2"/>
+    <text x="80" y="24" text-anchor="middle" font-size="13" fill="#475569">&lt;&lt;External System&gt;&gt;</text>
+    <text x="80" y="44" text-anchor="middle" font-size="14" font-weight="bold" fill="#15803D">Đối tác Hóa đơn EVN/Nước</text>
+  </g>
+
+  <!-- System Actor 6: FCM Push Notification -->
+  <g id="actor-fcm" transform="translate(1690, 1080)">
+    <rect x="0" y="0" width="160" height="60" rx="8" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+    <text x="80" y="24" text-anchor="middle" font-size="13" fill="#475569">&lt;&lt;External Service&gt;&gt;</text>
+    <text x="80" y="44" text-anchor="middle" font-size="14" font-weight="bold" fill="#B91C1C">Firebase FCM Push</text>
+  </g>
+
+
+  <!-- ==================== USE CASES (ELLIPSES) ==================== -->
+
+  <!-- Helper Macro Style:
+       rx=120, ry=24 for normal use case
+  -->
+
+  <!-- PACKAGE 1: IAM -->
+  <g id="uc-register">
+    <ellipse cx="530" cy="195" rx="130" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="200" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC01: Đăng ký tài khoản</text>
+  </g>
+
+  <g id="uc-login">
+    <ellipse cx="530" cy="255" rx="130" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="260" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC02: Đăng nhập mật khẩu</text>
+  </g>
+
+  <g id="uc-biometric">
+    <ellipse cx="530" cy="315" rx="135" ry="24" fill="url(#ucGrad3)" stroke="#D97706" stroke-width="1.8"/>
+    <text x="530" y="320" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#92400E">UC03: Đăng nhập Sinh trắc học</text>
+  </g>
+
+  <g id="uc-forgot">
+    <ellipse cx="530" cy="375" rx="130" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="380" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC04: Đổi / Quên mật khẩu</text>
+  </g>
+
+  <g id="uc-ekyc">
+    <ellipse cx="530" cy="435" rx="130" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="440" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC05: Định danh eKYC CCCD</text>
+  </g>
+
+  <!-- PACKAGE 2: ACCOUNT -->
+  <g id="uc-balance">
+    <ellipse cx="530" cy="545" rx="135" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="550" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC06: Xem / Ẩn hiện số dư ví</text>
+  </g>
+
+  <g id="uc-linkbank">
+    <ellipse cx="530" cy="605" rx="135" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="610" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC07: Liên kết thẻ / TK ngân hàng</text>
+  </g>
+
+  <g id="uc-limits">
+    <ellipse cx="530" cy="665" rx="135" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="670" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC08: Quản lý hạn mức chi tiêu</text>
+  </g>
+
+  <!-- PACKAGE 3: CORE TRANSFER (Very Important) -->
+  <g id="uc-transfer-internal">
+    <ellipse cx="980" cy="205" rx="160" ry="26" fill="url(#ucGradCore)" stroke="#1D4ED8" stroke-width="2.2"/>
+    <text x="980" y="210" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0F2C59">UC09: Chuyển tiền nội bộ SenBank 0đ</text>
+  </g>
+
+  <g id="uc-transfer-interbank">
+    <ellipse cx="980" cy="295" rx="160" ry="26" fill="url(#ucGradCore)" stroke="#1D4ED8" stroke-width="2.2"/>
+    <text x="980" y="300" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0F2C59">UC10: Chuyển tiền Napas 24/7 liên NH</text>
+  </g>
+
+  <g id="uc-scan-qr">
+    <ellipse cx="980" cy="385" rx="160" ry="26" fill="url(#ucGradCore)" stroke="#1D4ED8" stroke-width="2.2"/>
+    <text x="980" y="390" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0F2C59">UC11: Quét mã VietQR chuẩn EMVCo</text>
+  </g>
+
+  <g id="uc-my-qr">
+    <ellipse cx="980" cy="465" rx="160" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="470" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC12: Tạo mã VietQR nhận tiền cá nhân</text>
+  </g>
+
+  <g id="uc-money-request">
+    <ellipse cx="980" cy="535" rx="160" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="540" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC13: Yêu cầu chuyển tiền (Nhắc nợ)</text>
+  </g>
+
+  <g id="uc-save-beneficiary">
+    <ellipse cx="980" cy="625" rx="150" ry="24" fill="url(#ucGrad3)" stroke="#D97706" stroke-width="1.8"/>
+    <text x="980" y="630" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#92400E">UC14: Lưu danh bạ người thụ hưởng</text>
+  </g>
+
+
+  <!-- PACKAGE 4: BILLING & SERVICES -->
+  <g id="uc-bill">
+    <ellipse cx="530" cy="800" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="805" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC15: Thanh toán Hóa đơn (Điện/Nước)</text>
+  </g>
+
+  <g id="uc-topup">
+    <ellipse cx="530" cy="860" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="865" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC16: Nạp tiền điện thoại (Topup)</text>
+  </g>
+
+  <g id="uc-deposit">
+    <ellipse cx="530" cy="920" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="925" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC17: Nạp tiền từ thẻ ATM liên kết</text>
+  </g>
+
+  <g id="uc-withdraw">
+    <ellipse cx="530" cy="980" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="985" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC18: Rút tiền về tài khoản ngân hàng</text>
+  </g>
+
+  <g id="uc-savings">
+    <ellipse cx="980" cy="830" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="835" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC19: Gửi tiết kiệm tích lũy</text>
+  </g>
+
+  <g id="uc-loan">
+    <ellipse cx="980" cy="890" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="895" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC20: Vay tiêu dùng online SenAI</text>
+  </g>
+
+  <g id="uc-voucher">
+    <ellipse cx="980" cy="960" rx="145" ry="24" fill="url(#ucGrad3)" stroke="#D97706" stroke-width="1.8"/>
+    <text x="980" y="965" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#92400E">UC21: Áp dụng mã Voucher / Ưu đãi</text>
+  </g>
+
+
+  <!-- PACKAGE 5: STATEMENT & SUPPORT -->
+  <g id="uc-history">
+    <ellipse cx="530" cy="1120" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="1125" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC22: Tra cứu lịch sử &amp; Biến động số dư</text>
+  </g>
+
+  <g id="uc-export">
+    <ellipse cx="530" cy="1185" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="530" y="1190" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC23: Xuất sao kê PDF / Excel / CSV</text>
+  </g>
+
+  <g id="uc-receipt">
+    <ellipse cx="530" cy="1245" rx="145" ry="22" fill="url(#ucGrad3)" stroke="#D97706" stroke-width="1.8"/>
+    <text x="530" y="1250" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#92400E">UC24: Tải biên lai điện tử PDF</text>
+  </g>
+
+  <g id="uc-theme">
+    <ellipse cx="980" cy="1125" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="1130" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC25: Cài đặt Theme Sáng / Tối</text>
+  </g>
+
+  <g id="uc-support">
+    <ellipse cx="980" cy="1195" rx="145" ry="24" fill="url(#ucGrad1)" stroke="#2563EB" stroke-width="1.8"/>
+    <text x="980" y="1200" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A8A">UC26: Trợ giúp &amp; Live Chat AI SenBot</text>
+  </g>
+
+
+  <!-- PACKAGE 6: BACK-OFFICE ADMIN USE CASES -->
+  <g id="uc-admin-kyc">
+    <ellipse cx="1410" cy="205" rx="140" ry="25" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.8"/>
+    <text x="1410" y="210" text-anchor="middle" font-size="13" font-weight="bold" fill="#991B1B">UC27: Thẩm định duyệt hồ sơ eKYC</text>
+  </g>
+
+  <g id="uc-admin-reversal">
+    <ellipse cx="1410" cy="285" rx="140" ry="25" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.8"/>
+    <text x="1410" y="290" text-anchor="middle" font-size="13" font-weight="bold" fill="#991B1B">UC28: Tra soát &amp; Hoàn tiền (Reversal)</text>
+  </g>
+
+  <g id="uc-admin-reconcile">
+    <ellipse cx="1410" cy="365" rx="140" ry="25" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.8"/>
+    <text x="1410" y="370" text-anchor="middle" font-size="13" font-weight="bold" fill="#991B1B">UC29: Đối soát kế toán cuối ngày</text>
+  </g>
+
+  <g id="uc-admin-limits">
+    <ellipse cx="1410" cy="445" rx="140" ry="25" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.8"/>
+    <text x="1410" y="450" text-anchor="middle" font-size="13" font-weight="bold" fill="#991B1B">UC30: Cấu hình hạn mức hệ thống</text>
+  </g>
+
+
+  <!-- PACKAGE 7: INCLUDED USE CASES (LÕI VÀ CHUNG) -->
+  <g id="uc-auth-pin">
+    <ellipse cx="1410" cy="640" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="645" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC31: Xác thực PIN / Smart OTP</text>
+  </g>
+
+  <g id="uc-check-balance-limit">
+    <ellipse cx="1410" cy="725" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="730" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC32: Kiểm tra số dư &amp; Hạn mức</text>
+  </g>
+
+  <g id="uc-double-entry">
+    <ellipse cx="1410" cy="815" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="820" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC33: Ghi sổ cái kép Double-Entry</text>
+  </g>
+
+  <g id="uc-outbox">
+    <ellipse cx="1410" cy="905" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="910" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC34: Phát sự kiện Outbox Relay</text>
+  </g>
+
+  <g id="uc-notify-push">
+    <ellipse cx="1410" cy="995" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="1000" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC35: Thông báo Realtime (WS/FCM)</text>
+  </g>
+
+  <g id="uc-decode-emvco">
+    <ellipse cx="1410" cy="1085" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="1090" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC36: Phân tích &amp; Giải mã VietQR</text>
+  </g>
+
+  <g id="uc-biller-lookup">
+    <ellipse cx="1410" cy="1175" rx="145" ry="25" fill="url(#ucGrad2)" stroke="#16A34A" stroke-width="2"/>
+    <text x="1410" y="1180" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532D">UC37: Tra cứu nợ cước Biller Online</text>
+  </g>
+
+
+  <!-- ==================== ASSOCIATIONS (CUSTOMER TO USE CASES) ==================== -->
+  <g stroke="#64748B" stroke-width="1.4">
+    <!-- To IAM -->
+    <line x1="200" y1="520" x2="400" y2="195"/>
+    <line x1="200" y1="520" x2="400" y2="255"/>
+    <line x1="200" y1="520" x2="400" y2="375"/>
+    <line x1="200" y1="520" x2="400" y2="435"/>
+
+    <!-- To Account -->
+    <line x1="200" y1="530" x2="395" y2="545"/>
+    <line x1="200" y1="535" x2="395" y2="605"/>
+    <line x1="200" y1="540" x2="395" y2="665"/>
+
+    <!-- To Core Transfers -->
+    <line x1="200" y1="525" x2="820" y2="205"/>
+    <line x1="200" y1="530" x2="820" y2="295"/>
+    <line x1="200" y1="535" x2="820" y2="385"/>
+    <line x1="200" y1="540" x2="820" y2="465"/>
+    <line x1="200" y1="545" x2="820" y2="535"/>
+
+    <!-- To Billing -->
+    <line x1="200" y1="560" x2="385" y2="800"/>
+    <line x1="200" y1="565" x2="385" y2="860"/>
+    <line x1="200" y1="570" x2="385" y2="920"/>
+    <line x1="200" y1="575" x2="385" y2="980"/>
+    <line x1="200" y1="580" x2="835" y2="830"/>
+    <line x1="200" y1="585" x2="835" y2="890"/>
+
+    <!-- To History & Support -->
+    <line x1="200" y1="600" x2="385" y2="1120"/>
+    <line x1="200" y1="605" x2="385" y2="1185"/>
+    <line x1="200" y1="610" x2="835" y2="1125"/>
+    <line x1="200" y1="615" x2="835" y2="1195"/>
+  </g>
+
+  <!-- ==================== ASSOCIATIONS (ADMIN TO USE CASES) ==================== -->
+  <g stroke="#EF4444" stroke-width="1.5">
+    <line x1="1760" y1="230" x2="1550" y2="205"/>
+    <line x1="1760" y1="240" x2="1550" y2="285"/>
+    <line x1="1760" y1="250" x2="1550" y2="365"/>
+    <line x1="1760" y1="260" x2="1550" y2="445"/>
+  </g>
+
+  <!-- ==================== SYSTEM ACTOR ASSOCIATIONS ==================== -->
+  <g stroke="#0F2C59" stroke-width="1.5">
+    <!-- Core Banking -->
+    <line x1="1690" y1="620" x2="1555" y2="815"/>
+    <line x1="1690" y1="630" x2="1555" y2="905"/>
+    <line x1="1690" y1="610" x2="1550" y2="365"/>
+
+    <!-- NAPAS -->
+    <line x1="1690" y1="750" x2="1140" y2="295"/>
+    <line x1="1690" y1="760" x2="1555" y2="1085"/>
+
+    <!-- SMS Gateway -->
+    <line x1="1690" y1="870" x2="1555" y2="640"/>
+    <line x1="1690" y1="880" x2="675" y2="860"/>
+
+    <!-- Biller Partners -->
+    <line x1="1690" y1="990" x2="1555" y2="1175"/>
+
+    <!-- FCM Push -->
+    <line x1="1690" y1="1100" x2="1555" y2="995"/>
+  </g>
+
+
+  <!-- ==================== UML <<include>> RELATIONSHIPS ==================== -->
+  <!-- Transfer Internal -> Pin -->
+  <path d="M 1130 220 L 1280 230 L 1320 615" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1190" y="270" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1232" y="284" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Transfer Internal -> Check Balance -->
+  <path d="M 1120 225 L 1260 250 L 1320 705" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1190" y="320" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1232" y="334" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Transfer Internal -> Double Entry -->
+  <path d="M 1100 230 L 1230 310 L 1315 795" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1185" y="410" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1227" y="424" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Transfer Internal -> Outbox -->
+  <path d="M 1080 231 L 1210 390 L 1300 890" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1180" y="520" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1222" y="534" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Outbox -> Notify Push -->
+  <line x1="1410" y1="930" x2="1410" y2="970" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1420" y="940" width="80" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1460" y="954" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Transfer Interbank -> Napas Pin/Balance -->
+  <line x1="1140" y1="295" x2="1310" y2="630" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1210" y="375" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1252" y="389" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Scan QR -> Decode EMVCo -->
+  <path d="M 1140 385 L 1260 420 L 1320 1065" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="1225" y="680" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="1267" y="694" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Bill Pay -> Lookup Biller -->
+  <path d="M 675" y1="800" x2="1265" y2="1175" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="880" y="990" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="922" y="1004" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+  <!-- Withdraw -> Pin Auth -->
+  <path d="M 675" y1="980" x2="1275" y2="660" stroke="#2563EB" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrow)"/>
+  <rect x="910" y="760" width="85" height="20" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="952" y="774" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563EB">&lt;&lt;include&gt;&gt;</text>
+
+
+  <!-- ==================== UML <<extend>> RELATIONSHIPS ==================== -->
+  <!-- Biometric extends Login -->
+  <line x1="530" y1="291" x2="530" y2="279" stroke="#D97706" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrowOrange)"/>
+  <rect x="540" y="278" width="75" height="18" rx="3" fill="#FFFFFF" stroke="#FDE68A"/>
+  <text x="577" y="291" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#D97706">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- Save Beneficiary extends Internal Transfer -->
+  <path d="M 980 601 L 980 231" fill="none" stroke="#D97706" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrowOrange)"/>
+  <rect x="988" y="570" width="75" height="18" rx="3" fill="#FFFFFF" stroke="#FDE68A"/>
+  <text x="1025" y="583" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#D97706">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- Voucher extends Transfer / Bills -->
+  <path d="M 980 936 L 980 231" fill="none" stroke="#D97706" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrowOrange)"/>
+  <rect x="988" y="750" width="75" height="18" rx="3" fill="#FFFFFF" stroke="#FDE68A"/>
+  <text x="1025" y="763" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#D97706">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- PDF Receipt extends History -->
+  <line x1="530" y1="1223" x2="530" y2="1144" stroke="#D97706" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#dashArrowOrange)"/>
+  <rect x="540" y="1155" width="75" height="18" rx="3" fill="#FFFFFF" stroke="#FDE68A"/>
+  <text x="577" y="1168" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#D97706">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- Bottom Legend -->
+  <g id="legend" transform="translate(350, 1275)">
+    <rect x="0" y="0" width="860" height="24" rx="4" fill="#F1F5F9"/>
+    <text x="20" y="16" font-size="12" font-weight="bold" fill="#334155">Chú thích:</text>
+    <line x1="90" y1="12" x2="130" y2="12" stroke="#64748B" stroke-width="2"/>
+    <text x="140" y="16" font-size="12" fill="#334155">Liên kết Tác nhân (Association)</text>
+    <line x1="330" y1="12" x2="370" y2="12" stroke="#2563EB" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="380" y="16" font-size="12" fill="#2563EB">&lt;&lt;include&gt;&gt; Bắt buộc có</text>
+    <line x1="520" y1="12" x2="560" y2="12" stroke="#D97706" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="570" y="16" font-size="12" fill="#D97706">&lt;&lt;extend&gt;&gt; Mở rộng tùy chọn</text>
+    <rect x="730" y="5" width="14" height="14" rx="3" fill="#FEE2E2" stroke="#DC2626"/>
+    <text x="752" y="16" font-size="12" fill="#991B1B">Back-Office Admin</text>
+  </g>
+</svg>
+</div>
+</body>
+</html>

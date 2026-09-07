@@ -958,12 +958,12 @@ export default function HomeScreen({ navigation }: any) {
                   </View>
                 </View>
 
-                {/* CARD 2: Thẻ MB Visa (Kính mờ) */}
+                {/* CARD 2: Thẻ SenBank Visa (Kính mờ) */}
                 <View style={[styles.balanceCardWrapper, { width: BALANCE_CARD_WIDTH }]}>
                   <View style={styles.balanceCard}>
-                    {/* Dòng 1: Label "Thẻ MB Hi Visa" + chevron > + icon thẻ */}
+                    {/* Dòng 1: Label "Thẻ SenBank Hi Visa" + chevron > + icon thẻ */}
                     <View style={styles.balanceHeader}>
-                      <AppText style={styles.balanceTitle}>Thẻ MB Hi Visa</AppText>
+                      <AppText style={styles.balanceTitle}>Thẻ SenBank Hi Visa</AppText>
                       <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
                       <View style={{ flex: 1 }} />
                       <AppIcon name="card" size="xs" color="rgba(255,255,255,0.9)" />

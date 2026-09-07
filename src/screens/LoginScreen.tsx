@@ -343,7 +343,7 @@ export default function LoginScreen({ navigation }: any) {
           {/* FIRST SCREEN WRAP (Anchors Section 1, 2, 3 so quick actions are pinned to the bottom of the first viewport) */}
           <View style={[styles.firstScreenWrap, { minHeight: firstViewportHeight }]}>
             <View style={styles.topAndCardSection}>
-              {/* 1. TOP HEADER ROW (4 Icons chuẩn MBBank: Logo MB bên trái, Cột 3 Icon bên phải) */}
+              {/* 1. TOP HEADER ROW (4 Icons chuẩn SenBank: Logo SenBank bên trái, Cột 3 Icon bên phải) */}
               <View style={styles.topHeader}>
                 {/* Icon 1: Logo Sen Hồng Bank */}
                 <TouchableOpacity
@@ -584,7 +584,7 @@ export default function LoginScreen({ navigation }: any) {
             </View>
           </View>
 
-          {/* 4. DISCOVERY BENTO GRID (Kéo dài màn hình khi cuộn xuống - Chuẩn mẫu MBBank) */}
+          {/* 4. DISCOVERY BENTO GRID (Kéo dài màn hình khi cuộn xuống - Chuẩn SenBank FinTech) */}
           <View style={styles.discoveryContainer}>
             {/* Bento Grid 2 Columns */}
             <View style={styles.bentoRow}>

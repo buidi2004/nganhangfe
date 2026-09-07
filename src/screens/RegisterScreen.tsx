@@ -106,7 +106,7 @@ export default function RegisterScreen({ navigation }: any) {
               isThemedBg && { color: '#FFFFFF' },
             ]}
           >
-            Mở tài khoản MBBank
+            Mở tài khoản SenBank
           </AppText>
 
           <TouchableOpacity
@@ -264,7 +264,7 @@ export default function RegisterScreen({ navigation }: any) {
                   ]}
                   onPress={() => navigation.navigate('TermsOfService')}
                 >
-                  Điều khoản & Điều kiện sử dụng dịch vụ MBBank
+                  Điều khoản & Điều kiện sử dụng dịch vụ SenBank
                 </AppText>
                 .
               </AppText>
