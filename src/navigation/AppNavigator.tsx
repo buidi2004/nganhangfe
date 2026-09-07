@@ -51,6 +51,7 @@ import ConfigScreen from '../screens/ConfigScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SavingsScreen from '../screens/SavingsScreen';
 import QuickLoanScreen from '../screens/QuickLoanScreen';
+import AccountDetailScreen from '../screens/AccountDetailScreen';
 import MainTabs from './MainTabs';
 
 const Stack = createStackNavigator();
@@ -117,6 +118,7 @@ export default function AppNavigator() {
         <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
 
         {/* Account & Profile */}
+        <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
         <Stack.Screen name="UserProfile" component={UserProfileScreen} />
         <Stack.Screen name="IdentityDocument" component={IdentityDocumentScreen} />
         <Stack.Screen name="KycLevel" component={KycLevelScreen} />

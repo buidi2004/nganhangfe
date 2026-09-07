@@ -918,8 +918,14 @@ export default function HomeScreen({ navigation }: any) {
                   <View style={styles.balanceCard}>
                     {/* Dòng 1: Label "Tổng số dư VND" + chevron > + icon con mắt */}
                     <View style={styles.balanceHeader}>
-                      <AppText style={styles.balanceTitle}>Tổng số dư VND</AppText>
-                      <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
+                      <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate('AccountDetail')}
+                      >
+                        <AppText style={styles.balanceTitle}>Tổng số dư VND</AppText>
+                        <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
+                      </TouchableOpacity>
                       <View style={{ flex: 1 }} />
                       <TouchableOpacity
                         onPress={() => setBalanceVisible(!balanceVisible)}

@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Line } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -343,37 +343,46 @@ export default function LoginScreen({ navigation }: any) {
           {/* FIRST SCREEN WRAP (Anchors Section 1, 2, 3 so quick actions are pinned to the bottom of the first viewport) */}
           <View style={[styles.firstScreenWrap, { minHeight: firstViewportHeight }]}>
             <View style={styles.topAndCardSection}>
-              {/* 1. TOP HEADER ROW */}
+              {/* 1. TOP HEADER ROW (4 Icons chuẩn MBBank: Logo MB bên trái, Cột 3 Icon bên phải) */}
               <View style={styles.topHeader}>
-                {/* Logo Custom */}
-                <View style={styles.logoRow}>
-                  <Image 
-                    source={require('../../assets/icon.png')} 
-                    style={styles.customAppLogo} 
-                    resizeMode="contain" 
+                {/* Icon 1: Logo Sen Hồng Bank */}
+                <TouchableOpacity
+                  style={styles.logoRow}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('Home')}
+                >
+                  <Image
+                    source={require('../../assets/icon.png')}
+                    style={styles.customAppLogo}
+                    resizeMode="contain"
                   />
-                </View>
+                </TouchableOpacity>
 
-                {/* Right Action Icons (Flag 🇻🇳 with yellow star, Bell 🔔, Bee 🐝 Hỗ trợ) */}
+                {/* Cột 3 Icon xếp dọc bên phải (Cờ 🇻🇳, Chuông 🔔, Ong 🐝 HỖ TRỢ) */}
                 <View style={styles.rightHeaderActions}>
-                  <TouchableOpacity style={styles.flagBtn} activeOpacity={0.8}>
-                    <Ionicons name="star" size={17} color="#FFFF00" />
+                  {/* Icon 2: Cờ đỏ sao vàng */}
+                  <TouchableOpacity style={styles.headerActionCircle} activeOpacity={0.8}>
+                    <View style={styles.flagInnerCircle}>
+                      <Ionicons name="star" size={13} color="#FFFF00" />
+                    </View>
                   </TouchableOpacity>
 
+                  {/* Icon 3: Chuông thông báo */}
                   <TouchableOpacity
-                    style={styles.circleHeaderBtn}
+                    style={styles.headerActionCircle}
                     activeOpacity={0.8}
                     onPress={() => navigation.navigate('Notifications')}
                   >
-                    <Ionicons name="notifications" size={18} color="#FFFFFF" />
+                    <Ionicons name="notifications" size={19} color="#FFFFFF" />
                   </TouchableOpacity>
 
+                  {/* Icon 4: Ong hỗ trợ kèm badge HỖ TRỢ */}
                   <TouchableOpacity
-                    style={styles.supportBeeBtn}
+                    style={[styles.headerActionCircle, { overflow: 'visible' }]}
                     activeOpacity={0.8}
                     onPress={() => navigation.navigate('HelpCenter')}
                   >
-                    <AppText style={{ fontSize: 22 }}>🐝</AppText>
+                    <AppText style={{ fontSize: 21, marginTop: -2 }}>🐝</AppText>
                     <View style={styles.supportPillBadge}>
                       <AppText style={styles.supportPillText} numberOfLines={1}>HỖ TRỢ</AppText>
                     </View>
@@ -382,7 +391,7 @@ export default function LoginScreen({ navigation }: any) {
               </View>
 
               {/* Dynamic Spacer before login card */}
-              <View style={{ height: Math.max(40, Math.min(130, (firstViewportHeight - 460) * 0.55)) }} />
+              <View style={{ height: Math.max(16, Math.min(32, (firstViewportHeight - 570) * 0.3)) }} />
 
               {/* 2. MAIN FROSTED GLASS LOGIN CARD */}
               <View style={styles.glassLoginCard}>
@@ -764,7 +773,7 @@ const getStyles = createThemedStyles((colors) => ({
   },
   topHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: 0,
     paddingTop: 4,
@@ -773,43 +782,42 @@ const getStyles = createThemedStyles((colors) => ({
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingTop: 2,
   },
   customAppLogo: {
-    width: 52,
+    width: 96,
     height: 52,
-    borderRadius: 26,
+    marginLeft: -12,
   },
   rightHeaderActions: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  flagBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  headerActionCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  flagInnerCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#DA251D',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
   },
-  circleHeaderBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(0, 0, 0, 0.22)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  supportBeeBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 2,
-  },
+  
   supportPillBadge: {
     backgroundColor: '#00BAF2',
     borderRadius: 8,

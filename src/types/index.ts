@@ -250,6 +250,7 @@ export type RootStackParamList = {
   
   // Main Stack
   Home: undefined;
+  AccountDetail: undefined;
   Profile: undefined;
   EditProfile: undefined;
   Wallet: {walletId: string};
