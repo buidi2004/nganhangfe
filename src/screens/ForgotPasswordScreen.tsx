@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 interface ForgotPasswordScreenProps {
@@ -22,6 +23,8 @@ interface ForgotPasswordScreenProps {
 }
 
 export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +32,6 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
     if (!phoneNumber) return;
     try {
       setIsLoading(true);
-      // Assuming WalletApi is imported from api.ts
       await WalletApi.sendPasswordResetOtp(phoneNumber);
       setIsLoading(false);
       navigation.navigate('OtpVerification', { phone: phoneNumber });
@@ -40,27 +42,27 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Đổi / Quên mật khẩu</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Đổi / Quên mật khẩu</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -70,30 +72,30 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+          contentContainerStyle={styles.scrollContent}
+        >
         {/* HERO ICON */}
-        <View style={styles.heroIconWrapper}>
-          <MaterialCommunityIcons name="lock-reset" size={48} color="#700F43" />
+        <View style={[styles.heroIconWrapper, { backgroundColor: isDark ? colors.surface : colors.primarySoft }]}>
+          <MaterialCommunityIcons name="lock-reset" size={48} color={colors.primary} />
         </View>
 
-        <AppText style={styles.title}>Thiết lập lại mật khẩu</AppText>
-        <AppText style={styles.desc}>
-          Vui lòng nhập số điện thoại đã đăng ký tài khoản MBBank để nhận mã OTP xác thực và đặt mật khẩu mới.
+        <AppText style={[styles.title, { color: colors.primary }]}>Thiết lập lại mật khẩu</AppText>
+        <AppText style={[styles.desc, { color: colors.textSecondary }]}>
+          Vui lòng nhập số điện thoại đã đăng ký tài khoản SenBank để nhận mã OTP xác thực và đặt mật khẩu mới.
         </AppText>
 
         {/* PHONE NUMBER INPUT CARD */}
-        <View style={styles.inputCard}>
-          <AppText style={styles.inputLabel}>Số điện thoại đăng ký</AppText>
-          <View style={styles.inputRow}>
-            <MaterialCommunityIcons name="phone-outline" size={22} color="#700F43" style={{ marginRight: 10 }} />
+        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.inputLabel, { color: colors.textSecondary }]}>Số điện thoại đăng ký</AppText>
+          <View style={[styles.inputRow, { borderBottomColor: colors.primary }]}>
+            <MaterialCommunityIcons name="phone-outline" size={22} color={colors.primary} style={{ marginRight: 10 }} />
             <TextInput
-              style={styles.phoneInput}
+              style={[styles.phoneInput, { color: colors.textPrimary }]}
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               keyboardType="phone-pad"
               placeholder="Nhập số điện thoại"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
         </View>
@@ -106,7 +108,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
           disabled={isLoading}
         >
           <LinearGradient
-            colors={['#D2519D', '#700F43']}
+            colors={[colors.primary, colors.primaryDeep]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -121,7 +123,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <AppText style={styles.backLoginText}>Quay lại</AppText>
+          <AppText style={[styles.backLoginText, { color: colors.primary }]}>Quay lại</AppText>
         </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -129,7 +131,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#FCE7F3',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -218,7 +220,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#D2519D',
+    borderBottomColor: colors.primary,
     paddingBottom: 6,
   },
   phoneInput: {
@@ -235,7 +237,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -254,6 +256,6 @@ const styles = StyleSheet.create({
   backLoginText: {
     fontSize: 14.5,
     fontWeight: '700',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
-});
+}));

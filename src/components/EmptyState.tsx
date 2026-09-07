@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { AppIcon } from './icons/AppIcon';
-import { Colors, Radius, Spacing } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Spacing, createThemedStyles, ThemeColors } from '../theme';
 import { AppText } from './typography/AppText';
+import { useTheme } from '../context/ThemeContext';
 
 interface EmptyStateProps {
   icon?: string;
@@ -19,22 +19,25 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   subtitle,
   actionLabel,
   onAction,
-}) => (
-  <View style={styles.container}>
-    <View style={styles.iconWrapper}>
-      <AppIcon name={icon as any} size="lg" color={Colors.primarySoft} />
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.container}>
+      <View style={[styles.iconWrapper, { backgroundColor: colors.primarySoft }]}>
+        <AppIcon name={icon as any} size="lg" color={colors.primary} />
+      </View>
+      <AppText variant="headingXl" style={[styles.title, { color: colors.textPrimary }]}>{title}</AppText>
+      {subtitle && <AppText variant="caption" style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</AppText>}
+      {actionLabel && onAction && (
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primarySoft }]} onPress={onAction}>
+          <AppText variant="body" style={[styles.actionText, { color: colors.primary }]}>{actionLabel}</AppText>
+        </TouchableOpacity>
+      )}
     </View>
-    <AppText variant="heading" style={styles.title}>{title}</AppText>
-    {subtitle && <AppText variant="caption" style={styles.subtitle}>{subtitle}</AppText>}
-    {actionLabel && onAction && (
-      <TouchableOpacity style={styles.actionBtn} onPress={onAction}>
-        <AppText variant="body" style={styles.actionText}>{actionLabel}</AppText>
-      </TouchableOpacity>
-    )}
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -45,18 +48,18 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
   },
   title: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: Spacing.lg,
@@ -64,10 +67,10 @@ const styles = StyleSheet.create({
   actionBtn: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: Radius.pill,
   },
   actionText: {
-    color: Colors.primary,
+    color: colors.primary,
   },
-});
+}));

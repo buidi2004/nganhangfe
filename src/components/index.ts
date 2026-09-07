@@ -22,5 +22,8 @@ export { QuickAmountChip } from './QuickAmountChip';
 export { SideMenuDrawer } from './SideMenuDrawer';
 export { SolidCard } from './SolidCard';
 export { StatusChip } from './StatusChip';
+export { GlassHeader } from './GlassHeader';
+export { PinAuthModal } from './PinAuthModal';
 export { AppIcon } from './icons/AppIcon';
 export { AppText } from './typography/AppText';
+

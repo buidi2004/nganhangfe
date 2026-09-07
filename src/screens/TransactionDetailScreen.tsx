@@ -3,11 +3,12 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { AppIcon } from '../components/icons/AppIcon';
-import { Colors, Radius, Shadows, Spacing } from '../theme';
+import { Colors, Radius, Shadows, Spacing, createThemedStyles, ThemeColors } from '../theme';
 import { GroupedListRow } from '../components/GroupedListRow';
 import { AppText } from '../components/typography/AppText';
 
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface TransactionDetailScreenProps {
   route: any;
@@ -16,6 +17,8 @@ interface TransactionDetailScreenProps {
 
 export default function TransactionDetailScreen({ route, navigation }: TransactionDetailScreenProps) {
   const { user } = useApp();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { transaction } = route.params || {};
   
   const isCredit = transaction?.type === 'DEPOSIT' || (transaction?.type === 'TRANSFER' && transaction?.targetWalletId === user?.walletId);
@@ -28,15 +31,15 @@ export default function TransactionDetailScreen({ route, navigation }: Transacti
   const txId = transaction?.transactionId || transaction?.id || '—';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <BlurView intensity={70} tint="light" style={styles.headerBlur}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]}>
+      <BlurView intensity={70} tint={isDark ? 'dark' : 'light'} style={styles.headerBlur}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-              <AppIcon name="arrow-back" size="md" color={Colors.textPrimary} />
+              <AppIcon name="arrow-back" size="md" color={colors.textPrimary} />
           </TouchableOpacity>
-          <AppText style={styles.headerTitle}>Chi tiết giao dịch</AppText>
+          <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Chi tiết giao dịch</AppText>
           <TouchableOpacity>
-              <AppIcon name="share-outline" size="md" color={Colors.textPrimary} />
+              <AppIcon name="share-outline" size="md" color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </BlurView>
@@ -51,7 +54,7 @@ export default function TransactionDetailScreen({ route, navigation }: Transacti
         </View>
 
         {/* Detail card */}
-        <View style={styles.detailCard}>
+        <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
           {[
             { label: 'Loại giao dịch', value: typeText },
             { label: 'Người nhận/Gửi', value: transaction?.counterpartyName ? `${transaction.counterpartyName} (${transaction?.counterpartyAccount || transaction?.targetWalletId || 'N/A'})` : (transaction?.counterpartyAccount || transaction?.targetWalletId || 'N/A') },
@@ -62,11 +65,11 @@ export default function TransactionDetailScreen({ route, navigation }: Transacti
             { label: 'Phí', value: transaction?.feeAmount ? `${transaction.feeAmount.toLocaleString('vi-VN')} đ` : 'Miễn phí' },
           ].map((item, i, arr) => (
             <View key={i} style={styles.detailRow}>
-              <AppText style={styles.detailLabel}>{item.label}</AppText>
-              <AppText style={[styles.detailValue, item.label === 'Số tiền' && styles.amountValue]}>
+              <AppText style={[styles.detailLabel, { color: colors.textSecondary }]}>{item.label}</AppText>
+              <AppText style={[styles.detailValue, { color: colors.textPrimary }, item.label === 'Số tiền' && [styles.amountValue, { color: colors.primary }]]}>
                 {item.value}
               </AppText>
-              {i < arr.length - 1 && <View style={styles.divider} />}
+              {i < arr.length - 1 && <View style={[styles.divider, { backgroundColor: colors.primarySoft }]} />}
             </View>
           ))}
         </View>
@@ -82,10 +85,10 @@ export default function TransactionDetailScreen({ route, navigation }: Transacti
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   headerBlur: {
     position: 'absolute',
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   detailCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.md,
     marginHorizontal: Spacing.lg,
     padding: Spacing.lg,
@@ -128,19 +131,19 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   detailValue: {
     
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   amountValue: {
     
-    color: Colors.primary,
+    color: colors.primary,
   },
   statusSuccess: {
     
-    color: Colors.success,
+    color: colors.success,
   },
   divider: {
     position: 'absolute',
@@ -148,7 +151,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
   },
   footer: {
     marginTop: Spacing.xxl,
@@ -160,6 +163,6 @@ const styles = StyleSheet.create({
   },
   reportText: {
     
-    color: Colors.danger,
+    color: colors.danger,
     },
-});
+}));

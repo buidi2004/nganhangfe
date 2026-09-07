@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, createThemedStyles, ThemeColors } from '../theme';
 
 interface PhoneRechargeScreenProps {
   navigation: any;
@@ -330,7 +330,7 @@ export default function PhoneRechargeScreen({ navigation }: PhoneRechargeScreenP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#FCE7F3',
+    borderBottomColor: colors.badgePinkBorder,
     paddingBottom: 10,
     marginBottom: 12,
   },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   denomCardSelected: {
     borderColor: '#D2519D',
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     shadowColor: '#D2519D',
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   },
   dataCardSelected: {
     borderColor: '#D2519D',
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     shadowColor: '#D2519D',
     shadowOpacity: 0.12,
     shadowRadius: 8,
@@ -678,5 +678,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-});
+}));
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radius, Shadows, Opacity } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Shadows, Opacity , Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { AppText } from './typography/AppText';
 
 interface PrimaryButtonProps {
@@ -19,23 +19,34 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   style,
   textStyle,
   disabled,
-}) => (
-  <LinearGradient
-    colors={[Colors.primary, Colors.heroGradMid]}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-    style={[styles.container, disabled && styles.disabled, style]}
-  >
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-      style={styles.touchable}
-      activeOpacity={0.8}
+}) => {
+  const { colors } = useTheme();
+
+  return (
+    <LinearGradient
+      colors={[colors.primary, colors.heroGradMid]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[
+        styles.container,
+        { shadowColor: colors.shadowColor },
+        disabled && styles.disabled,
+        style,
+      ]}
     >
-      <AppText variant="body" style={[styles.text, textStyle]}>{title}</AppText>
-    </TouchableOpacity>
-  </LinearGradient>
-);
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        style={styles.touchable}
+        activeOpacity={0.8}
+      >
+        <AppText variant="body" style={[styles.text, textStyle]}>
+          {title}
+        </AppText>
+      </TouchableOpacity>
+    </LinearGradient>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -51,7 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    color: Colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   disabled: {

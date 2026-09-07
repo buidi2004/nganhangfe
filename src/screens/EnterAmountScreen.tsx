@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
@@ -27,11 +27,19 @@ import { BankItem, SENHONG_BANK, getVietQrBanks, removeVietnameseTones } from '.
 
 const { width, height } = Dimensions.get('window');
 
+const logoBadgeStyles = StyleSheet.create({
+  bankLogoBase: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+});
+
 // Bank Logo Component (Hỗ trợ logo chính thức từ VietQR CDN và logo SenBank nội bộ)
 function BankLogoBadge({ item, size = 38 }: { item?: BankItem | null; size?: number }) {
   if (!item) {
     return (
-      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
+      <View style={[logoBadgeStyles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
         <MaterialCommunityIcons name="bank" size={20} color="#64748B" />
       </View>
     );
@@ -40,7 +48,7 @@ function BankLogoBadge({ item, size = 38 }: { item?: BankItem | null; size?: num
   const isInternal = item.isInternal || item.id === 'senbank' || item.code === 'SENHONG';
   if (isInternal) {
     return (
-      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
+      <View style={[logoBadgeStyles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: Colors.primarySoft, borderColor: Colors.primarySoft }]}>
         <Image
           source={require('../../assets/sen-hong-logo.png')}
           style={{ width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }}
@@ -52,7 +60,7 @@ function BankLogoBadge({ item, size = 38 }: { item?: BankItem | null; size?: num
 
   if (item.logo) {
     return (
-      <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', overflow: 'hidden', padding: 2 }]}>
+      <View style={[logoBadgeStyles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', overflow: 'hidden', padding: 2 }]}>
         <Image
           source={{ uri: item.logo }}
           style={{ width: '100%', height: '100%' }}
@@ -63,7 +71,7 @@ function BankLogoBadge({ item, size = 38 }: { item?: BankItem | null; size?: num
   }
 
   return (
-    <View style={[styles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
+    <View style={[logoBadgeStyles.bankLogoBase, { width: size, height: size, borderRadius: 10, backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }]}>
       <MaterialCommunityIcons name="bank" size={20} color="#64748B" />
     </View>
   );
@@ -139,6 +147,7 @@ interface EnterAmountScreenProps {
 export default function EnterAmountScreen({ route, navigation }: EnterAmountScreenProps) {
   const { user, wallet } = useApp();
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const params = route.params || {};
   
   const [accountNumber, setAccountNumber] = useState(params.phone || '');
@@ -358,7 +367,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               </AppText>
             </View>
 
-            <Ionicons name="chevron-down" size={20} color="#D2519D" />
+            <Ionicons name="chevron-down" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -382,7 +391,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
                 <AppText style={styles.bankNameText}>{selectedBankItem?.shortName || 'Chọn ngân hàng'}</AppText>
               </View>
               
-              <Ionicons name="chevron-down" size={20} color="#D2519D" />
+              <Ionicons name="chevron-down" size={20} color={colors.primary} />
             </TouchableOpacity>
 
             {/* Dotted Divider 1 */}
@@ -414,7 +423,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
                   activeOpacity={0.7}
                   onPress={() => navigation.navigate('Beneficiaries')}
                 >
-                  <MaterialCommunityIcons name="card-account-details-outline" size={24} color="#D2519D" />
+                  <MaterialCommunityIcons name="card-account-details-outline" size={24} color={colors.primary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -437,7 +446,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
                 <Ionicons
                   name={isSaved ? "bookmark" : "bookmark-outline"}
                   size={15}
-                  color={isSaved ? "#FFFFFF" : "#700F43"}
+                  color={isSaved ? "#FFFFFF" : colors.primaryDeep}
                   style={{ marginRight: 4 }}
                 />
                 <AppText style={[styles.savePillText, isSaved && { color: '#FFFFFF' }]}>
@@ -455,7 +464,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
               <TextInput
                 style={[styles.amountInput, isInsufficient && { color: '#DC2626' }]}
                 placeholder="0"
-                placeholderTextColor="#D2519D"
+                placeholderTextColor={colors.primary}
                 keyboardType="numeric"
                 value={amount}
                 onFocus={scrollToAmount}
@@ -562,7 +571,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
             onPress={handleContinuePress}
           >
             <LinearGradient
-              colors={isContinueEnabled ? ['#D2519D', '#700F43'] : ['#CBD5E1', '#94A3B8']}
+              colors={isContinueEnabled ? [colors.primary, colors.primaryDeep] : ['#CBD5E1', '#94A3B8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -640,7 +649,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
 
                     <View style={styles.bankItemInfo}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <AppText style={[styles.bankItemShortName, { color: colors.textPrimary }, isInternal && { color: isDark ? colors.primary : '#700F43', fontWeight: '900' }]}>
+                        <AppText style={[styles.bankItemShortName, { color: colors.textPrimary }, isInternal && { color: isDark ? colors.primary : colors.primaryDeep, fontWeight: '900' }]}>
                           {item.shortName}
                         </AppText>
                         {isInternal && (
@@ -668,7 +677,7 @@ export default function EnterAmountScreen({ route, navigation }: EnterAmountScre
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -693,7 +702,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -712,14 +721,14 @@ const styles = StyleSheet.create({
   },
   sourceCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: Radius.card,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -731,7 +740,7 @@ const styles = StyleSheet.create({
   sourceAccountType: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginBottom: 4,
     letterSpacing: 0.2,
   },
@@ -742,10 +751,10 @@ const styles = StyleSheet.create({
   },
   destinationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -756,7 +765,7 @@ const styles = StyleSheet.create({
   cardSubLabel: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginBottom: 3,
   },
   bankSelectRow: {
@@ -825,35 +834,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 5,
     backgroundColor: '#FFFFFF',
   },
   savePillBtnActive: {
-    backgroundColor: '#D2519D',
-    borderColor: '#D2519D',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   savePillText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   amountSectionWrapper: {
     marginBottom: 16,
   },
   amountDisplayCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: Radius.card,
     paddingVertical: 14,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1.5,
-    borderColor: '#D2519D',
-    shadowColor: '#D2519D',
+    borderColor: colors.primary,
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -863,6 +872,7 @@ const styles = StyleSheet.create({
     borderColor: '#EF4444',
     backgroundColor: '#FEF2F2',
     shadowColor: '#EF4444',
+    borderRadius: Radius.card,
   },
   insufficientWarningCard: {
     flexDirection: 'row',
@@ -870,7 +880,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: Radius.sm,
     marginTop: 8,
     gap: 6,
     borderWidth: 1,
@@ -891,7 +901,7 @@ const styles = StyleSheet.create({
   amountInput: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     textAlign: 'center',
     minWidth: 60,
     paddingVertical: 0,
@@ -917,11 +927,11 @@ const styles = StyleSheet.create({
   },
   messageCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: Radius.card,
     padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -964,7 +974,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -972,7 +982,7 @@ const styles = StyleSheet.create({
   backActionText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   continueActionButton: {
     flex: 1.4,
@@ -981,7 +991,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -1013,13 +1023,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   quickPillActive: {
-    backgroundColor: '#D2519D',
-    borderColor: '#D2519D',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   quickPillText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   quickPillTextActive: {
     color: '#FFFFFF',
@@ -1042,20 +1052,20 @@ const styles = StyleSheet.create({
     borderColor: '#FCE7F3',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   inlineQuickPillActive: {
-    backgroundColor: '#D2519D',
-    borderColor: '#D2519D',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   inlineQuickPillText: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   inlineQuickPillTextActive: {
     color: '#FFFFFF',
@@ -1072,8 +1082,8 @@ const styles = StyleSheet.create({
   },
   bankSheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     // Dùng maxHeight thay height cứng để co giãn khi bàn phím bật
     maxHeight: height * 0.82,
     flex: 0,
@@ -1097,7 +1107,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -1154,15 +1164,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginVertical: 4,
     borderWidth: 1.2,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   bankListItemSelected: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     borderRadius: 14,
     paddingHorizontal: 8,
   },
   internalBadgePill: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
     paddingHorizontal: 7,
     paddingVertical: 2.5,
     borderRadius: 6,
@@ -1170,6 +1180,6 @@ const styles = StyleSheet.create({
   internalBadgeText: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#E11D48',
+    color: colors.primary,
   },
-});
+}));

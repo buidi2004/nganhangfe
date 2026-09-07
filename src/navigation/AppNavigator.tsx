@@ -15,8 +15,6 @@ import ChooseRecipientScreen from '../screens/ChooseRecipientScreen';
 import EnterAmountScreen from '../screens/EnterAmountScreen';
 import ConfirmTransferScreen from '../screens/ConfirmTransferScreen';
 import TransferResultScreen from '../screens/TransferResultScreen';
-
-import TransferConfirmScreen from '../screens/TransferConfirmScreen';
 import ScanQRScreen from '../screens/ScanQRScreen';
 import QRMyScreen from '../screens/QRMyScreen';
 import TransactionDetailScreen from '../screens/TransactionDetailScreen';
@@ -98,6 +96,7 @@ export default function AppNavigator() {
         {/* Main tabs */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="Home" component={MainTabs} />
+        <Stack.Screen name="HomeTab" component={MainTabs} />
 
         {/* Transfer flow */}
         <Stack.Screen name="Deposit" component={DepositScreen} />
@@ -107,9 +106,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Transfer" component={ChooseRecipientScreen} />
         <Stack.Screen name="EnterAmount" component={EnterAmountScreen} />
         <Stack.Screen name="ConfirmTransfer" component={ConfirmTransferScreen} />
-        <Stack.Screen name="TransferConfirm" component={TransferConfirmScreen} />
         <Stack.Screen name="TransferResult" component={TransferResultScreen} />
         <Stack.Screen name="ScanQR" component={ScanQRScreen} />
+        <Stack.Screen name="QR" component={ScanQRScreen} />
 
         {/* QR */}
         <Stack.Screen name="MyQR" component={QRMyScreen} />

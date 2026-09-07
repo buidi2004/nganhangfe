@@ -1,3 +1,5 @@
+import { Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -101,7 +103,7 @@ export default function AnimatedRainbowPill({
       <View style={[styles.innerPill, { borderRadius: (height - 3.6) / 2 }]}>
         <AppText style={styles.pillText}>{title}</AppText>
         {showIcon && (
-          <Ionicons name="sparkles" size={16} color="#D2519D" />
+          <Ionicons name="sparkles" size={16} color={Colors.primary} />
         )}
       </View>
     </TouchableOpacity>

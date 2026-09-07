@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,17 +6,17 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
-  Modal,
   ActivityIndicator,
-  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { PinAuthModal } from '../components/PinAuthModal';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
+import { Radius , Colors } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -36,142 +36,167 @@ interface DepositConfirmScreenProps {
 }
 
 export default function DepositConfirmScreen({ route, navigation }: DepositConfirmScreenProps) {
-  const { user } = useApp();
+  const { user, wallet, refreshBalance } = useApp();
+  const { colors, isDark } = useTheme();
   const {
     amount = '2,000',
     selectedSource = 'Vietcombank ****8888',
   } = route.params || {};
 
-  const [isOtpModalVisible, setIsOtpModalVisible] = useState(false);
-  const [pinDigits, setPinDigits] = useState<string[]>([]);
-  const [isTransferring, setIsTransferring] = useState(false);
+  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
   const [feeAmount, setFeeAmount] = useState<number | null>(null);
   const [isFetchingFee, setIsFetchingFee] = useState(true);
 
-  const rawNumAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
+  const rawNumAmount = parseInt(String(amount).replace(/[^0-9]/g, ''), 10) || 0;
+  const currentWalletId = user?.walletId || wallet?.walletId || '';
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchFee = async () => {
       try {
-        if (!user?.walletId) return;
-        const res = await WalletApi.estimateFees(user.walletId, rawNumAmount, 'TOPUP', 'VND');
-        setFeeAmount(res.data?.feeAmount ?? 0);
-      } catch (error) {
-        console.warn('Lỗi tính phí:', error);
+        setIsFetchingFee(true);
+        if (currentWalletId) {
+          const res = await WalletApi.estimateFees(currentWalletId, rawNumAmount, 'TOPUP', 'VND');
+          if (res.data?.feeAmount !== undefined) {
+            setFeeAmount(res.data.feeAmount);
+          } else {
+            setFeeAmount(0);
+          }
+        } else {
+          setFeeAmount(0);
+        }
+      } catch (err) {
         setFeeAmount(0);
       } finally {
         setIsFetchingFee(false);
       }
     };
     fetchFee();
-  }, []);
+  }, [currentWalletId, rawNumAmount]);
 
-  const displayAmount = amount.includes('VND') || amount.includes('đ') ? amount : `${amount} VND`;
+  const displayAmount = String(amount).includes('VND') || String(amount).includes('đ') ? String(amount) : `${amount} VND`;
 
-  const handleKeyPress = async (val: string) => {
-    if (pinDigits.length < 6 && !isTransferring) {
-      const nextPins = [...pinDigits, val];
-      setPinDigits(nextPins);
+  const handlePinSubmit = async (pin: string) => {
+    setIsProcessing(true);
+    setPinError(null);
 
-      if (nextPins.length === 6) {
-        setIsTransferring(true);
-        
-        try {
-          if (!user?.walletId) throw new Error('Không tìm thấy ví đích');
-          const rawNumAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
-          
-          const depositRes = await WalletApi.deposit(user.walletId, rawNumAmount, 'VND');
-          
-          setIsOtpModalVisible(false);
-          setPinDigits([]);
-          setIsTransferring(false);
-          
-          // Chuyển hướng tới kết quả với cấu trúc form tương tự giao dịch thành công
-          navigation.navigate('TransferResult', {
-            success: true,
-            amount: displayAmount,
-            recipient: { name: user.name || 'Người dùng', phone: user.phoneNumber },
-            selectedBank: 'Ví SenBank',
-            notes: `Nạp tiền từ ${selectedSource}`,
-            transactionId: depositRes.data?.id,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          setIsTransferring(false);
-          setPinDigits([]);
-          Alert.alert('Lỗi nạp tiền', e.message || 'Giao dịch thất bại');
-        }
+    try {
+      if (pin.length !== 6) {
+        throw new Error('Mã PIN không chính xác. Vui lòng nhập đủ 6 chữ số.');
       }
-    }
-  };
 
-  const handleDelete = () => {
-    if (pinDigits.length > 0) {
-      setPinDigits(pinDigits.slice(0, -1));
+      // 1. Xác thực mã PIN với Core Banking
+      try {
+        await WalletApi.verifyPin(pin);
+      } catch (pinErr: any) {
+        throw new Error(pinErr.message || 'Mã PIN không chính xác. Vui lòng thử lại.');
+      }
+
+      // 2. Thực hiện nạp tiền vào ví
+      if (!currentWalletId) {
+        throw new Error('Không tìm thấy thông tin ví của người dùng.');
+      }
+
+      const depositRes = await WalletApi.deposit(currentWalletId, rawNumAmount, 'VND');
+      const txId = depositRes.data?.id || (depositRes.data as any)?.transactionId || `DEP${Date.now()}`;
+
+      // 3. Cập nhật số dư ví tức thì
+      try {
+        await refreshBalance();
+      } catch (refErr) {
+        console.warn('refreshBalance error:', refErr);
+      }
+
+      setIsPinModalVisible(false);
+      setIsProcessing(false);
+
+      navigation.navigate('TransferResult', {
+        success: true,
+        amount: displayAmount,
+        recipient: { name: user?.name || 'Người dùng', phone: user?.phoneNumber || '0987654321' },
+        selectedBank: 'Ví SenBank',
+        notes: `Nạp tiền từ ${selectedSource}`,
+        transactionId: txId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e: any) {
+      setIsProcessing(false);
+      setPinError(e.message || 'Giao dịch nạp tiền không thành công. Vui lòng thử lại.');
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* 1. TOP HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} activeOpacity={0.7} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.backBtn, { backgroundColor: isDark ? colors.surfaceSecondary : '#F1F5F9' }]}
+          activeOpacity={0.7}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>Xác nhận nạp tiền</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Xác nhận nạp tiền</AppText>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* 2. MAIN DETAILS CARD */}
-        <View style={styles.detailsCard}>
+        <View style={[styles.detailsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View style={styles.amountSection}>
-            <AppText style={styles.amountLabel}>Số tiền nạp</AppText>
-            <AppText style={styles.amountValueText}>{displayAmount}</AppText>
-            <AppText style={styles.amountWordsText}>{numberToVietnameseWords(amount)}</AppText>
+            <AppText style={[styles.amountLabel, { color: colors.textSecondary }]}>Số tiền nạp</AppText>
+            <AppText style={[styles.amountValueText, { color: colors.primary }]}>{displayAmount}</AppText>
+            <AppText style={[styles.amountWordsText, { color: colors.textSecondary }]}>
+              {numberToVietnameseWords(String(amount))}
+            </AppText>
           </View>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.partySection}>
-            <AppText style={styles.partyHeaderLabel}>Nguồn tiền</AppText>
+            <AppText style={[styles.partyHeaderLabel, { color: colors.textPrimary }]}>Nguồn tiền</AppText>
             <View style={styles.partyInfoRow}>
-              <View style={styles.vcbLogoCircle}>
-                <Ionicons name="card" size={17} color="#15803D" />
+              <View style={[styles.vcbLogoCircle, { backgroundColor: isDark ? '#334155' : '#E0F2FE' }]}>
+                <Ionicons name="card" size={18} color="#0284C7" />
               </View>
               <View style={styles.partyDetailsCol}>
-                <AppText style={styles.partyName}>{selectedSource}</AppText>
-                <AppText style={styles.partySubInfo}>Thẻ thanh toán nội địa</AppText>
+                <AppText style={[styles.partyName, { color: colors.textPrimary }]}>{selectedSource}</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>
+                  Thẻ thanh toán nội địa
+                </AppText>
               </View>
             </View>
           </View>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.partySection}>
-            <AppText style={styles.partyHeaderLabel}>Nạp vào ví</AppText>
+            <AppText style={[styles.partyHeaderLabel, { color: colors.textPrimary }]}>Nạp vào ví</AppText>
             <View style={styles.partyInfoRow}>
-              <View style={[styles.mbLogoCircle, { backgroundColor: '#FDF2F8' }]}>
-                <AppText style={{ color: '#D2519D', fontSize: 16, fontWeight: '900' }}>★</AppText>
+              <View style={[styles.senLogoCircle, { backgroundColor: colors.primarySoft }]}>
+                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: '900' }}>★</AppText>
               </View>
               <View style={styles.partyDetailsCol}>
-                <AppText style={styles.partyName}>Ví SenBank của tôi</AppText>
-                <AppText style={styles.partySubInfo}>{user?.phoneNumber || 'SĐT Của Bạn'}</AppText>
+                <AppText style={[styles.partyName, { color: colors.textPrimary }]}>Ví SenBank của tôi</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>
+                  {user?.phoneNumber || 'SĐT Của Bạn'}
+                </AppText>
               </View>
             </View>
           </View>
-          
-          <View style={styles.cardDivider} />
+
+          <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.extraInfoBlock}>
             <View style={styles.extraInfoRow}>
-              <AppText style={styles.extraInfoLabel}>Phí giao dịch</AppText>
+              <AppText style={[styles.extraInfoLabel, { color: colors.textSecondary }]}>Phí giao dịch</AppText>
               {isFetchingFee ? (
-                <ActivityIndicator size="small" color="#D2519D" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <AppText style={styles.extraInfoValue}>
+                <AppText style={[styles.extraInfoValue, { color: colors.primary }]}>
                   {feeAmount === 0 ? 'Miễn phí' : `${feeAmount?.toLocaleString('vi-VN')} đ`}
                 </AppText>
               )}
@@ -181,122 +206,176 @@ export default function DepositConfirmScreen({ route, navigation }: DepositConfi
       </ScrollView>
 
       {/* 3. BOTTOM ACTIONS */}
-      <View style={styles.bottomFooter}>
-        <TouchableOpacity style={styles.confirmActionButton} activeOpacity={0.9} onPress={() => setIsOtpModalVisible(true)}>
-          <LinearGradient colors={['#D2519D', '#700F43']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+      <View style={[styles.bottomFooter, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={styles.confirmActionButton}
+          activeOpacity={0.9}
+          onPress={() => {
+            setPinError(null);
+            setIsPinModalVisible(true);
+          }}
+        >
+          <LinearGradient
+            colors={[colors.primary, colors.primaryDeep]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
           <AppText style={styles.confirmActionText}>Xác nhận nạp tiền</AppText>
         </TouchableOpacity>
       </View>
 
-      {/* 4. PIN/OTP BOTTOM SHEET */}
-      <Modal visible={isOtpModalVisible} transparent animationType="slide" onRequestClose={() => setIsOtpModalVisible(false)}>
-        <View style={styles.otpModalOverlay}>
-          <TouchableOpacity style={styles.otpBackdropTap} onPress={() => setIsOtpModalVisible(false)} />
-          <View style={styles.otpModalContent}>
-            <View style={styles.otpModalHeader}>
-              <AppText style={styles.otpModalTitle}>Nhập mã PIN</AppText>
-              <TouchableOpacity onPress={() => setIsOtpModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#0F172A" />
-              </TouchableOpacity>
-            </View>
-
-            <AppText style={styles.otpModalSubtitle}>
-              Mã PIN của bạn dùng để xác thực giao dịch nạp tiền.
-            </AppText>
-
-            <View style={styles.pinDotsRow}>
-              {[1, 2, 3, 4, 5, 6].map((idx) => {
-                const isFilled = pinDigits.length >= idx;
-                return (
-                  <View key={idx} style={[styles.pinDot, isFilled && styles.pinDotFilled]} />
-                );
-              })}
-            </View>
-
-            {isTransferring && (
-              <View style={{ alignItems: 'center', marginTop: 15 }}>
-                <ActivityIndicator size="small" color="#D2519D" />
-                <AppText style={{ color: '#D2519D', marginTop: 5 }}>Đang xử lý nạp tiền...</AppText>
-              </View>
-            )}
-
-            <View style={styles.keypadContainer}>
-              {[
-                ['1', '2', '3'],
-                ['4', '5', '6'],
-                ['7', '8', '9'],
-                ['faceid', '0', 'delete']
-              ].map((row, rIdx) => (
-                <View key={`row-${rIdx}`} style={styles.keypadRow}>
-                  {row.map((btn) => {
-                    if (btn === 'faceid') {
-                      return (
-                        <TouchableOpacity key={btn} style={styles.keypadBtn} activeOpacity={0.7}>
-                          <Ionicons name="scan" size={28} color="#D2519D" />
-                        </TouchableOpacity>
-                      );
-                    }
-                    if (btn === 'delete') {
-                      return (
-                        <TouchableOpacity key={btn} style={styles.keypadBtn} activeOpacity={0.7} onPress={handleDelete}>
-                          <Ionicons name="backspace-outline" size={28} color="#0F172A" />
-                        </TouchableOpacity>
-                      );
-                    }
-                    return (
-                      <TouchableOpacity key={btn} style={styles.keypadBtn} activeOpacity={0.7} onPress={() => handleKeyPress(btn)}>
-                        <AppText style={styles.keypadBtnText}>{btn}</AppText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* 4. UNIFIED PIN AUTH MODAL */}
+      <PinAuthModal
+        visible={isPinModalVisible}
+        onClose={() => setIsPinModalVisible(false)}
+        onSuccess={handlePinSubmit}
+        title="Xác nhận nạp tiền"
+        subtitle={`Nhập mã PIN 6 chữ số để nạp ${displayAmount} vào ví SenBank`}
+        isProcessing={isProcessing}
+        errorMessage={pinError}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FDF2F8', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#0F172A' },
-  scrollContent: { padding: 16, paddingBottom: 100 },
-  detailsCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 3 },
-  amountSection: { alignItems: 'center', marginBottom: 20 },
-  amountLabel: { fontSize: 13, color: '#64748B', fontWeight: '500', marginBottom: 8 },
-  amountValueText: { fontSize: 32, fontWeight: '800', color: '#700F43', marginBottom: 4 },
-  amountWordsText: { fontSize: 13, color: '#94A3B8', fontStyle: 'italic' },
-  cardDivider: { height: 1, backgroundColor: '#F1F5F9', marginVertical: 16, borderStyle: 'dashed' },
-  partySection: { marginBottom: 4 },
-  partyHeaderLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  partyInfoRow: { flexDirection: 'row', alignItems: 'center' },
-  mbLogoCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: '#FFE4E6' },
-  vcbLogoCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#ECFCCB', alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: '#D9F99D' },
-  partyDetailsCol: { flex: 1 },
-  partyName: { fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 2 },
-  partySubInfo: { fontSize: 13, color: '#64748B' },
-  extraInfoBlock: { marginTop: 4 },
-  extraInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  extraInfoLabel: { fontSize: 13, color: '#64748B', flex: 1 },
-  extraInfoValue: { fontSize: 14, color: '#0F172A', fontWeight: '500', flex: 2, textAlign: 'right' },
-  bottomFooter: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 30, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F1F5F9' },
-  confirmActionButton: { height: 50, borderRadius: 25, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  confirmActionText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  otpModalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
-  otpBackdropTap: { flex: 1 },
-  otpModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
-  otpModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  otpModalTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  otpModalSubtitle: { fontSize: 14, color: '#64748B', lineHeight: 20, marginBottom: 24 },
-  pinDotsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 30, gap: 16 },
-  pinDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#E2E8F0' },
-  pinDotFilled: { backgroundColor: '#D2519D' },
-  keypadContainer: { gap: 12 },
-  keypadRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  keypadBtn: { width: '30%', aspectRatio: 2, backgroundColor: '#F8FAFC', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  keypadBtnText: { fontSize: 24, fontWeight: '600', color: '#0F172A' },
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  detailsCard: {
+    borderRadius: Radius.card,
+    padding: 18,
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  amountSection: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  amountLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  amountValueText: {
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  amountWordsText: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  cardDivider: {
+    height: 1,
+    marginVertical: 16,
+  },
+  partySection: {
+    marginBottom: 4,
+  },
+  partyHeaderLabel: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  partyInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  senLogoCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vcbLogoCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  partyDetailsCol: {
+    flex: 1,
+  },
+  partyName: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  partySubInfo: {
+    fontSize: 13,
+  },
+  extraInfoBlock: {
+    marginTop: 4,
+  },
+  extraInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  extraInfoLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  extraInfoValue: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  bottomFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
+    borderTopWidth: 1,
+  },
+  confirmActionButton: {
+    height: 52,
+    borderRadius: 26,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmActionText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
 });

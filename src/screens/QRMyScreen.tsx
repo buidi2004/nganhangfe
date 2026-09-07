@@ -15,7 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, createThemedStyles, ThemeColors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { WalletApi } from '../services/api';
 import QRCode from 'react-native-qrcode-svg';
@@ -276,7 +276,7 @@ export default function QRMyScreen({ navigation }: QRMyScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
     alignItems: 'center',
     marginBottom: 16,
   },
@@ -406,18 +406,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   amountPill: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   amountPillText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   accountDetailsBlock: {
     alignItems: 'center',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -547,4 +547,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B',
   },
-});
+}));

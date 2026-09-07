@@ -1,3 +1,4 @@
+import { Colors } from '../theme';
 import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,6 +7,8 @@ import AnimatedGradientQRIcon from './icons/AnimatedGradientQRIcon';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navBarTranslateY } from './GlassNavBarBridge';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 // ==========================================
 // THÔNG SỐ BẠN CÓ THỂ TỰ DO CHỈNH SỬA Ở ĐÂY:
@@ -100,6 +103,7 @@ function TabItemButton({ isFocused, tabDef, onPress }: TabItemButtonProps) {
 }
 
 export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { colors } = useTheme();
   // Kiểm tra cấu hình ẩn navbar của tab hiện tại
   const focusedOptions = descriptors[state.routes[state.index].key].options;
   if (focusedOptions.tabBarStyle && (focusedOptions.tabBarStyle as any).display === 'none') {
@@ -164,9 +168,13 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
     borderBottomRightRadius: R_BOTTOM_RIGHT,
   };
 
+  const insets = useSafeAreaInsets();
+  const bottomOffset = insets.bottom > 0 ? insets.bottom + 8 : 18;
+
   return (
-    <Animated.View style={[styles.wrapper, { transform: [{ translateY: navBarTranslateY }] }]}>
+    <Animated.View style={[styles.wrapper, { bottom: bottomOffset, transform: [{ translateY: navBarTranslateY }] }]}>
       {/* 1. Lớp đổ bóng chuyên dụng cho Android (Tách rời để không bị lỗi elevation) */}
+
       <View style={[styles.shadowContainer, radiusStyles]} />
 
       {/* 2. Lớp chứa nội dung (Cắt gọt hiển thị theo đúng 4 góc bo cong) */}
@@ -179,9 +187,9 @@ export function GlassBottomNavbar({ state, descriptors, navigation }: BottomTabB
           style={[StyleSheet.absoluteFill, radiusStyles, { overflow: 'hidden', height: BAR_HEIGHT }]} 
         />
 
-        {/* Bật lại lớp phủ màu hồng */}
+        {/* Lớp phủ gradient đồng bộ theo theme */}
         <LinearGradient
-          colors={['rgba(210, 81, 157, 0.85)', 'rgba(163, 27, 107, 0.92)']}
+          colors={colors.navGradient as any}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}

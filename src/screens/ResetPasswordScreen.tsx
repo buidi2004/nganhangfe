@@ -1,3 +1,4 @@
+import { Colors, createThemedStyles } from '../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -15,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 import { WalletApi } from '../services/api';
 
@@ -27,6 +28,8 @@ interface ResetPasswordScreenProps {
 }
 
 export default function ResetPasswordScreen({ route, navigation }: ResetPasswordScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { phone = '', otp = '' } = route?.params || {};
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,7 +48,7 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
 
   const handleResetPassword = async () => {
     if (!isFormValid) {
-      Alert.alert('Thông báo', 'Vui lòng đáp ứng đầy đủ tiêu chuẩn bảo mật mật khẩu của MBBank.');
+      Alert.alert('Thông báo', 'Vui lòng đáp ứng đầy đủ tiêu chuẩn bảo mật mật khẩu của SenBank.');
       return;
     }
     try {
@@ -54,7 +57,7 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
       setIsLoading(false);
       Alert.alert(
         'Thành công',
-        'Mật khẩu tài khoản MBBank của bạn đã được thay đổi thành công!',
+        'Mật khẩu tài khoản SenBank của bạn đã được thay đổi thành công!',
         [
           {
             text: 'Đăng nhập ngay',
@@ -69,27 +72,27 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Đặt lại mật khẩu</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Đặt lại mật khẩu</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -99,30 +102,30 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+          contentContainerStyle={styles.scrollContent}
+        >
         {/* HERO ICON */}
-        <View style={styles.heroIconWrapper}>
-          <MaterialCommunityIcons name="shield-lock-outline" size={48} color="#700F43" />
+        <View style={[styles.heroIconWrapper, { backgroundColor: isDark ? colors.surface : colors.primarySoft }]}>
+          <MaterialCommunityIcons name="shield-lock-outline" size={48} color={colors.primary} />
         </View>
 
-        <AppText style={styles.headingTitle}>Tạo mật khẩu mới</AppText>
-        <AppText style={styles.headingSubtitle}>
-          Vui lòng thiết lập mật khẩu mới cho tài khoản của bạn theo tiêu chuẩn an ninh ngân hàng.
+        <AppText style={[styles.headingTitle, { color: colors.primary }]}>Tạo mật khẩu mới</AppText>
+        <AppText style={[styles.headingSubtitle, { color: colors.textSecondary }]}>
+          Vui lòng thiết lập mật khẩu mới cho tài khoản SenBank của bạn theo tiêu chuẩn an ninh ngân hàng.
         </AppText>
 
         {/* INPUT 1: MẬT KHẨU MỚI */}
-        <View style={styles.inputCard}>
-          <AppText style={styles.inputLabel}>Mật khẩu mới</AppText>
-          <View style={styles.inputRow}>
-            <MaterialCommunityIcons name="lock-outline" size={22} color="#700F43" style={{ marginRight: 8 }} />
+        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.inputLabel, { color: colors.textSecondary }]}>Mật khẩu mới</AppText>
+          <View style={[styles.inputRow, { borderBottomColor: colors.primary }]}>
+            <MaterialCommunityIcons name="lock-outline" size={22} color={colors.primary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.textPrimary }]}
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry={!showPass}
               placeholder="Nhập mật khẩu mới"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textSecondary}
             />
             <TouchableOpacity
               onPress={() => setShowPass(!showPass)}
@@ -131,24 +134,24 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
               <Ionicons
                 name={showPass ? "eye-off-outline" : "eye-outline"}
                 size={20}
-                color="#64748B"
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* INPUT 2: XÁC NHẬN MẬT KHẨU MỚI */}
-        <View style={styles.inputCard}>
-          <AppText style={styles.inputLabel}>Xác nhận mật khẩu mới</AppText>
-          <View style={styles.inputRow}>
-            <MaterialCommunityIcons name="lock-check-outline" size={22} color="#700F43" style={{ marginRight: 8 }} />
+        <View style={[styles.inputCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.inputLabel, { color: colors.textSecondary }]}>Xác nhận mật khẩu mới</AppText>
+          <View style={[styles.inputRow, { borderBottomColor: colors.primary }]}>
+            <MaterialCommunityIcons name="lock-check-outline" size={22} color={colors.primary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.textPrimary }]}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPass}
               placeholder="Nhập lại mật khẩu mới"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textSecondary}
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPass(!showConfirmPass)}
@@ -157,23 +160,23 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
               <Ionicons
                 name={showConfirmPass ? "eye-off-outline" : "eye-outline"}
                 size={20}
-                color="#64748B"
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* PASSWORD CRITERIA CHECKLIST */}
-        <View style={styles.criteriaCard}>
-          <AppText style={styles.criteriaHeader}>Tiêu chuẩn mật khẩu an toàn:</AppText>
+        <View style={[styles.criteriaCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#F8FAFC', borderColor: colors.border }]}>
+          <AppText style={[styles.criteriaHeader, { color: colors.textPrimary }]}>Tiêu chuẩn mật khẩu an toàn:</AppText>
 
           <View style={styles.checkItem}>
             <Ionicons
               name={hasLength ? "checkmark-circle" : "ellipse-outline"}
               size={18}
-              color={hasLength ? "#10B981" : "#94A3B8"}
+              color={hasLength ? "#10B981" : colors.textSecondary}
             />
-            <AppText style={[styles.checkText, hasLength && styles.checkTextPass]}>
+            <AppText style={[styles.checkText, { color: hasLength ? (isDark ? '#34D399' : '#15803D') : colors.textSecondary }]}>
               Tối thiểu 8 ký tự
             </AppText>
           </View>
@@ -182,9 +185,9 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
             <Ionicons
               name={hasUpper && hasLower ? "checkmark-circle" : "ellipse-outline"}
               size={18}
-              color={hasUpper && hasLower ? "#10B981" : "#94A3B8"}
+              color={hasUpper && hasLower ? "#10B981" : colors.textSecondary}
             />
-            <AppText style={[styles.checkText, hasUpper && hasLower && styles.checkTextPass]}>
+            <AppText style={[styles.checkText, { color: hasUpper && hasLower ? (isDark ? '#34D399' : '#15803D') : colors.textSecondary }]}>
               Chứa cả chữ hoa (A-Z) và chữ thường (a-z)
             </AppText>
           </View>
@@ -193,10 +196,21 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
             <Ionicons
               name={hasNumber ? "checkmark-circle" : "ellipse-outline"}
               size={18}
-              color={hasNumber ? "#10B981" : "#94A3B8"}
+              color={hasNumber ? "#10B981" : colors.textSecondary}
             />
-            <AppText style={[styles.checkText, hasNumber && styles.checkTextPass]}>
+            <AppText style={[styles.checkText, { color: hasNumber ? (isDark ? '#34D399' : '#15803D') : colors.textSecondary }]}>
               Chứa ít nhất 1 chữ số (0-9)
+            </AppText>
+          </View>
+
+          <View style={styles.checkItem}>
+            <Ionicons
+              name={hasSpecial ? "checkmark-circle" : "ellipse-outline"}
+              size={18}
+              color={hasSpecial ? "#10B981" : colors.textSecondary}
+            />
+            <AppText style={[styles.checkText, { color: hasSpecial ? (isDark ? '#34D399' : '#15803D') : colors.textSecondary }]}>
+              Chứa ký tự đặc biệt (!@#$%^&*...)
             </AppText>
           </View>
 
@@ -204,10 +218,10 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
             <Ionicons
               name={isMatch ? "checkmark-circle" : "ellipse-outline"}
               size={18}
-              color={isMatch ? "#10B981" : "#94A3B8"}
+              color={isMatch ? "#10B981" : colors.textSecondary}
             />
-            <AppText style={[styles.checkText, isMatch && styles.checkTextPass]}>
-              Mật khẩu xác nhận trùng khớp
+            <AppText style={[styles.checkText, { color: isMatch ? (isDark ? '#34D399' : '#15803D') : colors.textSecondary }]}>
+              Hai mật khẩu trùng khớp
             </AppText>
           </View>
         </View>
@@ -220,7 +234,7 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
           disabled={!isFormValid || isLoading}
         >
           <LinearGradient
-            colors={isFormValid ? ['#D2519D', '#700F43'] : ['#CBD5E1', '#94A3B8']}
+            colors={isFormValid ? [colors.primary, colors.primaryDeep] : ['#CBD5E1', '#94A3B8']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -235,7 +249,7 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -260,7 +274,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -279,7 +293,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#FCE7F3',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -306,7 +320,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -323,7 +337,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#D2519D',
+    borderBottomColor: colors.primary,
     paddingBottom: 6,
   },
   textInput: {
@@ -339,7 +353,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -374,7 +388,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -389,4 +403,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Typography } from '../theme';
+import { Typography, Colors, createThemedStyles, ThemeColors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 export interface GlassSliderProps {
   value?: number;
@@ -44,10 +45,14 @@ export function GlassSlider({
   disabled = false,
   style,
   showValueBubble = true,
-  activeColor = ['#D2519D', '#700F43'],
-  inactiveColor = 'rgba(112, 15, 67, 0.15)',
+  activeColor,
+  inactiveColor,
   label,
 }: GlassSliderProps) {
+  const { colors } = useTheme();
+  const effectiveActiveColor = activeColor || [colors.primary, colors.primaryDeep];
+  const effectiveInactiveColor = inactiveColor || colors.primarySoft;
+
   const [trackWidth, setTrackWidth] = useState(0);
   const [internalValue, setInternalValue] = useState(
     controlledValue !== undefined ? controlledValue : defaultValue
@@ -171,10 +176,10 @@ export function GlassSlider({
       {/* Optional Header Label & Current Value */}
       {(label || showValueBubble) && (
         <View style={styles.labelRow}>
-          {label && <Text style={styles.labelText}>{label}</Text>}
+          {label && <Text style={[styles.labelText, { color: colors.primaryDeep }]}>{label}</Text>}
           {showValueBubble && (
-            <View style={styles.valueBadge}>
-              <Text style={styles.valueText}>{currentVal}</Text>
+            <View style={[styles.valueBadge, { backgroundColor: colors.primarySoft, borderColor: colors.primaryGlow }]}>
+              <Text style={[styles.valueText, { color: colors.primaryDeep }]}>{currentVal}</Text>
             </View>
           )}
         </View>
@@ -187,14 +192,14 @@ export function GlassSlider({
         {...panResponder.panHandlers}
       >
         {/* 1. Inactive Track (Thanh ray nền bo tròn 6dp) */}
-        <View style={[styles.inactiveTrack, { backgroundColor: inactiveColor }]} />
+        <View style={[styles.inactiveTrack, { backgroundColor: effectiveInactiveColor }]} />
 
         {/* 2. Active Filled Track (Thanh ray hoạt động có dải màu gradient) */}
         <Animated.View
           style={[styles.activeTrackWrapper, { width: activeTrackWidth }]}
         >
           <LinearGradient
-            colors={activeColor as any}
+            colors={effectiveActiveColor as any}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.activeTrackGradient}
@@ -227,7 +232,7 @@ export function GlassSlider({
           <LinearGradient
             colors={[
               'rgba(255, 255, 255, 0.95)',
-              'rgba(210, 81, 157, 0.25)',
+              colors.badgeBlueSoft || 'rgba(255, 255, 255, 0.25)',
               'rgba(255, 255, 255, 0.70)',
             ]}
             start={{ x: 0, y: 0 }}
@@ -236,14 +241,14 @@ export function GlassSlider({
           />
 
           {/* Center Specular Lens Reflection Line (Vạch sáng phản quang trục thấu kính) */}
-          <View style={styles.thumbGripIndicator} />
+          <View style={[styles.thumbGripIndicator, { backgroundColor: colors.primaryDeep }]} />
         </Animated.View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     width: '100%',
     paddingVertical: 10,
@@ -258,21 +263,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: Typography.bodySm.fontFamily,
     fontWeight: '700',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   valueBadge: {
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
-    backgroundColor: 'rgba(210, 81, 157, 0.15)',
+    backgroundColor: colors.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(210, 81, 157, 0.35)',
+    borderColor: colors.primaryGlow,
   },
   valueText: {
     fontSize: 13,
     fontFamily: Typography.captionSm.fontFamily,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   sliderContainer: {
     height: 40,
@@ -304,7 +309,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.95)',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.30,
     shadowRadius: 8,
@@ -320,11 +325,11 @@ const styles = StyleSheet.create({
     width: 14,
     height: 3.5,
     borderRadius: 2,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     opacity: 0.75,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.8,
     shadowRadius: 1,
   },
-});
+}));

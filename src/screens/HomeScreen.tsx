@@ -39,7 +39,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path, Circle, Rect, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { AppIcon } from '../components/icons/AppIcon';
-import { Colors, Shadows, Typography, Radius } from '../theme';
+import { Colors, Shadows, Typography, Radius, createThemedStyles, ThemeColors } from '../theme';
 import { AppText } from '../components/typography/AppText';
 import { GlassBottomNavbar } from '../components/GlassBottomNavbar';
 import { useApp } from '../context/AppContext';
@@ -62,19 +62,19 @@ const BALANCE_CARD_GAP = 10;                         // 👈 Khoảng cách gi�
 const BALANCE_SNAP_INTERVAL = BALANCE_CARD_WIDTH + BALANCE_CARD_GAP;
 
 // Official Vector Icons for Quick Actions (Lotus Pink Theme)
-function MBTransferIcon({ size = 28, color = '#D2519D' }: { size?: number; color?: string }) {
+function MBTransferIcon({ size = 28, color = Colors.primary }: { size?: number; color?: string }) {
   return <MaterialCommunityIcons name="bank-transfer" size={size} color={color} />;
 }
 
-function MBPhoneIcon({ size = 28, color = '#D2519D' }: { size?: number; color?: string }) {
+function MBPhoneIcon({ size = 28, color = Colors.primary }: { size?: number; color?: string }) {
   return <Ionicons name="phone-portrait-outline" size={size} color={color} />;
 }
 
-function MBPiggyIcon({ size = 28, color = '#D2519D' }: { size?: number; color?: string }) {
+function MBPiggyIcon({ size = 28, color = Colors.primary }: { size?: number; color?: string }) {
   return <MaterialCommunityIcons name="piggy-bank-outline" size={size} color={color} />;
 }
 
-function MBCoinsIcon({ size = 28, color = '#D2519D' }: { size?: number; color?: string }) {
+function MBCoinsIcon({ size = 28, color = Colors.primary }: { size?: number; color?: string }) {
   return <MaterialCommunityIcons name="hand-coin-outline" size={size} color={color} />;
 }
 
@@ -93,7 +93,7 @@ const QUICK_ACTIONS = [
   { id: '1', component: MBTransferIcon, title: 'Chuyển tiền', badge: null, badgeColor: null },
   { id: '2', component: MBPhoneIcon, title: 'Nạp tiền\nđiện thoại', badge: null, badgeColor: null },
   { id: '3', component: MBPiggyIcon, title: 'Tiền gửi', badge: '🧧 TÀI LỘC', badgeColor: '#E11D48' },
-  { id: '4', component: MBCoinsIcon, title: 'Vay nhanh', badge: 'NHƯ GIÓ 💨', badgeColor: '#FDF2F8', badgeTextColor: '#D2519D' },
+  { id: '4', component: MBCoinsIcon, title: 'Vay nhanh', badge: 'NHƯ GIÓ 💨', get badgeColor() { return Colors.badgePinkSoft; }, get badgeTextColor() { return Colors.primary; } },
 ];
 
 // 4 Icon Quick Actions mở rộng khi bấm nút mũi tên kép
@@ -132,11 +132,46 @@ const EXPANDED_ACTIONS = [
     lib: 'MaterialCommunityIcons',
     route: 'TransactionHistory',
     badge: 'MỚI ✨',
-    badgeColor: '#700F43',
+    get badgeColor() { return Colors.primaryDeep; },
   },
 ];
 
 // 6 Banners SenBank thương hiệu chuẩn với dải màu hồng nhạt đến đậm hài hòa cao cấp
+const THEMED_BANNER_PALETTES: Record<string, [string, string][]> = {
+  amber: [
+    ['#78350F', '#D97706'],
+    ['#92400E', '#F59E0B'],
+    ['#78350F', '#B45309'],
+    ['#B45309', '#FBBF24'],
+    ['#451A03', '#D97706'],
+    ['#92400E', '#F59E0B'],
+  ],
+  emerald: [
+    ['#042F2E', '#0D9488'],
+    ['#0F766E', '#14B8A6'],
+    ['#134E4A', '#2DD4BF'],
+    ['#042F2E', '#0F766E'],
+    ['#115E59', '#14B8A6'],
+    ['#0F766E', '#2DD4BF'],
+  ],
+  ocean: [
+    ['#082F49', '#0284C7'],
+    ['#0369A1', '#38BDF8'],
+    ['#0C4A6E', '#0284C7'],
+    ['#075985', '#38BDF8'],
+    ['#082F49', '#0369A1'],
+    ['#0369A1', '#7DD3FC'],
+  ],
+  purple: [
+    ['#3B0764', '#7C3AED'],
+    ['#581C87', '#A78BFA'],
+    ['#4C1D95', '#8B5CF6'],
+    ['#2E1065', '#7C3AED'],
+    ['#6B21A8', '#A78BFA'],
+    ['#581C87', '#8B5CF6'],
+  ],
+};
+
 const BASE_CAROUSEL_DATA = [
   {
     id: 'b1',
@@ -166,7 +201,7 @@ const BASE_CAROUSEL_DATA = [
     colorStart: '#831843', // Hồng ruby đậm quý phái
     colorEnd: '#BE185D',   // Hồng sen tươi
     tags: [
-      { text: '7.8%', color: '#FDF2F8', textColor: '#831843', top: 22, right: 18, rotate: '-10deg' },
+      { text: '7.8%', color: 'rgba(255,255,255,0.88)', textColor: '#831843', top: 22, right: 18, rotate: '-10deg' },
     ],
     showCarMascot: false,
   },
@@ -411,6 +446,10 @@ const WigglingBellButton = ({
 
 // 7. Giải pháp 3: Gói (Memoize) thành phần renderItem để chống lag
 const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; index: number; scrollX: Animated.Value }) => {
+  const { themeColor } = useTheme();
+  const bannerColors: [string, string] = (THEMED_BANNER_PALETTES[themeColor] && THEMED_BANNER_PALETTES[themeColor][index % 6])
+    ? (THEMED_BANNER_PALETTES[themeColor][index % 6] as [string, string])
+    : [item.colorStart, item.colorEnd];
   const inputRange = [
     (index - 1) * SNAP_INTERVAL,
     index * SNAP_INTERVAL,
@@ -452,7 +491,7 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
     >
       <View style={styles.bannerItem}>
         <LinearGradient
-          colors={[item.colorStart, item.colorEnd]}
+          colors={bannerColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.bannerBackground}
@@ -542,7 +581,7 @@ const MemoizedBannerItem = React.memo(({ item, index, scrollX }: { item: any; in
 
 export default function HomeScreen({ navigation }: any) {
   const { user, wallet, refreshBalance, isBalanceLoading, customBackgroundUri } = useApp();
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, themeColor } = useTheme();
   const isFocused = useIsFocused();
   const throttledNavBarScroll = useThrottledNavBarScroll();
   const lastBalanceRefreshRef = useRef(0);
@@ -705,7 +744,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]} />
           {/* DẢI MÀU (GRADIENT) HỒNG ĐẬM HƠN PHỦ LÊN KÍNH */}
           <LinearGradient
-            colors={['rgba(228, 172, 178, 0.6)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.9)']}
+            colors={colors.stickyGrad}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -747,16 +786,22 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.headerBackground} pointerEvents="none">
         {customBackgroundUri ? (
           <Image cachePolicy="memory-disk" source={{ uri: customBackgroundUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        ) : (
-          <LinearGradient
-            colors={['#E4ACB2', '#D2519D', '#700F43']}
+        ) : (themeColor === 'amber' ? (
+          <Image
+            source={require('../../assets/theme-amber-bg.png')}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            contentPosition="top"
+          />
+        ) : <LinearGradient
+            colors={[colors.heroGradStart, colors.heroGradMid, colors.heroGradEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
         )}
         {/* Thêm các đường nét trang trí uốn lượn (Waves & Rings) */}
-        {!customBackgroundUri && (
+        {!customBackgroundUri && themeColor !== 'amber' && (
           <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
             {/* Đường cong mềm mại */}
             <Path d="M-50 150 Q 150 50 400 180 T 600 100" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" fill="none" />
@@ -784,8 +829,8 @@ export default function HomeScreen({ navigation }: any) {
           <RefreshControl
             refreshing={isBalanceLoading}
             onRefresh={refreshBalance}
-            tintColor="#D2519D"
-            colors={['#D2519D', '#700F43']}
+            tintColor={colors.primary}
+            colors={[colors.primary, colors.primaryDeep]}
           />
         }
       >
@@ -873,7 +918,7 @@ export default function HomeScreen({ navigation }: any) {
                         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                         style={styles.eyeToggleBtn}
                       >
-                        <AppIcon name={balanceVisible ? "eyeOff" : "eye"} size="sm" color="#FDF2F8" />
+                        <AppIcon name={balanceVisible ? "eyeOff" : "eye"} size="sm" color="rgba(255,255,255,0.9)" />
                       </TouchableOpacity>
                     </View>
 
@@ -894,7 +939,7 @@ export default function HomeScreen({ navigation }: any) {
                       onPress={() => navigation.navigate('TransactionHistory')}
                     >
                       <AppText style={styles.profitText}>LỊCH SỬ GIAO DỊCH</AppText>
-                      <AppIcon name="chevronRight" size="xs" color="#FDF2F8" />
+                      <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -907,7 +952,7 @@ export default function HomeScreen({ navigation }: any) {
                       <AppText style={styles.balanceTitle}>Thẻ MB Hi Visa</AppText>
                       <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
                       <View style={{ flex: 1 }} />
-                      <AppIcon name="card" size="xs" color="#FDF2F8" />
+                      <AppIcon name="card" size="xs" color="rgba(255,255,255,0.9)" />
                     </View>
 
                     {/* Dòng 2: Hạn mức / Số dư thẻ */}
@@ -921,7 +966,7 @@ export default function HomeScreen({ navigation }: any) {
                     {/* Dòng 3: Link "QUẢN LÝ THẺ & HẠN MỨC" + chevron > */}
                     <TouchableOpacity style={styles.profitStrip} activeOpacity={0.8}>
                       <AppText style={styles.profitText}>QUẢN LÝ THẺ & HẠN MỨC</AppText>
-                      <AppIcon name="chevronRight" size="xs" color="#FDF2F8" />
+                      <AppIcon name="chevronRight" size="xs" color="rgba(255,255,255,0.9)" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -932,7 +977,7 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* MAIN FULL-WIDTH BODY CONTAINER (Chuyển nền tối khi bật Dark Mode) */}
         <View style={[styles.whiteBodyContainer, { backgroundColor: colors.background }]}>
-          {!isDark && (
+          {!isDark && themeColor === 'lotus' && (
             <ImageBackground 
               source={require('../assets/images/bg-white-pink-pattern.png')}
               style={StyleSheet.absoluteFill}
@@ -958,7 +1003,7 @@ export default function HomeScreen({ navigation }: any) {
                   {/* Icon Container with relative position for the badge */}
                   <View style={styles.actionIconContainer}>
                     <View style={[styles.actionIconBg, isDark && { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-                      <IconComp size={28} color={isDark ? colors.primary : '#D2519D'} />
+                      <IconComp size={28} color={colors.primary} />
                     </View>
 
                     {/* Badges positioned at top: -8, right: -10 */}
@@ -1004,7 +1049,7 @@ export default function HomeScreen({ navigation }: any) {
                   >
                     <View style={styles.actionIconContainer}>
                       <View style={[styles.actionIconBg, isDark && { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-                        <IconComp name={item.iconName as any} size={28} color={isDark ? colors.primary : '#D2519D'} />
+                        <IconComp name={item.iconName as any} size={28} color={colors.primary} />
                       </View>
 
                       {item.badge && (
@@ -1132,14 +1177,14 @@ export default function HomeScreen({ navigation }: any) {
                     <View style={[
                       styles.serviceIconBg, 
                       { 
-                        backgroundColor: isDark ? colors.surface : '#FDF2F8',
-                        borderColor: isDark ? colors.border : '#FCE7F3',
+                        backgroundColor: isDark ? colors.surface : colors.badgePinkSoft,
+                        borderColor: isDark ? colors.border : colors.badgePinkBorder,
                       }
                     ]}>
-                      <AppIcon name={item.icon as any} size="md" color={isDark ? colors.primary : '#700F43'} />
+                      <AppIcon name={item.icon as any} size="md" color={colors.primaryDeep} />
                     </View>
                     {item.badgeText && (
-                      <View style={[styles.serviceItemBadge, { backgroundColor: isDark ? colors.primary : '#700F43' }]}>
+                      <View style={[styles.serviceItemBadge, { backgroundColor: colors.primaryDeep }]}>
                         <AppText style={styles.serviceItemBadgeText}>{item.badgeText}</AppText>
                       </View>
                     )}
@@ -1157,7 +1202,7 @@ export default function HomeScreen({ navigation }: any) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalAdsContainer}
             >
-              <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: '#FCE7F3' }]} activeOpacity={0.85}>
+              <TouchableOpacity style={[styles.miniAdBanner, { backgroundColor: colors.badgePinkSoft }]} activeOpacity={0.85}>
                 <Image cachePolicy="memory-disk" source={{ uri: 'https://images.unsplash.com/photo-1557821552-171051530dcb?w=400&q=80' }} style={styles.miniAdImage} />
                 <LinearGradient colors={['transparent', 'rgba(112, 15, 67, 0.85)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.miniAdOverlay}>
@@ -1195,7 +1240,7 @@ export default function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   stickyHeaderContainer: {
     position: 'absolute',
     top: 0,
@@ -1479,7 +1524,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20, // 👈 Bo góc dưới-phải dải mờ khớp với thẻ
   },
   profitText: {
-    color: '#FDF2F8',     // 👈 Màu chữ "SINH LỜI MỖI NGÀY" (trắng hồng sen sáng)
+    color: 'rgba(255,255,255,0.92)',
     fontSize: 10.5,       // 👈 Kích thước chữ "SINH LỜI MỖI NGÀY"
     fontWeight: '800',    // 👈 Độ đậm chữ
     letterSpacing: 0.3,
@@ -1498,7 +1543,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,             // 👈 5. Đệm lề bên trong từ mép trên khối trắng đến 4 nút chuyển tiền
     paddingBottom: 100,         // 👈 6. Đệm lề đáy để cuộn không bị thanh menu đáy che
     width: '100%',              // 👈 7. Chiều rộng 100% tràn toàn màn hình
-    shadowColor: '#700F43',     // 👈 8. Màu đổ bóng lên nền hồng sen
+    shadowColor: colors.shadowColor,     // 👈 8. Màu đổ bóng lên nền hồng sen
     shadowOffset: { width: 0, height: -4 }, // 👈 Hướng bóng hắt lên phía trên
     shadowOpacity: 0.12,         // 👈 Độ mờ của bóng
     shadowRadius: 14,           // 👈 Độ lan tỏa của bóng
@@ -1523,13 +1568,13 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 18, // Squircle
-    backgroundColor: '#FDF2F8', // Nền hồng pastel hoa sen
+    backgroundColor: colors.badgePinkSoft,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FCE7F3', // Viền hồng pastel
+    borderColor: colors.badgePinkBorder,
     overflow: 'hidden',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -1558,7 +1603,7 @@ const styles = StyleSheet.create({
   badgeNhuGio: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   badgeText: {
     fontSize: 9,
@@ -1569,7 +1614,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   badgeTextNhuGio: {
-    color: '#D2519D',
+    color: colors.primary,
   },
   expandButtonWrapper: {
     alignItems: 'center',
@@ -1737,14 +1782,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 'auto',
     zIndex: 4,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 3,
   },
   ctaPillText: {
-    color: '#700F43',
+    color: colors.primaryDeep,
     fontSize: 10.5,
     fontWeight: '900',
     letterSpacing: 0.4,
@@ -1780,10 +1825,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
-    backgroundColor: '#FDF2F8',
+    borderColor: colors.badgePinkBorder,
+    backgroundColor: colors.badgePinkSoft,
     overflow: 'hidden',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -1894,4 +1939,4 @@ const styles = StyleSheet.create({
     marginTop: 2,
     letterSpacing: 0.5,
   },
-});
+}));

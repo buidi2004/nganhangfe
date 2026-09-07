@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { AppIcon } from './icons/AppIcon';
-import { Colors, Radius, Spacing, Shadows } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Spacing, Shadows, createThemedStyles, ThemeColors } from '../theme';
 import { AppText } from './typography/AppText';
+import { useTheme } from '../context/ThemeContext';
 
 interface AmountEntryPadProps {
   onInputChange?: (value: string) => void;
 }
 
 export const AmountEntryPad: React.FC<AmountEntryPadProps> = ({ onInputChange }) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'];
 
   const handlePress = (key: string) => {
@@ -30,7 +32,7 @@ export const AmountEntryPad: React.FC<AmountEntryPadProps> = ({ onInputChange })
           activeOpacity={0.7}
         >
           {key === 'del' ? (
-            <AppIcon name="close" size="sm" color={Colors.textPrimary} />
+            <AppIcon name="close" size="sm" color={colors.textPrimary} />
           ) : (
             <AppText variant="headingXl" style={styles.keyText}>{key}</AppText>
           )}
@@ -40,7 +42,7 @@ export const AmountEntryPad: React.FC<AmountEntryPadProps> = ({ onInputChange })
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -52,7 +54,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 56,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     ...Shadows.card,
@@ -62,6 +64,6 @@ const styles = StyleSheet.create({
     shadowColor: 'transparent',
   },
   keyText: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
-});
+}));

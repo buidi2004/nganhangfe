@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radius, Shadows, Spacing } from '../theme';
+import { Radius, Shadows, Spacing , Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { StatusChip } from '../components/StatusChip';
 import { SolidCard } from '../components/SolidCard';
 import { EmptyState } from '../components/EmptyState';
@@ -21,10 +22,11 @@ interface DeviceSession {
   userAgent: string;
   active: boolean;
   lastActiveAt: string;
-  isCurrent?: boolean; // We'll infer this
+  isCurrent?: boolean;
 }
 
 export default function DeviceManagementScreen({ navigation }: DeviceManagementScreenProps) {
+  const { colors, isDark } = useTheme();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,8 +35,6 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
       setIsLoading(true);
       const res = await WalletApi.getActiveSessions();
       if (res.data) {
-        // Find the most recently active session to mark as 'current'
-        // Alternatively, the backend could tell us which one is the current token's session.
         const sorted = res.data.sort((a: any, b: any) => 
           new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime()
         );
@@ -87,20 +87,21 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.bgBase} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-            <AppIcon name="arrow-back" size="md" color={Colors.textPrimary} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <AppIcon name="arrow-back" size="md" color={colors.textPrimary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>Thiết bị đã đăng nhập</AppText>
-        <TouchableOpacity onPress={fetchSessions}>
-          <AppIcon name="refresh" size="sm" color={Colors.primary} />
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Thiết bị đã đăng nhập</AppText>
+        <TouchableOpacity onPress={fetchSessions} style={styles.backBtn}>
+          <AppIcon name="refresh" size="sm" color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {isLoading ? (
-          <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
         ) : sessions.length === 0 ? (
           <EmptyState
             icon="phone-portrait-outline"
@@ -109,17 +110,23 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
           />
         ) : (
           <>
-            <AppText style={styles.sectionTitle}>Thiết bị hiện tại</AppText>
+            <AppText style={[styles.sectionTitle, { color: colors.textSecondary }]}>Thiết bị đang hoạt động</AppText>
             {sessions.map((device) => {
               const platform = getPlatform(device.userAgent);
               const name = device.userAgent.split(' ')[0] || device.deviceId;
               const date = new Date(device.lastActiveAt).toLocaleString('vi-VN');
 
               return (
-                <SolidCard key={device.id} style={styles.deviceCard}>
+                <SolidCard
+                  key={device.id}
+                  style={[
+                    styles.deviceCard,
+                    { backgroundColor: isDark ? colors.cardBackground : colors.surface },
+                  ]}
+                >
                   <View style={styles.deviceHeader}>
                     <LinearGradient
-                      colors={[Colors.primarySoft, Colors.deviceIconGradEnd]}
+                      colors={[colors.primarySoft, isDark ? '#334155' : colors.deviceIconGradEnd]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.deviceIcon}
@@ -127,21 +134,27 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
                       <AppIcon
                         name={platform === 'iOS' ? 'phone-portrait' : (platform === 'Android' ? 'logo-android' : 'laptop-outline')}
                         size="lg"
-                        color={Colors.primary}
+                        color={colors.primary}
                       />
                     </LinearGradient>
                     <View style={styles.deviceInfo}>
                       <View style={styles.deviceNameRow}>
-                        <AppText style={styles.deviceName} numberOfLines={1}>{name}</AppText>
+                        <AppText style={[styles.deviceName, { color: colors.textPrimary }]} numberOfLines={1}>
+                          {name}
+                        </AppText>
                         {device.isCurrent && <StatusChip text="Đang dùng" type="success" size="sm" />}
                       </View>
-                      <AppText style={styles.devicePlatform}>{platform} • {device.ipAddress}</AppText>
-                      <AppText style={styles.deviceLastUsed}>Lần cuối: {date}</AppText>
+                      <AppText style={[styles.devicePlatform, { color: colors.textSecondary }]}>
+                        {platform} • {device.ipAddress}
+                      </AppText>
+                      <AppText style={[styles.deviceLastUsed, { color: colors.textSecondary }]}>
+                        Lần cuối: {date}
+                      </AppText>
                     </View>
                   </View>
                   {!device.isCurrent && (
                     <TouchableOpacity style={styles.removeBtn} onPress={() => handleRevoke(device.deviceId, name)}>
-                      <AppText style={styles.removeText}>Gỡ thiết bị</AppText>
+                      <AppText style={[styles.removeText, { color: colors.danger }]}>Gỡ thiết bị</AppText>
                     </TouchableOpacity>
                   )}
                 </SolidCard>
@@ -149,10 +162,10 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
             })}
 
             {/* Security tip */}
-            <View style={styles.tipCard}>
-                <AppIcon name="information-circle" size="md" color={Colors.primary} />
-              <AppText style={styles.tipText}>
-                Nếu bạn không nhận ra thiết bị nào, hãy đăng xuất và đổi mật khẩu ngay lập tức.
+            <View style={[styles.tipCard, { backgroundColor: isDark ? colors.cardBackground : colors.primarySoft }]}>
+              <AppIcon name="information-circle" size="md" color={colors.primary} />
+              <AppText style={[styles.tipText, { color: isDark ? colors.textPrimary : colors.primary }]}>
+                Nếu bạn không nhận ra thiết bị nào, hãy gỡ thiết bị và đổi mật khẩu tài khoản ngay lập tức.
               </AppText>
             </View>
           </>
@@ -165,7 +178,6 @@ export default function DeviceManagementScreen({ navigation }: DeviceManagementS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
   },
   header: {
     flexDirection: 'row',
@@ -174,27 +186,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
-  headerTitle: {
-    
-    color: Colors.textPrimary,
+  backBtn: {
+    padding: Spacing.xs,
   },
-  addBtn: {
-    
-    color: Colors.primary,
-    },
-  scrollView: {
-    flex: 1,
-    paddingTop: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
   sectionTitle: {
-    
-    color: Colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   deviceCard: {
     marginBottom: Spacing.md,
     padding: Spacing.md,
+    borderRadius: Radius.lg,
+    ...Shadows.card,
   },
   deviceHeader: {
     flexDirection: 'row',
@@ -202,9 +216,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   deviceIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.sm,
+    width: 52,
+    height: 52,
+    borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -218,16 +232,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   deviceName: {
-    
-    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
   },
   devicePlatform: {
-    
-    color: Colors.textSecondary,
+    fontSize: 13,
   },
   deviceLastUsed: {
-    
-    color: Colors.textSecondary,
+    fontSize: 12,
   },
   removeBtn: {
     marginTop: Spacing.md,
@@ -236,22 +248,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   removeText: {
-    
-    color: Colors.danger,
-    },
+    fontSize: 13,
+    fontWeight: '600',
+  },
   tipCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: Colors.primarySoft,
     borderRadius: Radius.md,
     marginTop: Spacing.lg,
   },
   tipText: {
     flex: 1,
-    
-    color: Colors.primary,
+    fontSize: 13,
     lineHeight: 18,
   },
 });
+

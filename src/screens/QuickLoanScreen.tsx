@@ -16,7 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
+import { Radius , Colors, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
@@ -81,21 +83,17 @@ export default function QuickLoanScreen({ navigation }: any) {
   const handleConfirmDisburse = async () => {
     setIsProcessing(true);
     try {
-      // Giả lập giải ngân tức thì vào ví SenBank của user qua Deposit API nếu có walletId
-      if (user?.walletId) {
-        try {
-          await WalletApi.deposit(user.walletId, numLoan, 'VND');
-          await refreshBalance();
-        } catch (e) {
-          // Bỏ qua nếu là offline/mock
-        }
+      if (!user?.walletId) {
+        throw new Error('Không tìm thấy thông tin ví người dùng để giải ngân.');
       }
+      await WalletApi.deposit(user.walletId, numLoan, 'VND');
+      await refreshBalance();
 
       setIsProcessing(false);
       setIsModalVisible(false);
 
       Alert.alert(
-        'Giải ngân thành công! 🌪️',
+        'Giải ngân thành công! 🎉',
         `Chúc mừng bạn! Khoản vay ${numLoan.toLocaleString('vi-VN')} đ đã được giải ngân thành công trực tiếp vào số dư ví SenBank.\n\nHạn trả kỳ 1: 30 ngày sau.`,
         [
           {
@@ -106,17 +104,20 @@ export default function QuickLoanScreen({ navigation }: any) {
       );
     } catch (err: any) {
       setIsProcessing(false);
-      Alert.alert('Thông báo', 'Hồ sơ đã được gửi phê duyệt thành công!');
+      Alert.alert('Giải ngân thất bại', err.message || 'Không thể giải ngân vào ví lúc này. Vui lòng thử lại sau.');
     }
   };
 
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDeep} />
 
       {/* Header Gradient */}
       <LinearGradient
-        colors={['#700F43', '#9D174D', '#D2519D']}
+        colors={[colors.heroGradEnd, colors.heroGradMid, colors.heroGradStart]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerBar}
@@ -146,7 +147,7 @@ export default function QuickLoanScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollBody}>
         {/* HERO APPROVED LIMIT CARD */}
         <LinearGradient
-          colors={['#500724', '#700F43', '#831843']}
+          colors={[colors.heroGradEnd, colors.primaryDeep, colors.heroGradMid]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -180,7 +181,7 @@ export default function QuickLoanScreen({ navigation }: any) {
             onPress={() => setIsModalVisible(true)}
           >
             <LinearGradient
-              colors={['#F43F5E', '#E11D48']}
+              colors={[colors.primaryDeep, colors.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.applyNowGradient}
@@ -191,21 +192,21 @@ export default function QuickLoanScreen({ navigation }: any) {
         </LinearGradient>
 
         {/* SECTION: BỘ TÍNH KHOẢN VAY VÀ TRẢ GÓP */}
-        <View style={styles.calcCard}>
+        <View style={[styles.calcCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <MaterialCommunityIcons name="calculator" size={22} color="#D2519D" />
-            <AppText style={styles.calcTitle}>Tùy chỉnh số tiền vay & Kỳ hạn</AppText>
+            <MaterialCommunityIcons name="calculator" size={22} color={colors.primary} />
+            <AppText style={[styles.calcTitle, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Tùy chỉnh số tiền vay & Kỳ hạn</AppText>
           </View>
 
-          <AppText style={styles.calcLabel}>Số tiền bạn cần vay (VNĐ)</AppText>
-          <View style={styles.calcInputRow}>
+          <AppText style={[styles.calcLabel, { color: colors.textSecondary }]}>Số tiền bạn cần vay (VNĐ)</AppText>
+          <View style={[styles.calcInputRow, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
             <TextInput
-              style={styles.calcInput}
+              style={[styles.calcInput, { color: colors.textPrimary }]}
               keyboardType="numeric"
               value={numLoan.toLocaleString('vi-VN')}
               onChangeText={(txt) => setLoanAmount(txt.replace(/[^0-9]/g, ''))}
             />
-            <AppText style={{ fontWeight: '800', color: '#D2519D' }}>VND</AppText>
+            <AppText style={{ fontWeight: '800', color: colors.primary }}>VND</AppText>
           </View>
 
           {/* Quick Amount Chips */}
@@ -213,7 +214,7 @@ export default function QuickLoanScreen({ navigation }: any) {
             {['5000000', '10000000', '20000000', '50000000'].map((amt) => (
               <TouchableOpacity
                 key={amt}
-                style={[styles.calcChip, loanAmount === amt && styles.calcChipActive]}
+                style={[styles.calcChip, { backgroundColor: colors.surfaceSecondary }, loanAmount === amt && styles.calcChipActive]}
                 onPress={() => setLoanAmount(amt)}
               >
                 <AppText style={[styles.calcChipText, loanAmount === amt && styles.calcChipTextActive]}>
@@ -224,7 +225,7 @@ export default function QuickLoanScreen({ navigation }: any) {
           </View>
 
           {/* Term Selector */}
-          <AppText style={[styles.calcLabel, { marginTop: 16 }]}>Thời gian trả góp</AppText>
+          <AppText style={[styles.calcLabel, { marginTop: 16, color: colors.textSecondary }]}>Thời gian trả góp</AppText>
           <View style={styles.termsRow}>
             {[
               { t: 3, label: '3 Tháng' },
@@ -234,7 +235,7 @@ export default function QuickLoanScreen({ navigation }: any) {
             ].map((term) => (
               <TouchableOpacity
                 key={term.t}
-                style={[styles.termItem, loanTerm === term.t && styles.termItemActive]}
+                style={[styles.termItem, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }, loanTerm === term.t && styles.termItemActive]}
                 onPress={() => setLoanTerm(term.t)}
               >
                 <AppText style={[styles.termText, loanTerm === term.t && styles.termTextActive]}>
@@ -245,18 +246,18 @@ export default function QuickLoanScreen({ navigation }: any) {
           </View>
 
           {/* Monthly Breakdown Box */}
-          <View style={styles.breakdownBox}>
+          <View style={[styles.breakdownBox, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
             <View style={styles.breakdownRow}>
-              <AppText style={styles.breakdownLabel}>Gốc trả mỗi tháng:</AppText>
-              <AppText style={styles.breakdownValue}>{monthlyPrincipal.toLocaleString('vi-VN')} đ</AppText>
+              <AppText style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Gốc trả mỗi tháng:</AppText>
+              <AppText style={[styles.breakdownValue, { color: colors.textPrimary }]}>{monthlyPrincipal.toLocaleString('vi-VN')} đ</AppText>
             </View>
             <View style={styles.breakdownRow}>
-              <AppText style={styles.breakdownLabel}>Lãi tạm tính (0.85%/tháng):</AppText>
-              <AppText style={styles.breakdownValue}>{monthlyInterest.toLocaleString('vi-VN')} đ</AppText>
+              <AppText style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Lãi tạm tính (0.85%/tháng):</AppText>
+              <AppText style={[styles.breakdownValue, { color: colors.textPrimary }]}>{monthlyInterest.toLocaleString('vi-VN')} đ</AppText>
             </View>
-            <View style={styles.breakdownDivider} />
+            <View style={[styles.breakdownDivider, { backgroundColor: colors.border }]} />
             <View style={styles.breakdownRow}>
-              <AppText style={styles.breakdownTotalLabel}>Tổng thanh toán/tháng:</AppText>
+              <AppText style={[styles.breakdownTotalLabel, { color: colors.textPrimary }]}>Tổng thanh toán/tháng:</AppText>
               <AppText style={styles.breakdownTotalValue}>{monthlyTotal.toLocaleString('vi-VN')} đ</AppText>
             </View>
           </View>
@@ -264,7 +265,7 @@ export default function QuickLoanScreen({ navigation }: any) {
 
         {/* SECTION: 3 GÓI VAY ĐA DẠNG */}
         <View style={styles.sectionHeaderRow}>
-          <AppText style={styles.sectionHeading}>Các gói vay SenBank phù hợp</AppText>
+          <AppText style={[styles.sectionHeading, { color: colors.textPrimary }]}>Các gói vay SenBank phù hợp</AppText>
         </View>
 
         {LOAN_PRODUCTS.map((prod) => {
@@ -272,7 +273,11 @@ export default function QuickLoanScreen({ navigation }: any) {
           return (
             <TouchableOpacity
               key={prod.id}
-              style={[styles.productCard, isChosen && styles.productCardActive]}
+              style={[
+                styles.productCard,
+                { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                isChosen && [styles.productCardActive, { borderColor: colors.primary, backgroundColor: isDark ? colors.surfaceSecondary : '#FFFDFE' }]
+              ]}
               activeOpacity={0.9}
               onPress={() => {
                 setSelectedProduct(prod);
@@ -286,17 +291,17 @@ export default function QuickLoanScreen({ navigation }: any) {
                 <AppText style={styles.productRate}>{prod.rateMonth}</AppText>
               </View>
 
-              <AppText style={styles.productName}>{prod.name}</AppText>
+              <AppText style={[styles.productName, { color: colors.textPrimary }]}>{prod.name}</AppText>
               <AppText style={styles.productHighlight}>⚡ {prod.highlight}</AppText>
 
-              <View style={styles.productFooter}>
+              <View style={[styles.productFooter, { borderTopColor: colors.border }]}>
                 <View>
-                  <AppText style={{ fontSize: 11, color: '#64748B' }}>Hạn mức tới</AppText>
-                  <AppText style={styles.productLimit}>{prod.maxAmountText}</AppText>
+                  <AppText style={{ fontSize: 11, color: colors.textSecondary }}>Hạn mức tới</AppText>
+                  <AppText style={[styles.productLimit, { color: colors.textPrimary }]}>{prod.maxAmountText}</AppText>
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.productBtn, isChosen && styles.productBtnActive]}
+                  style={[styles.productBtn, { backgroundColor: colors.surfaceSecondary }, isChosen && styles.productBtnActive]}
                   activeOpacity={0.8}
                   onPress={() => {
                     setSelectedProduct(prod);
@@ -313,29 +318,29 @@ export default function QuickLoanScreen({ navigation }: any) {
         })}
 
         {/* SECTION: 3 BƯỚC NHẬN TIỀN */}
-        <View style={styles.stepsCard}>
-          <AppText style={styles.stepsCardTitle}>Quy trình vay đơn giản</AppText>
+        <View style={[styles.stepsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.stepsCardTitle, { color: colors.textPrimary }]}>Quy trình vay đơn giản</AppText>
           <View style={styles.stepItem}>
             <View style={styles.stepNumberBadge}><AppText style={styles.stepNumberText}>1</AppText></View>
             <View style={{ flex: 1 }}>
-              <AppText style={styles.stepItemTitle}>Chọn số tiền và thời hạn</AppText>
-              <AppText style={styles.stepItemSub}>Tùy chỉnh số tiền vay linh hoạt theo nhu cầu</AppText>
+              <AppText style={[styles.stepItemTitle, { color: colors.textPrimary }]}>Chọn số tiền và thời hạn</AppText>
+              <AppText style={[styles.stepItemSub, { color: colors.textSecondary }]}>Tùy chỉnh số tiền vay linh hoạt theo nhu cầu</AppText>
             </View>
           </View>
 
           <View style={styles.stepItem}>
             <View style={styles.stepNumberBadge}><AppText style={styles.stepNumberText}>2</AppText></View>
             <View style={{ flex: 1 }}>
-              <AppText style={styles.stepItemTitle}>Duyệt tự động 1 phút</AppText>
-              <AppText style={styles.stepItemSub}>Hệ thống SenAI xét duyệt tự động hoàn toàn trực tuyến</AppText>
+              <AppText style={[styles.stepItemTitle, { color: colors.textPrimary }]}>Duyệt tự động 1 phút</AppText>
+              <AppText style={[styles.stepItemSub, { color: colors.textSecondary }]}>Hệ thống SenAI xét duyệt tự động hoàn toàn trực tuyến</AppText>
             </View>
           </View>
 
           <View style={styles.stepItem}>
             <View style={styles.stepNumberBadge}><AppText style={styles.stepNumberText}>3</AppText></View>
             <View style={{ flex: 1 }}>
-              <AppText style={styles.stepItemTitle}>Tiền về ví SenBank</AppText>
-              <AppText style={styles.stepItemSub}>Tiền giải ngân tức thì, sử dụng chuyển tiền hoặc rút về ngân hàng</AppText>
+              <AppText style={[styles.stepItemTitle, { color: colors.textPrimary }]}>Tiền về ví SenBank</AppText>
+              <AppText style={[styles.stepItemSub, { color: colors.textSecondary }]}>Tiền giải ngân tức thì, sử dụng chuyển tiền hoặc rút về ngân hàng</AppText>
             </View>
           </View>
         </View>
@@ -346,36 +351,36 @@ export default function QuickLoanScreen({ navigation }: any) {
       {/* MODAL XÁC NHẬN KHOẢN VAY */}
       <Modal visible={isModalVisible} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Image source={require('../../assets/sen-hong-logo.png')} style={{ width: 28, height: 28, borderRadius: 14 }} />
-                <AppText style={styles.modalTitle}>Xác nhận hồ sơ vay</AppText>
+                <AppText style={[styles.modalTitle, { color: colors.textPrimary }]}>Xác nhận hồ sơ vay</AppText>
               </View>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close-circle" size={24} color="#94A3B8" />
+                <Ionicons name="close-circle" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.confirmDetailsBox}>
+            <View style={[styles.confirmDetailsBox, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
               <View style={styles.confirmRow}>
-                <AppText style={styles.confirmLabel}>Gói vay:</AppText>
-                <AppText style={styles.confirmValBold}>{selectedProduct.name}</AppText>
+                <AppText style={[styles.confirmLabel, { color: colors.textSecondary }]}>Gói vay:</AppText>
+                <AppText style={[styles.confirmValBold, { color: colors.textPrimary }]}>{selectedProduct.name}</AppText>
               </View>
               <View style={styles.confirmRow}>
-                <AppText style={styles.confirmLabel}>Số tiền giải ngân:</AppText>
+                <AppText style={[styles.confirmLabel, { color: colors.textSecondary }]}>Số tiền giải ngân:</AppText>
                 <AppText style={styles.confirmValBig}>{numLoan.toLocaleString('vi-VN')} đ</AppText>
               </View>
               <View style={styles.confirmRow}>
-                <AppText style={styles.confirmLabel}>Thời gian vay:</AppText>
-                <AppText style={styles.confirmValBold}>{loanTerm} tháng</AppText>
+                <AppText style={[styles.confirmLabel, { color: colors.textSecondary }]}>Thời gian vay:</AppText>
+                <AppText style={[styles.confirmValBold, { color: colors.textPrimary }]}>{loanTerm} tháng</AppText>
               </View>
               <View style={styles.confirmRow}>
-                <AppText style={styles.confirmLabel}>Trả mỗi tháng:</AppText>
+                <AppText style={[styles.confirmLabel, { color: colors.textSecondary }]}>Trả mỗi tháng:</AppText>
                 <AppText style={styles.confirmValProfit}>{monthlyTotal.toLocaleString('vi-VN')} đ / tháng</AppText>
               </View>
               <View style={styles.confirmRow}>
-                <AppText style={styles.confirmLabel}>Hình thức nhận:</AppText>
+                <AppText style={[styles.confirmLabel, { color: colors.textSecondary }]}>Hình thức nhận:</AppText>
                 <AppText style={{ color: '#10B981', fontWeight: '800' }}>Vào ví SenBank tức thì</AppText>
               </View>
             </View>
@@ -387,7 +392,7 @@ export default function QuickLoanScreen({ navigation }: any) {
               disabled={isProcessing}
             >
               <LinearGradient
-                colors={['#700F43', '#E11D48']}
+                colors={[colors.primaryDeep, colors.badgeRed]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.finalGradient}
@@ -406,7 +411,7 @@ export default function QuickLoanScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -437,7 +442,7 @@ const styles = StyleSheet.create({
   headerSubText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#FFE4E6',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 2,
   },
   headerRightBtn: {
@@ -452,10 +457,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
@@ -480,7 +485,7 @@ const styles = StyleSheet.create({
   },
   heroLabel: {
     fontSize: 13,
-    color: '#FCE7F3',
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '600',
     marginTop: 12,
   },
@@ -528,12 +533,12 @@ const styles = StyleSheet.create({
   },
   calcCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
-    shadowColor: '#D2519D',
+    borderColor: colors.badgePinkBorder,
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -542,7 +547,7 @@ const styles = StyleSheet.create({
   calcTitle: {
     fontSize: 15.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   calcLabel: {
     fontSize: 12.5,
@@ -579,9 +584,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   calcChipActive: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
     borderWidth: 1,
-    borderColor: '#F43F5E',
+    borderColor: colors.primary,
   },
   calcChipText: {
     fontSize: 12,
@@ -589,7 +594,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   calcChipTextActive: {
-    color: '#BE185D',
+    color: colors.primary,
   },
   termsRow: {
     flexDirection: 'row',
@@ -605,8 +610,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   termItemActive: {
-    borderColor: '#E11D48',
-    backgroundColor: '#FFF1F2',
+    borderColor: colors.primary,
+    backgroundColor: colors.badgePinkSoft,
   },
   termText: {
     fontSize: 12.5,
@@ -614,16 +619,16 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   termTextActive: {
-    color: '#BE185D',
+    color: colors.primaryDeep,
     fontWeight: '800',
   },
   breakdownBox: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     borderRadius: 14,
     padding: 14,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   breakdownRow: {
     flexDirection: 'row',
@@ -654,7 +659,7 @@ const styles = StyleSheet.create({
   breakdownTotalValue: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#E11D48',
+    color: colors.primary,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -669,20 +674,20 @@ const styles = StyleSheet.create({
   },
   productCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1.5,
     borderColor: '#F1F5F9',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
   },
   productCardActive: {
-    borderColor: '#E11D48',
-    backgroundColor: '#FFFDFE',
+    borderColor: colors.primary,
+    backgroundColor: colors.badgePinkSoft,
   },
   productTop: {
     flexDirection: 'row',
@@ -691,7 +696,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   productBadge: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -699,12 +704,12 @@ const styles = StyleSheet.create({
   productBadgeText: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#E11D48',
+    color: colors.primary,
   },
   productRate: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#E11D48',
+    color: colors.primary,
   },
   productName: {
     fontSize: 15,
@@ -713,7 +718,7 @@ const styles = StyleSheet.create({
   },
   productHighlight: {
     fontSize: 12.5,
-    color: '#700F43',
+    color: colors.primaryDeep,
     fontWeight: '700',
     marginTop: 4,
   },
@@ -738,7 +743,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
   },
   productBtnActive: {
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
   },
   productBtnText: {
     fontSize: 12.5,
@@ -747,7 +752,7 @@ const styles = StyleSheet.create({
   },
   stepsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -768,16 +773,16 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   stepNumberText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   stepItemTitle: {
     fontSize: 13,
@@ -797,8 +802,8 @@ const styles = StyleSheet.create({
   },
   modalSheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     padding: 20,
     paddingBottom: 36,
   },
@@ -811,15 +816,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   confirmDetailsBox: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     padding: 14,
     borderRadius: 14,
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   confirmRow: {
     flexDirection: 'row',
@@ -840,12 +845,12 @@ const styles = StyleSheet.create({
   confirmValBig: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   confirmValProfit: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#E11D48',
+    color: colors.primary,
   },
   finalSubmitBtn: {
     borderRadius: 14,
@@ -860,4 +865,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
-});
+}));

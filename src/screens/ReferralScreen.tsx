@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -25,13 +26,15 @@ const REFERRAL_HISTORY = [
 ];
 
 export default function ReferralScreen({ navigation }: { navigation: any }) {
-  const referralCode = 'MB0923158725';
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+  const referralCode = 'SEN0923158725';
   const [inputFriendCode, setInputFriendCode] = useState('');
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Mở tài khoản MBBank nhận ngay 50.000đ và tài khoản số đẹp miễn phí! Nhập mã giới thiệu: ${referralCode} hoặc tải App MBBank tại: https://mbbank.com.vn/app`,
+        message: `Mở tài khoản SenBank nhận ngay 50.000đ và tài khoản số đẹp miễn phí! Nhập mã giới thiệu: ${referralCode} hoặc tải App SenBank tại: https://senbank.vn/app`,
       });
     } catch (error) {
       console.log(error);
@@ -48,27 +51,27 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Giới thiệu bạn bè</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Giới thiệu bạn bè</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -79,7 +82,7 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
         {/* HERO BANNER */}
         <View style={styles.heroCard}>
           <LinearGradient
-            colors={['#700F43', '#D2519D', '#E4ACB2']}
+            colors={[colors.heroGradEnd, colors.heroGradMid, colors.heroGradStart]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroGradient}
@@ -90,14 +93,14 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
 
             <AppText style={styles.heroTitle}>Giới thiệu bạn - Nhận 50.000đ</AppText>
             <AppText style={styles.heroSub}>
-              Nhận ngay 50.000đ tiền mặt không giới hạn cho mỗi lượt giới thiệu bạn bè mở tài khoản MBBank thành công!
+              Nhận ngay 50.000đ tiền mặt không giới hạn cho mỗi lượt giới thiệu bạn bè mở tài khoản SenBank thành công!
             </AppText>
 
             {/* MY REFERRAL CODE PILL */}
-            <View style={styles.codePillBox}>
+            <View style={[styles.codePillBox, { backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : '#FFFFFF' }]}>
               <View>
-                <AppText style={styles.codeLabel}>Mã giới thiệu của bạn:</AppText>
-                <AppText style={styles.codeValue}>{referralCode}</AppText>
+                <AppText style={[styles.codeLabel, { color: colors.textSecondary }]}>Mã giới thiệu của bạn:</AppText>
+                <AppText style={[styles.codeValue, { color: colors.primary }]}>{referralCode}</AppText>
               </View>
 
               <TouchableOpacity
@@ -105,7 +108,7 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
                 activeOpacity={0.8}
                 onPress={() => Alert.alert('Đã sao chép', `Đã sao chép mã ${referralCode}`)}
               >
-                <Ionicons name="copy-outline" size={16} color="#700F43" style={{ marginRight: 4 }} />
+                <Ionicons name="copy-outline" size={16} color={colors.primaryDeep} style={{ marginRight: 4 }} />
                 <AppText style={styles.copyBtnText}>Sao chép</AppText>
               </TouchableOpacity>
             </View>
@@ -113,28 +116,28 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* STATS OVERVIEW */}
-        <View style={styles.statsCard}>
+        <View style={[styles.statsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View style={styles.statCol}>
-            <AppText style={styles.statNumber}>1,250,000 đ</AppText>
-            <AppText style={styles.statLabel}>Tổng thưởng tích lũy</AppText>
+            <AppText style={[styles.statNumber, { color: colors.primary }]}>1,250,000 đ</AppText>
+            <AppText style={[styles.statLabel, { color: colors.textSecondary }]}>Tổng thưởng tích lũy</AppText>
           </View>
 
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.statCol}>
-            <AppText style={styles.statNumber}>25</AppText>
-            <AppText style={styles.statLabel}>Bạn bè đã giới thiệu</AppText>
+            <AppText style={[styles.statNumber, { color: colors.primary }]}>25</AppText>
+            <AppText style={[styles.statLabel, { color: colors.textSecondary }]}>Bạn bè đã giới thiệu</AppText>
           </View>
         </View>
 
         {/* APPLY FRIEND CODE */}
-        <View style={styles.applyCard}>
-          <AppText style={styles.cardTitle}>Nhập mã giới thiệu từ bạn bè</AppText>
-          <View style={styles.inputRow}>
+        <View style={[styles.applyCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.cardTitle, { color: colors.textPrimary }]}>Nhập mã giới thiệu từ bạn bè</AppText>
+          <View style={[styles.inputRow, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: colors.border }]}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.textPrimary }]}
               placeholder="Nhập mã giới thiệu người khác"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textSecondary}
               value={inputFriendCode}
               onChangeText={setInputFriendCode}
               autoCapitalize="characters"
@@ -150,19 +153,19 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* REFERRAL HISTORY */}
-        <View style={styles.historyCard}>
-          <AppText style={styles.cardTitle}>Lịch sử nhận thưởng gần đây</AppText>
+        <View style={[styles.historyCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.cardTitle, { color: colors.textPrimary }]}>Lịch sử nhận thưởng gần đây</AppText>
 
           {REFERRAL_HISTORY.map((item, index) => (
             <View key={item.id}>
               <View style={styles.historyRow}>
-                <View style={styles.historyIconCircle}>
-                  <Ionicons name="gift-outline" size={20} color="#D2519D" />
+                <View style={[styles.historyIconCircle, { backgroundColor: isDark ? colors.surface : colors.primarySoft }]}>
+                  <Ionicons name="gift-outline" size={20} color={colors.primary} />
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <AppText style={styles.historyName}>{item.name}</AppText>
-                  <AppText style={styles.historySub}>{item.phone} • {item.date}</AppText>
+                  <AppText style={[styles.historyName, { color: colors.textPrimary }]}>{item.name}</AppText>
+                  <AppText style={[styles.historySub, { color: colors.textSecondary }]}>{item.phone} • {item.date}</AppText>
                 </View>
 
                 <View style={{ alignItems: 'flex-end' }}>
@@ -171,21 +174,21 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
                 </View>
               </View>
 
-              {index < REFERRAL_HISTORY.length - 1 && <View style={styles.divider} />}
+              {index < REFERRAL_HISTORY.length - 1 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
             </View>
           ))}
         </View>
       </ScrollView>
 
       {/* BOTTOM SHARE BUTTON */}
-      <View style={styles.bottomFooter}>
+      <View style={[styles.bottomFooter, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={styles.shareBtn}
           activeOpacity={0.9}
           onPress={handleShare}
         >
           <LinearGradient
-            colors={['#D2519D', '#700F43']}
+            colors={[colors.primary, colors.primaryDeep]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -198,7 +201,7 @@ export default function ReferralScreen({ navigation }: { navigation: any }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -223,7 +226,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -232,9 +235,9 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     overflow: 'hidden',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -287,7 +290,7 @@ const styles = StyleSheet.create({
   codeValue: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: 0.5,
   },
   copyBtn: {
@@ -303,18 +306,18 @@ const styles = StyleSheet.create({
   copyBtnText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   statsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginBottom: 4,
   },
   statLabel: {
@@ -342,12 +345,12 @@ const styles = StyleSheet.create({
   },
   applyCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
   applyBtn: {
     height: 44,
     paddingHorizontal: 16,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -391,12 +394,12 @@ const styles = StyleSheet.create({
   },
   historyCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -461,7 +464,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -472,4 +475,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

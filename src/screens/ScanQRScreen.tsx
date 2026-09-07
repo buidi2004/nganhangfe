@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 import { Alert, ActivityIndicator } from 'react-native';
 import { CameraView, useCameraPermissions, scanFromURLAsync } from 'expo-camera';
@@ -28,6 +29,8 @@ const { width } = Dimensions.get('window');
 const SCANNER_SIZE = Math.round(width * 0.88);
 
 export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const isFocused = useIsFocused();
   const [flashlightOn, setFlashlightOn] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -241,7 +244,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
 
               {isScanning && (
                 <View style={[{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }, StyleSheet.absoluteFill]}>
-                  <ActivityIndicator size="large" color="#D2519D" />
+                  <ActivityIndicator size="large" color={colors.primary} />
                   <AppText style={{ color: '#FFFFFF', marginTop: 12 }}>Đang giải mã...</AppText>
                 </View>
               )}
@@ -257,7 +260,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
                   ]}
                 >
                   <LinearGradient
-                    colors={['rgba(210, 81, 157, 0)', '#D2519D', '#F472B6', 'rgba(210, 81, 157, 0)']}
+                    colors={['transparent', colors.primary, colors.primaryGlow, 'transparent']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.laserBeamLine}
@@ -276,19 +279,33 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
           <View style={styles.actionsContainer}>
             {/* Action 1: QR của tôi */}
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? colors.cardBackground : '#FFFFFF',
+                  borderColor: isDark ? colors.border : 'transparent',
+                  borderWidth: isDark ? 1 : 0,
+                },
+              ]}
               onPress={() => navigation.navigate('MyQR')}
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconWrapper}>
-                <MaterialCommunityIcons name="qrcode-scan" size={26} color="#700F43" />
+              <View style={[styles.actionIconWrapper, { backgroundColor: isDark ? 'rgba(244, 114, 182, 0.15)' : '#FDF2F8' }]}>
+                <MaterialCommunityIcons name="qrcode-scan" size={26} color={colors.primary} />
               </View>
-              <AppText style={styles.actionCardText}>QR của tôi</AppText>
+              <AppText style={[styles.actionCardText, { color: colors.textPrimary }]}>QR của tôi</AppText>
             </TouchableOpacity>
 
             {/* Action 2: Chuyển tiền bằng ảnh */}
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? colors.cardBackground : '#FFFFFF',
+                  borderColor: isDark ? colors.border : 'transparent',
+                  borderWidth: isDark ? 1 : 0,
+                },
+              ]}
               onPress={() =>
                 navigation.navigate('EnterAmount', {
                   name: 'HỨA MINH HOÀNG',
@@ -298,22 +315,29 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
               }
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconWrapper}>
-                <Ionicons name="camera-outline" size={26} color="#700F43" />
+              <View style={[styles.actionIconWrapper, { backgroundColor: isDark ? 'rgba(244, 114, 182, 0.15)' : '#FDF2F8' }]}>
+                <Ionicons name="camera-outline" size={26} color={colors.primary} />
               </View>
-              <AppText style={styles.actionCardText}>Chuyển tiền{'\n'}bằng ảnh</AppText>
+              <AppText style={[styles.actionCardText, { color: colors.textPrimary }]}>Chuyển tiền{'\n'}bằng ảnh</AppText>
             </TouchableOpacity>
 
             {/* Action 3: Tải ảnh lên */}
             <TouchableOpacity
-              style={styles.actionCard}
+              style={[
+                styles.actionCard,
+                {
+                  backgroundColor: isDark ? colors.cardBackground : '#FFFFFF',
+                  borderColor: isDark ? colors.border : 'transparent',
+                  borderWidth: isDark ? 1 : 0,
+                },
+              ]}
               onPress={handleImagePick}
               activeOpacity={0.8}
             >
-              <View style={styles.actionIconWrapper}>
-                <Ionicons name="images-outline" size={26} color="#700F43" />
+              <View style={[styles.actionIconWrapper, { backgroundColor: isDark ? 'rgba(244, 114, 182, 0.15)' : '#FDF2F8' }]}>
+                <Ionicons name="images-outline" size={26} color={colors.primary} />
               </View>
-              <AppText style={styles.actionCardText}>Tải ảnh lên</AppText>
+              <AppText style={[styles.actionCardText, { color: colors.textPrimary }]}>Tải ảnh lên</AppText>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -322,7 +346,7 @@ export default function ScanQRScreen({ navigation }: ScanQRScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -367,7 +391,7 @@ const styles = StyleSheet.create({
   scannerBox: {
     width: SCANNER_SIZE,
     height: SCANNER_SIZE,
-    borderRadius: 20,
+    borderRadius: Radius.card,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
@@ -378,7 +402,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 32,
     height: 32,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
   },
   bracketTopLeft: {
     top: -1,
@@ -473,4 +497,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-});
+}));

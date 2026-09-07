@@ -1,3 +1,4 @@
+import { Colors, createThemedStyles, ThemeColors } from '../theme';
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
@@ -6,14 +7,14 @@ import {
   StatusBar,
   FlatList,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
-import { ActivityIndicator } from 'react-native';
 import { useHideOnScroll } from '../hooks/useHideOnScroll';
 import { useApp } from '../context/AppContext';
 
@@ -56,12 +57,13 @@ function categorizeNotification(type: string, body: string): 'balance' | 'news' 
 }
 
 const TABS = [
-  { key: 'mine', title: 'Của tôi' },
   { key: 'balance', title: 'Biến động số dư' },
-  { key: 'news', title: 'Bảng tin' },
+  { key: 'news', title: 'Bảng tin & Ưu đãi' },
+  { key: 'mine', title: 'Hệ thống' },
 ];
 
 export default function NotificationsScreen({ navigation }: { navigation: any }) {
+  const { colors, isDark } = useTheme();
   const { notifications: localNotifs } = useApp();
   const [activeTab, setActiveTab] = useState<'mine' | 'balance' | 'news'>('balance');
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,91 +72,66 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
   const { onScroll } = useHideOnScroll();
 
   React.useEffect(() => {
-    const fetchNotifs = async () => {
-      try {
-        const res = await WalletApi.getNotifications();
-        const rawItems = res.data?.content || res.data || [];
-        console.log("NOTIFICATIONS RAW:", JSON.stringify(rawItems, null, 2));
-
-        const grouped: Record<string, NotificationItem[]> = {};
-
-        // Merge API notifications
-        rawItems.forEach((it: any) => {
-          const dateStr = new Date(it.createdAt).toLocaleDateString('vi-VN');
-          if (!grouped[dateStr]) grouped[dateStr] = [];
-
-          let displayTitle = it.title || '';
-          if (displayTitle.includes('TRANSFER')) displayTitle = displayTitle.replace('TRANSFER', 'Chuyển tiền');
-          else if (displayTitle.includes('DEPOSIT')) displayTitle = displayTitle.replace('DEPOSIT', 'Nạp tiền');
-          else if (displayTitle.includes('WITHDRAWAL')) displayTitle = displayTitle.replace('WITHDRAWAL', 'Rút tiền');
-
-          const body = it.content || it.message || it.body || '';
-          grouped[dateStr].push({
-            id: String(it.id),
-            title: displayTitle,
-            body,
-            time: new Date(it.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-            isUnread: !(it.isRead ?? it.read),
-            category: categorizeNotification(it.type || '', body),
-          });
-        });
-
-        setNotifications(Object.keys(grouped).map((date) => ({ date, items: grouped[date] })));
-      } catch (e) {
-        console.error('Failed to get notifications', e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchNotifs();
   }, []);
 
-  // Combine fetched notifications with live local notifications from WebSocket
-  const combinedNotifications = useMemo(() => {
-    const grouped = [...notifications]; // Start with fetched groups
-    const todayStr = new Date().toLocaleDateString('vi-VN');
+  const fetchNotifs = async () => {
+    try {
+      setIsLoading(true);
+      const res = await WalletApi.getNotifications();
+      const rawItems = res.data?.content || res.data || [];
 
-    localNotifs.forEach((localIt) => {
-      let group = grouped.find(g => g.date === todayStr);
-      if (!group) {
-        group = { date: todayStr, items: [] };
-        grouped.unshift(group);
-      }
-      // Avoid duplicates if ID matches
-      if (!group.items.some(it => it.id === localIt.id)) {
-        group.items.unshift({
-          id: localIt.id,
-          title: localIt.title,
-          body: localIt.body,
-          time: localIt.time,
-          isUnread: localIt.isUnread,
-          category: categorizeNotification(localIt.type || '', localIt.body),
+      const grouped: Record<string, NotificationItem[]> = {};
+
+      rawItems.forEach((it: any) => {
+        const dateStr = new Date(it.createdAt).toLocaleDateString('vi-VN');
+        if (!grouped[dateStr]) grouped[dateStr] = [];
+
+        let displayTitle = it.title || '';
+        if (displayTitle.includes('TRANSFER')) displayTitle = displayTitle.replace('TRANSFER', 'Chuyển tiền');
+        else if (displayTitle.includes('DEPOSIT')) displayTitle = displayTitle.replace('DEPOSIT', 'Nạp tiền');
+        else if (displayTitle.includes('WITHDRAWAL')) displayTitle = displayTitle.replace('WITHDRAWAL', 'Rút tiền');
+
+        const body = it.content || it.body || it.message || '';
+        grouped[dateStr].push({
+          id: String(it.id),
+          title: displayTitle || 'Thông báo giao dịch',
+          body,
+          time: new Date(it.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          isUnread: !(it.isRead ?? it.read ?? false),
+          category: categorizeNotification(it.type || '', body),
         });
-      }
-    });
+      });
 
-    return grouped;
-  }, [notifications, localNotifs]);
+      const sortedGroups: DateGroup[] = Object.keys(grouped).map((date) => ({
+        date,
+        items: grouped[date],
+      }));
+
+      setNotifications(sortedGroups);
+    } catch (e) {
+      console.error('Failed to fetch notifications', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const tabFilteredGroups = useMemo(() => {
-    if (activeTab === 'mine') {
-      return combinedNotifications;
-    }
-    return combinedNotifications
+    return notifications
       .map((group) => ({
         ...group,
         items: group.items.filter((it) => it.category === activeTab),
       }))
-      .filter((g) => g.items.length > 0);
-  }, [combinedNotifications, activeTab]);
+      .filter((group) => group.items.length > 0);
+  }, [notifications, activeTab]);
 
-  // Search filtering
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return tabFilteredGroups;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+
     return tabFilteredGroups.map((group) => {
       const matchItems = group.items.filter(
-        (it) => it.body.toLowerCase().includes(q) || it.title.toLowerCase().includes(q)
+        (it) => it.title.toLowerCase().includes(q) || it.body.toLowerCase().includes(q)
       );
       const isDateMatch = group.date.toLowerCase().includes(q);
       return {
@@ -174,26 +151,26 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
     } catch (e) {}
   }, []);
 
-
   const renderNotificationBody = useCallback((body: string) => {
     if (!body.includes('Tài khoản:') && !body.includes('PS:')) {
-      return <AppText style={styles.itemBodyText}>{body}</AppText>;
+      return <AppText style={[styles.itemBodyText, { color: colors.textSecondary }]}>{body}</AppText>;
     }
     const lines = body.split('\n');
     return (
       <View style={{ marginTop: 4, marginBottom: 4 }}>
         {lines.map((line, idx) => {
           if (!line.trim()) return null;
-          let color = '#475569';
+          let color = colors.textSecondary;
           let fontWeight = '500';
           if (line.startsWith('PS: +')) {
             color = '#10B981'; // Green
-            fontWeight = '700';
+            fontWeight = '800';
           } else if (line.startsWith('PS: -')) {
             color = '#EF4444'; // Red
-            fontWeight = '700';
+            fontWeight = '800';
           } else if (line.startsWith('Số dư cuối:') || line.startsWith('SD:')) {
             fontWeight = '700';
+            color = colors.textPrimary;
           }
           return (
             <AppText key={idx} style={{ fontSize: 13, color, lineHeight: 18, fontWeight: fontWeight as any }}>
@@ -203,61 +180,69 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
         })}
       </View>
     );
-  }, []);
+  }, [colors]);
 
   const renderDateGroup = useCallback(({ item: group }: { item: DateGroup }) => (
-    <View style={styles.dateGroupCard}>
-      <View style={styles.dateHeaderStrip}>
-        <AppText style={styles.dateHeaderText}>{group.date}</AppText>
+    <View style={[styles.dateGroupCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+      <View style={[styles.dateHeaderStrip, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#EEF2F6', borderBottomColor: colors.border }]}>
+        <AppText style={[styles.dateHeaderText, { color: colors.textPrimary }]}>{group.date}</AppText>
       </View>
-      <View style={styles.groupItemsContainer}>
+      <View style={[styles.groupItemsContainer, { backgroundColor: colors.cardBackground }]}>
         {group.items.map((item, itIdx) => (
           <View key={item.id}>
             <TouchableOpacity style={styles.notificationItem} activeOpacity={0.7} onPress={() => handleRead(item.id)}>
               <View style={styles.itemTitleRow}>
-                <AppText style={styles.itemTitleText}>{item.title}</AppText>
+                <AppText style={[styles.itemTitleText, { color: colors.textPrimary }]}>{item.title}</AppText>
                 {item.isUnread && <View style={styles.unreadCyanDot} />}
               </View>
               {renderNotificationBody(item.body)}
-              <AppText style={styles.itemTimeText}>{item.time}</AppText>
+              <AppText style={[styles.itemTimeText, { color: colors.primary }]}>{item.time}</AppText>
             </TouchableOpacity>
-            {itIdx < group.items.length - 1 && <View style={styles.itemInnerDivider} />}
+            {itIdx < group.items.length - 1 && <View style={[styles.itemInnerDivider, { backgroundColor: colors.border }]} />}
           </View>
         ))}
       </View>
     </View>
-  ), [handleRead, renderNotificationBody]);
+  ), [handleRead, renderNotificationBody, colors, isDark]);
 
   const listEmpty = (
     <View style={styles.emptyWrap}>
-      <Ionicons name="notifications-off-outline" size={64} color="#93C5FD" style={{ marginBottom: 16, opacity: 0.8 }} />
-      <AppText style={styles.emptyText}>Không tìm thấy thông báo nào</AppText>
+      <Ionicons name="notifications-off-outline" size={60} color={colors.primary} style={{ marginBottom: 16, opacity: 0.6 }} />
+      <AppText style={[styles.emptyText, { color: colors.textSecondary }]}>Không tìm thấy thông báo nào</AppText>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top']}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
 
       {/* 1. TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Thông báo</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Thông báo</AppText>
 
-        <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7}>
-          <Ionicons name="settings-outline" size={22} color="#700F43" />
+        <TouchableOpacity
+          style={styles.settingsBtn}
+          activeOpacity={0.7}
+          onPress={fetchNotifs}
+        >
+          <Ionicons name="refresh-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* 2. 3 TABS HEADER (CỦA TÔI | BIẾN ĐỘNG SỐ DƯ | BẢNG TIN) */}
-      <View style={styles.tabsContainer}>
+      {/* 2. 3 TABS HEADER */}
+      <View style={[styles.tabsContainer, { backgroundColor: colors.cardBackground }]}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -267,32 +252,47 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
               onPress={() => setActiveTab(tab.key as any)}
               activeOpacity={0.8}
             >
-              <AppText style={[styles.tabText, isActive && styles.tabTextActive]}>
+              <AppText style={[
+                styles.tabText,
+                { color: isActive ? colors.primary : colors.textSecondary },
+                isActive && styles.tabTextActive
+              ]}>
                 {tab.title}
               </AppText>
-              {isActive && <View style={styles.tabIndicator} />}
+              {isActive && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
             </TouchableOpacity>
           );
         })}
       </View>
-      <View style={styles.tabsBottomBorder} />
+      <View style={[styles.tabsBottomBorder, { backgroundColor: colors.border }]} />
 
       {/* 3. SEARCH INPUT BAR */}
-      <View style={styles.searchBarWrapper}>
+      <View style={[styles.searchBarWrapper, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
+        <Ionicons name="search-outline" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
         <TextInput
-          style={styles.searchInput}
-          placeholder="Tìm theo nội dung hoặc ngày"
-          placeholderTextColor="#94A3B8"
+          style={[styles.searchInput, { color: colors.textPrimary }]}
+          placeholder="Tìm theo nội dung hoặc ngày..."
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <Ionicons name="search-outline" size={22} color="#94A3B8" />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {isLoading ? (
-        <ActivityIndicator size="large" color="#D2519D" style={{ marginTop: 40 }} />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <AppText style={{ marginTop: 12, color: colors.textSecondary, fontSize: 13 }}>Đang tải thông báo...</AppText>
+        </View>
       ) : (
-        <LinearGradient colors={['#FFF0F5', '#FCE7F3', '#FDF2F8']} style={{ flex: 1 }}>
+        <LinearGradient
+          colors={isDark ? [colors.bgBase, colors.surface, colors.bgBase] : [colors.background, colors.badgePinkSoft, colors.background]}
+          style={{ flex: 1 }}
+        >
           <FlatList
             data={filteredGroups}
             keyExtractor={(item) => item.date}
@@ -313,10 +313,9 @@ export default function NotificationsScreen({ navigation }: { navigation: any })
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -324,7 +323,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
   },
   backBtn: {
     width: 40,
@@ -336,7 +335,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
     letterSpacing: -0.3,
   },
   settingsBtn: {
@@ -350,7 +348,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
   },
   tabItem: {
@@ -360,43 +357,35 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '600',
-    color: '#64748B',
   },
   tabTextActive: {
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: '800',
-    color: '#700F43',
   },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
     width: '70%',
     height: 3,
-    backgroundColor: '#700F43',
     borderRadius: 2,
   },
   tabsBottomBorder: {
     height: 1,
-    backgroundColor: '#F1F5F9',
     width: '100%',
   },
   searchBarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    backgroundColor: '#FFFFFF',
   },
   searchInput: {
     flex: 1,
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
     paddingVertical: 2,
   },
   scrollContent: {
@@ -406,33 +395,26 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   dateGroupCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
-    marginBottom: 16,
+    marginBottom: 14,
     overflow: 'hidden',
   },
   dateHeaderStrip: {
-    backgroundColor: '#EEF2F6',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   dateHeaderText: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '800',
-    color: '#0F172A',
   },
-  groupItemsContainer: {
-    backgroundColor: '#FFFFFF',
-  },
+  groupItemsContainer: {},
   notificationItem: {
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -446,7 +428,6 @@ const styles = StyleSheet.create({
   itemTitleText: {
     fontSize: 14.5,
     fontWeight: '800',
-    color: '#0F172A',
   },
   unreadCyanDot: {
     width: 8,
@@ -456,31 +437,27 @@ const styles = StyleSheet.create({
   },
   itemBodyText: {
     fontSize: 13,
-    color: '#475569',
     lineHeight: 18,
     fontWeight: '500',
     marginVertical: 4,
   },
   itemTimeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#700F43',
     marginTop: 2,
   },
   itemInnerDivider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
     marginHorizontal: 14,
   },
   emptyWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 120,
+    paddingVertical: 100,
   },
   emptyText: {
     fontSize: 14.5,
     fontWeight: '600',
-    color: '#64748B',
   },
-});
+}));

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '../components/icons/AppIcon';
-import { Colors, Radius, Shadows, Spacing } from '../theme';
+import { Colors, Radius, Shadows, Spacing, createThemedStyles } from '../theme';
 import { Typography } from '../theme';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
@@ -17,10 +17,13 @@ interface WithdrawScreenProps {
 }
 
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
   const { wallet } = useApp();
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [amount, setAmount] = useState('');
   const [fundingSources, setFundingSources] = useState<any[]>([]);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
@@ -43,40 +46,43 @@ export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
   const isExceedBalance = amountNum > balance;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AppIcon name="arrowLeft" size="md" color={Colors.textPrimary} />
+          <AppIcon name="arrowLeft" size="md" color={colors.textPrimary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>Rút tiền</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Rút tiền</AppText>
         <View style={styles.spacer} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         {/* Target bank card */}
-        <TouchableOpacity style={styles.sourceCard} onPress={() => navigation.navigate('PaymentMethods')}>
+        <TouchableOpacity
+          style={[styles.sourceCard, { backgroundColor: colors.surface }]}
+          onPress={() => navigation.navigate('PaymentMethods')}
+        >
           <View style={styles.sourceLeft}>
-            <AppIcon name="card" size="lg" color={Colors.primary} />
+            <AppIcon name="card" size="lg" color={colors.primary} />
             <View style={styles.sourceInfo}>
               <AppText style={styles.sourceLabel}>Ngân hàng nhận</AppText>
-              <AppText style={styles.sourceValue}>{selectedBankName}</AppText>
+              <AppText style={[styles.sourceValue, { color: colors.textPrimary }]}>{selectedBankName}</AppText>
             </View>
           </View>
-          <AppIcon name="chevronRight" size="md" color={Colors.textSecondary} />
+          <AppIcon name="chevronRight" size="md" color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Amount input */}
         <View style={styles.amountSection}>
-          <AppText style={styles.amountLabel}>Số tiền rút</AppText>
-          <View style={styles.amountDisplay}>
+          <AppText style={[styles.amountLabel, { color: colors.textPrimary }]}>Số tiền rút</AppText>
+          <View style={[styles.amountDisplay, { backgroundColor: colors.surface }]}>
             <AppText style={styles.currencySymbol}>VNĐ</AppText>
             <TextInput
-              style={[styles.amountValue, { padding: 0, margin: 0, flex: 1, fontSize: 32, fontWeight: '700' }]}
+              style={[styles.amountValue, { color: colors.primary, padding: 0, margin: 0, flex: 1, fontSize: 32, fontWeight: '700' }]}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
               placeholder="0"
-              placeholderTextColor={Colors.primary}
+              placeholderTextColor={colors.primary}
             />
           </View>
           <AppText style={styles.balanceHint}>Số dư khả dụng: {balance.toLocaleString('vi-VN')} VNĐ</AppText>
@@ -120,7 +126,7 @@ export default function WithdrawScreen({ navigation }: WithdrawScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: Colors.bgBase,
@@ -193,7 +199,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   amountValue: {
-    color: Colors.primary,
+    color: colors.primary,
   },
   balanceHint: {
     
@@ -237,4 +243,4 @@ const styles = StyleSheet.create({
   secondaryBtn: {
     marginTop: 0,
   },
-});
+}));

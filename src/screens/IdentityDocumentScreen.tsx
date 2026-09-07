@@ -7,12 +7,14 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Radius , Colors, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
@@ -22,6 +24,8 @@ interface IdentityDocumentScreenProps {
 }
 
 export default function IdentityDocumentScreen({ navigation }: IdentityDocumentScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const [showIdNumber, setShowIdNumber] = useState(true);
   const [kycData, setKycData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,27 +49,27 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Giấy tờ tùy thân</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Giấy tờ tùy thân</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -74,17 +78,20 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
         contentContainerStyle={styles.scrollContent}
       >
         {isLoading ? (
-          <AppText style={{ textAlign: 'center', marginTop: 20 }}>Đang tải...</AppText>
-        ) : !kycData ? (
           <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <MaterialCommunityIcons name="card-account-details-outline" size={64} color="#94A3B8" />
-            <AppText style={{ fontSize: 18, fontWeight: '600', marginTop: 16, marginBottom: 8 }}>Chưa định danh</AppText>
-            <AppText style={{ textAlign: 'center', color: '#64748B', marginBottom: 24 }}>Tài khoản của bạn chưa được định danh. Vui lòng cập nhật giấy tờ tùy thân để sử dụng đầy đủ các tính năng.</AppText>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <AppText style={{ textAlign: 'center', marginTop: 12, color: colors.textSecondary }}>Đang tải...</AppText>
+          </View>
+        ) : !kycData ? (
+          <View style={{ alignItems: 'center', marginTop: 40, paddingHorizontal: 20 }}>
+            <MaterialCommunityIcons name="card-account-details-outline" size={64} color={colors.primary} />
+            <AppText style={{ fontSize: 18, fontWeight: '700', marginTop: 16, marginBottom: 8, color: colors.textPrimary }}>Chưa định danh</AppText>
+            <AppText style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: 24, lineHeight: 22 }}>Tài khoản của bạn chưa được định danh. Vui lòng cập nhật giấy tờ tùy thân để sử dụng đầy đủ các tính năng.</AppText>
             <TouchableOpacity 
-              style={{ backgroundColor: '#700F43', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 }}
+              style={{ backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24 }}
               onPress={() => navigation.navigate('EKyc')}
             >
-              <AppText style={{ color: '#FFFFFF', fontWeight: '600' }}>Bắt đầu định danh</AppText>
+              <AppText style={{ color: '#FFFFFF', fontWeight: '700' }}>Bắt đầu định danh</AppText>
             </TouchableOpacity>
           </View>
         ) : (
@@ -92,7 +99,7 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
             {/* CCCD CARD MOCKUP WITH LOTUS PINK GRADIENT ACCENT */}
             <View style={styles.cardWrapper}>
               <LinearGradient
-                colors={['#700F43', '#D2519D', '#E4ACB2']}
+                colors={[colors.heroGradEnd, colors.heroGradMid, colors.heroGradStart]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.cccdCard}
@@ -152,39 +159,45 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
             </View>
 
             {/* VERIFICATION BADGE */}
-            <View style={styles.verifiedBanner}>
+            <View style={[
+              styles.verifiedBanner,
+              {
+                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#F0FDF4',
+                borderColor: isDark ? 'rgba(16, 185, 129, 0.25)' : '#DCFCE7',
+              }
+            ]}>
               <MaterialCommunityIcons name="check-decagram" size={24} color="#10B981" />
               <View style={{ flex: 1 }}>
-                <AppText style={styles.verifiedBannerTitle}>Đã xác thực CCCD thành công</AppText>
-                <AppText style={styles.verifiedBannerSub}>Dữ liệu định danh đã được lưu trên hệ thống</AppText>
+                <AppText style={[styles.verifiedBannerTitle, { color: isDark ? '#34D399' : '#15803D' }]}>Đã xác thực CCCD thành công</AppText>
+                <AppText style={[styles.verifiedBannerSub, { color: isDark ? '#A7F3D0' : '#166534' }]}>Dữ liệu định danh đã được lưu trên hệ thống</AppText>
               </View>
             </View>
 
         {/* DETAILED INFORMATION CARD */}
-        <View style={styles.detailsCard}>
-          <AppText style={styles.sectionHeading}>Thông tin chi tiết</AppText>
+        <View style={[styles.detailsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border, borderWidth: 1 }]}>
+          <AppText style={[styles.sectionHeading, { color: colors.textPrimary }]}>Thông tin chi tiết</AppText>
 
           <View style={styles.detailRow}>
-            <AppText style={styles.detailLabel}>Loại giấy tờ</AppText>
-            <AppText style={styles.detailValue}>Thẻ Căn cước công dân gắn chip</AppText>
+            <AppText style={[styles.detailLabel, { color: colors.textSecondary }]}>Loại giấy tờ</AppText>
+            <AppText style={[styles.detailValue, { color: colors.textPrimary }]}>Thẻ Căn cước công dân gắn chip</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.detailRow}>
-            <AppText style={styles.detailLabel}>Ngày cấp</AppText>
-            <AppText style={styles.detailValue}>20/04/2022</AppText>
+            <AppText style={[styles.detailLabel, { color: colors.textSecondary }]}>Ngày cấp</AppText>
+            <AppText style={[styles.detailValue, { color: colors.textPrimary }]}>20/04/2022</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.detailRow}>
-            <AppText style={styles.detailLabel}>Nơi cấp</AppText>
-            <AppText style={styles.detailValue}>Cục CSQLHC về TTXH</AppText>
+            <AppText style={[styles.detailLabel, { color: colors.textSecondary }]}>Nơi cấp</AppText>
+            <AppText style={[styles.detailValue, { color: colors.textPrimary }]}>Cục CSQLHC về TTXH</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.detailRow}>
-            <AppText style={styles.detailLabel}>Nơi thường trú</AppText>
-            <AppText style={styles.detailValue}>TP. Hồ Chí Minh, Việt Nam</AppText>
+            <AppText style={[styles.detailLabel, { color: colors.textSecondary }]}>Nơi thường trú</AppText>
+            <AppText style={[styles.detailValue, { color: colors.textPrimary }]}>TP. Hồ Chí Minh, Việt Nam</AppText>
           </View>
         </View>
 
@@ -195,7 +208,7 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
           onPress={handleUpdateDocument}
         >
           <LinearGradient
-            colors={['#D2519D', '#700F43']}
+            colors={[colors.primary, colors.primaryDeep]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -210,7 +223,7 @@ export default function IdentityDocumentScreen({ navigation }: IdentityDocumentS
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -235,7 +248,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -244,9 +257,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   cardWrapper: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     overflow: 'hidden',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -340,12 +353,12 @@ const styles = StyleSheet.create({
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
     marginBottom: 20,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -386,7 +399,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -397,4 +410,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

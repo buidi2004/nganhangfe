@@ -17,8 +17,13 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = setupNotificationListeners();
+    const safetyTimer = setTimeout(() => {
+      setIntroDone(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, 3800);
     return () => {
       unsubscribe && unsubscribe();
+      clearTimeout(safetyTimer);
     };
   }, []);
 

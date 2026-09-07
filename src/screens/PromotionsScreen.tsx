@@ -6,7 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path, Rect, Circle, G, Defs, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles, ThemeColors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 import { AppIcon } from '../components/icons/AppIcon';
 import { BlurView } from 'expo-blur';
@@ -17,12 +18,13 @@ const { width } = Dimensions.get('window');
 
 // 1. Hot Deal 3D Center Graphics with Gift Boxes & Lightning
 const HotDealGraphic = React.memo(function HotDealGraphic({ width: bannerW = width - 32, height: bannerH = 140 }: { width?: number; height?: number }) {
+  const { colors } = useTheme();
   return (
     <Svg width={bannerW} height={bannerH} viewBox="0 0 340 140" fill="none">
       <Defs>
         <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor="#F472B6" stopOpacity="0.8" />
-          <Stop offset="100%" stopColor="#D2519D" stopOpacity="0" />
+          <Stop offset="0%" stopColor={colors.primaryLight} stopOpacity="0.8" />
+          <Stop offset="100%" stopColor={colors.primary} stopOpacity="0" />
         </RadialGradient>
       </Defs>
 
@@ -31,28 +33,28 @@ const HotDealGraphic = React.memo(function HotDealGraphic({ width: bannerW = wid
       {/* Left Gift Box */}
       <G transform="translate(40, 25) rotate(-15)">
         <Rect x="0" y="15" width="48" height="42" rx="6" fill="#FFFFFF" />
-        <Rect x="-2" y="10" width="52" height="12" rx="3" fill="#FDF2F8" />
-        <Rect x="20" y="10" width="8" height="47" fill="#E11D48" />
-        <Rect x="-2" y="30" width="52" height="8" fill="#E11D48" />
-        <Circle cx="18" cy="8" r="6" stroke="#E11D48" strokeWidth="3" fill="none" />
-        <Circle cx="30" cy="8" r="6" stroke="#E11D48" strokeWidth="3" fill="none" />
+        <Rect x="-2" y="10" width="52" height="12" rx="3" fill={colors.badgePinkSoft} />
+        <Rect x="20" y="10" width="8" height="47" fill={colors.primary} />
+        <Rect x="-2" y="30" width="52" height="8" fill={colors.primary} />
+        <Circle cx="18" cy="8" r="6" stroke={colors.primary} strokeWidth="3" fill="none" />
+        <Circle cx="30" cy="8" r="6" stroke={colors.primary} strokeWidth="3" fill="none" />
       </G>
 
       {/* Right Gift Box */}
       <G transform="translate(250, 30) rotate(18)">
         <Rect x="0" y="15" width="44" height="38" rx="6" fill="#FFFFFF" />
-        <Rect x="-2" y="10" width="48" height="10" rx="3" fill="#FDF2F8" />
-        <Rect x="18" y="10" width="8" height="43" fill="#E11D48" />
-        <Rect x="-2" y="28" width="48" height="8" fill="#E11D48" />
-        <Circle cx="16" cy="8" r="5" stroke="#E11D48" strokeWidth="3" fill="none" />
-        <Circle cx="28" cy="8" r="5" stroke="#E11D48" strokeWidth="3" fill="none" />
+        <Rect x="-2" y="10" width="48" height="10" rx="3" fill={colors.badgePinkSoft} />
+        <Rect x="18" y="10" width="8" height="43" fill={colors.primary} />
+        <Rect x="-2" y="28" width="48" height="8" fill={colors.primary} />
+        <Circle cx="16" cy="8" r="5" stroke={colors.primary} strokeWidth="3" fill="none" />
+        <Circle cx="28" cy="8" r="5" stroke={colors.primary} strokeWidth="3" fill="none" />
       </G>
 
       {/* Center 3D Burst Circle */}
-      <Circle cx="170" cy="70" r="38" fill="#700F43" stroke="#D2519D" strokeWidth="3" />
+      <Circle cx="170" cy="70" r="38" fill={colors.primaryDeep} stroke={colors.primary} strokeWidth="3" />
       <Path
         d="M170 30L175 42L188 38L180 50L194 54L178 68L205 70L178 78L190 92L176 90L174 104L165 92L152 98L160 84L144 80L160 70L135 68L160 58L148 46L164 48Z"
-        fill="#D2519D"
+        fill={colors.primary}
         opacity="0.4"
       />
     </Svg>
@@ -61,12 +63,13 @@ const HotDealGraphic = React.memo(function HotDealGraphic({ width: bannerW = wid
 
 // 2. Hero Visual Art for Cashback Plus Modal
 const CashbackHeroArt = React.memo(function CashbackHeroArt() {
+  const { colors } = useTheme();
   return (
     <Svg width={140} height={110} viewBox="0 0 140 110" fill="none">
-      {/* 3D Shopping Bag Lotus Pink */}
+      {/* 3D Shopping Bag */}
       <G transform="translate(35, 12)">
-        <Path d="M10 25h45l-5 50H15L10 25z" fill="#D2519D" />
-        <Path d="M15 75h35l-3-48H18l-3 48z" fill="#700F43" />
+        <Path d="M10 25h45l-5 50H15L10 25z" fill={colors.primary} />
+        <Path d="M15 75h35l-3-48H18l-3 48z" fill={colors.primaryDeep} />
         <Path d="M24 25V14a8 8 0 0 1 16 0v11" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
         <G transform="translate(0, 30) rotate(-15)">
           <Rect x="0" y="0" width="26" height="34" rx="4" fill="#10B981" />
@@ -77,9 +80,9 @@ const CashbackHeroArt = React.memo(function CashbackHeroArt() {
 
       {/* 3D Smartphone Cashback Mockup */}
       <G transform="translate(85, 25) rotate(10)">
-        <Rect x="0" y="0" width="38" height="65" rx="6" fill="#FFFFFF" stroke="#FBCFE8" strokeWidth="1.5" />
-        <Rect x="4" y="6" width="30" height="53" rx="4" fill="#FDF2F8" />
-        <Circle cx="19" cy="30" r="10" fill="#700F43" />
+        <Rect x="0" y="0" width="38" height="65" rx="6" fill="#FFFFFF" stroke={colors.badgePinkBorder} strokeWidth="1.5" />
+        <Rect x="4" y="6" width="30" height="53" rx="4" fill={colors.badgePinkSoft} />
+        <Circle cx="19" cy="30" r="10" fill={colors.primaryDeep} />
         <Path d="M19 24v12M15 30h8" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
       </G>
 
@@ -101,6 +104,8 @@ const CashbackHeroArt = React.memo(function CashbackHeroArt() {
 
 // 3. Voucher Card Component
 const PromoVoucherCard = React.memo(function PromoVoucherCard({ imageUri, title, category, percent, expiry }: { imageUri: string; title: string; category: string; percent: string; expiry: string }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <TouchableOpacity style={styles.voucherCard} activeOpacity={0.9}>
       <View style={styles.voucherTopRow}>
@@ -134,6 +139,8 @@ const PromoVoucherCard = React.memo(function PromoVoucherCard({ imageUri, title,
 
 // 4. Advertisement Banner Component
 const AdBannerCard = React.memo(function AdBannerCard() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <TouchableOpacity style={styles.adBannerCard} activeOpacity={0.95}>
       <Image cachePolicy="memory-disk" 
@@ -156,6 +163,8 @@ const AdBannerCard = React.memo(function AdBannerCard() {
 });
 
 export default function PromotionsScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isPromoModalVisible, setIsPromoModalVisible] = useState(false);
   const throttledNavBarScroll = useThrottledNavBarScroll();
@@ -176,7 +185,7 @@ export default function PromotionsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#700F43" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDeep} />
 
       {/* 1. TOP CURVED LOTUS PINK HEADER */}
       <View style={styles.headerContainer}>
@@ -238,14 +247,14 @@ export default function PromotionsScreen({ navigation }: any) {
             onPress={() => setIsPromoModalVisible(true)}
           >
             <LinearGradient
-              colors={['#FFFBEB', '#FDF2F8']}
+              colors={[colors.surface, colors.badgePinkSoft]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.cardHeaderRow}>
               <AppText style={styles.loyaltyHeaderTitle}>ĐIỂM LOYALTY</AppText>
-              <Ionicons name="chevron-forward" size={15} color="#D2519D" />
+              <Ionicons name="chevron-forward" size={15} color={colors.primary} />
             </View>
 
             <View style={styles.loyaltyBottomRow}>
@@ -263,7 +272,7 @@ export default function PromotionsScreen({ navigation }: any) {
             onPress={() => setIsPromoModalVisible(true)}
           >
             <LinearGradient
-              colors={['#FDF2F8', '#FCE7F3']}
+              colors={[colors.badgePinkSoft, colors.badgePinkBorder]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -276,7 +285,7 @@ export default function PromotionsScreen({ navigation }: any) {
 
             <View style={styles.cashbackHeaderRow}>
               <AppText style={styles.cashbackTitle}>Mua sắm{'\n'}hoàn tiền</AppText>
-              <Ionicons name="chevron-forward" size={15} color="#700F43" style={{ marginTop: 2 }} />
+              <Ionicons name="chevron-forward" size={15} color={colors.primaryDeep} style={{ marginTop: 2 }} />
             </View>
 
             {/* Bottom-Right Brand Logos (Shopee, Lazada, TikTok) */}
@@ -344,7 +353,7 @@ export default function PromotionsScreen({ navigation }: any) {
         {/* Hot Deal Banner Card */}
         <TouchableOpacity style={styles.hotDealCard} activeOpacity={0.9}>
           <LinearGradient
-            colors={['#FCE7F3', '#FDF2F8', '#E9D5FF']}
+            colors={[colors.badgePinkBorder, colors.badgePinkSoft, colors.badgeBlueSoft]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -455,7 +464,7 @@ export default function PromotionsScreen({ navigation }: any) {
                       </View>
 
                       <View style={styles.otherBrandsRow}>
-                        <Ionicons name="star" size={10} color="#D2519D" />
+                        <Ionicons name="star" size={10} color={colors.primary} />
                         <AppText style={styles.otherBrandsText}> Hơn <AppText style={{ fontWeight: '800' }}>1000</AppText> thương hiệu khác</AppText>
                       </View>
 
@@ -464,7 +473,7 @@ export default function PromotionsScreen({ navigation }: any) {
                         <AppText style={[styles.partnerLogoSmall, { color: '#059669' }]}>agoda</AppText>
                         <AppText style={[styles.partnerLogoSmall, { color: '#1E1B4B' }]}>Lazada</AppText>
                         <AppText style={[styles.partnerLogoSmall, { color: '#EC4899' }]}>concung</AppText>
-                        <AppText style={[styles.partnerLogoSmall, { color: '#D2519D' }]}>KidsPlaza</AppText>
+                        <AppText style={[styles.partnerLogoSmall, { color: colors.primary }]}>KidsPlaza</AppText>
                         <AppText style={[styles.partnerLogoSmall, { color: '#0F172A' }]}>Nike</AppText>
                         <AppText style={styles.partnerLogoSmall}>...</AppText>
                       </View>
@@ -535,7 +544,7 @@ export default function PromotionsScreen({ navigation }: any) {
               onPress={() => setIsPromoModalVisible(false)}
             >
               <LinearGradient
-                colors={['#D2519D', '#700F43']}
+                colors={[colors.primary, colors.primaryDeep]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -552,7 +561,7 @@ export default function PromotionsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const themedStyles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -563,7 +572,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#700F43',
+    shadowColor: colors.primaryDeep,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -619,7 +628,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.5,
     marginBottom: 16,
   },
@@ -636,8 +645,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
-    shadowColor: '#D2519D',
+    borderColor: colors.badgePinkBorder,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -651,7 +660,7 @@ const styles = StyleSheet.create({
   loyaltyHeaderTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: 0.3,
   },
   loyaltyBottomRow: {
@@ -662,7 +671,7 @@ const styles = StyleSheet.create({
   loyaltyScore: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   crownShieldWrapper: {
     width: 44,
@@ -681,7 +690,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#FBCFE8',
-    shadowColor: '#D2519D',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -692,7 +701,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderBottomLeftRadius: 10,
@@ -713,7 +722,7 @@ const styles = StyleSheet.create({
   cashbackTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     lineHeight: 18,
   },
   cashbackLogosRow: {
@@ -743,17 +752,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   seeAllPill: {
     borderWidth: 1.5,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 4,
   },
   seeAllText: {
-    color: '#D2519D',
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -762,8 +771,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
-    shadowColor: '#D2519D',
+    borderColor: colors.badgePinkBorder,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -777,7 +786,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 60,
     borderRadius: 10,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
   },
   voucherInfo: {
     flex: 1,
@@ -793,14 +802,14 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 4,
-    backgroundColor: '#E11D48',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   voucherCategory: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   badge99: {
     borderWidth: 1,
@@ -863,7 +872,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    shadowColor: '#D2519D',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -875,7 +884,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#F1F5F9',
     position: 'relative',
-    shadowColor: '#D2519D',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -964,7 +973,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.primaryDeep,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.35,
     shadowRadius: 20,
@@ -985,21 +994,21 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 5,
-    backgroundColor: '#E11D48',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalLogoText: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: 0.5,
   },
   modalCloseBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1015,13 +1024,13 @@ const styles = StyleSheet.create({
   cashbackPlusWord1: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.5,
   },
   cashbackPlusWord2: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#D2519D',
+    color: colors.primary,
     letterSpacing: -0.5,
   },
   cashbackPlusGreen: {
@@ -1033,13 +1042,13 @@ const styles = StyleSheet.create({
   mua1Nhan3Pill: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
     alignSelf: 'flex-start',
     marginTop: 4,
-    shadowColor: '#D2519D',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -1048,17 +1057,17 @@ const styles = StyleSheet.create({
   mua1Nhan3Text: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   benefitsContainer: {
     gap: 8,
   },
   benefitBox1: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.badgePinkSoft,
     borderRadius: 14,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   benefit1HeaderRow: {
     flexDirection: 'row',
@@ -1070,7 +1079,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1078,7 +1087,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1098,7 +1107,7 @@ const styles = StyleSheet.create({
   benefit1Title: {
     fontSize: 13.5,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   benefit1ContentRow: {
     flexDirection: 'row',
@@ -1128,7 +1137,7 @@ const styles = StyleSheet.create({
   },
   otherBrandsText: {
     fontSize: 9,
-    color: '#D2519D',
+    color: colors.primary,
     fontWeight: '600',
   },
   partnerLogosStrip: {
@@ -1186,7 +1195,7 @@ const styles = StyleSheet.create({
   benefit2Title: {
     fontSize: 12.5,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     lineHeight: 16,
   },
   benefit2RightArt: {
@@ -1198,7 +1207,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1211,19 +1220,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: colors.badgePinkBorder,
   },
   orderVerifiedText: {
     fontSize: 7.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     lineHeight: 9,
   },
   checkCirclePink: {
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1240,7 +1249,7 @@ const styles = StyleSheet.create({
   benefit3Title: {
     fontSize: 12.5,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     lineHeight: 16,
   },
   benefit3RightArt: {
@@ -1249,7 +1258,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   interestShield: {
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 4,
@@ -1269,7 +1278,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     overflow: 'hidden',
-    shadowColor: '#D2519D',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
@@ -1280,4 +1289,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-});
+}));
+
+function getStyles(colors: any) {
+  return themedStyles(colors);
+}

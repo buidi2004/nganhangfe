@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
+import { Radius , Colors, createThemedStyles } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 import { LEGAL_TERMS_DATA, LegalChapter, LegalArticle } from '../data/legalTermsData';
@@ -25,6 +26,7 @@ const { width } = Dimensions.get('window');
 
 export default function TermsOfServiceScreen({ navigation }: { navigation: any }) {
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const [selectedSection, setSelectedSection] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({});
@@ -259,7 +261,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
           contentContainerStyle={styles.scrollContent}
         >
           {/* Document Header Banner */}
-          <View style={[styles.docHeaderBanner, { backgroundColor: colors.surface, borderColor: isDark ? colors.border : '#FCE7F3' }]}>
+          <View style={[styles.docHeaderBanner, { backgroundColor: colors.surface, borderColor: isDark ? colors.border : colors.badgePinkBorder }]}>
             <View style={styles.bankBadgeHeader}>
               <View style={styles.lotusIconBox}>
                 <AppText style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>★</AppText>
@@ -309,7 +311,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
                 <AppText style={[styles.trustPillText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Sinh trắc học NFC</AppText>
               </View>
               <View style={[styles.trustPill, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-                <Ionicons name="lock-closed" size={14} color="#D2519D" />
+                <Ionicons name="lock-closed" size={14} color={colors.primary} />
                 <AppText style={[styles.trustPillText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Mã hóa 256-Bit</AppText>
               </View>
             </View>
@@ -351,7 +353,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
                   <View style={styles.chapterNumberBadge}>
                     <AppText style={styles.chapterNumberBadgeText}>{chapter.chapterNumber}</AppText>
                   </View>
-                  <AppText style={[styles.chapterTitleText, { color: isDark ? colors.primary : '#700F43' }]}>
+                  <AppText style={[styles.chapterTitleText, { color: isDark ? colors.primary : colors.primaryDeep }]}>
                     {chapter.title}
                   </AppText>
                 </View>
@@ -371,7 +373,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
                         >
                           <View style={styles.articleHeaderLeft}>
                             <View style={[styles.articlePillTag, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-                              <AppText style={[styles.articlePillTagText, { color: isDark ? colors.primary : '#700F43' }]}>
+                              <AppText style={[styles.articlePillTagText, { color: isDark ? colors.primary : colors.primaryDeep }]}>
                                 {article.articleNumber}
                               </AppText>
                             </View>
@@ -402,13 +404,13 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
 
                             {/* Important Highlights box if available */}
                             {article.highlights && article.highlights.length > 0 && (
-                              <View style={[styles.highlightBox, { backgroundColor: isDark ? 'rgba(244, 114, 182, 0.08)' : '#FFF5F8', borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : '#FCE7F3' }]}>
+                              <View style={[styles.highlightBox, { backgroundColor: colors.badgePinkSoft, borderColor: colors.badgePinkBorder }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                   <Ionicons name="shield-checkmark" size={15} color={colors.primary} />
                                   <AppText style={[styles.highlightTitle, { color: colors.primary }]}>Lưu ý trọng yếu từ SenBank:</AppText>
                                 </View>
                                 {article.highlights.map((hl, hIdx) => (
-                                  <AppText key={hIdx} style={[styles.highlightItemText, { color: isDark ? '#F1F5F9' : '#700F43' }]}>
+                                  <AppText key={hIdx} style={[styles.highlightItemText, { color: isDark ? colors.textPrimary : colors.primaryDeep }]}>
                                     • {hl}
                                   </AppText>
                                 ))}
@@ -449,7 +451,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
             onPress={handleAcceptTerms}
           >
             <LinearGradient
-              colors={['#D2519D', '#700F43']}
+              colors={[colors.primary, colors.primaryDeep]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -469,7 +471,7 @@ export default function TermsOfServiceScreen({ navigation }: { navigation: any }
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
   },
@@ -551,12 +553,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   docHeaderBanner: {
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
     marginBottom: 12,
     elevation: 2,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -571,14 +573,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#E11D48',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mbTextLogo: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.5,
   },
   verifiedBadge: {
@@ -679,7 +681,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   chapterNumberBadge: {
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -838,7 +840,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -848,4 +850,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

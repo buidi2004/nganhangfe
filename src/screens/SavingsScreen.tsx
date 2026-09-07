@@ -15,7 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
+import { Radius , Colors, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -36,8 +38,8 @@ const PACKAGES: SavingPackage[] = [
   {
     id: 'pkg_tailoc',
     badge: '🧧 TÀI LỘC • LÃI CAO NHẤT',
-    badgeBg: '#FFE4E6',
-    badgeColor: '#E11D48',
+    get badgeBg() { return Colors.badgePinkSoft; },
+    get badgeColor() { return Colors.primary; },
     name: 'Tiết Kiệm Phát Tài SenBank',
     rate: 7.8,
     term: '12 Tháng',
@@ -48,8 +50,8 @@ const PACKAGES: SavingPackage[] = [
   {
     id: 'pkg_linhhoat',
     badge: '✨ SINH LỜI MỖI NGÀY',
-    badgeBg: '#FDF2F8',
-    badgeColor: '#D2519D',
+    get badgeBg() { return Colors.primaryMuted; },
+    get badgeColor() { return Colors.primary; },
     name: 'Tích Lũy Không Kỳ Hạn',
     rate: 5.5,
     term: 'Không kỳ hạn',
@@ -113,13 +115,16 @@ export default function SavingsScreen({ navigation }: any) {
     );
   };
 
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDeep} />
 
       {/* Header Gradient */}
       <LinearGradient
-        colors={['#700F43', '#9D174D', '#D2519D']}
+        colors={[colors.heroGradEnd, colors.heroGradMid, colors.heroGradStart]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerBar}
@@ -149,7 +154,7 @@ export default function SavingsScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollBody}>
         {/* HERO TOTAL SAVINGS CARD */}
         <LinearGradient
-          colors={['#500724', '#700F43', '#9D174D']}
+          colors={[colors.heroGradEnd, colors.heroGradMid, colors.heroGradStart]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -182,7 +187,7 @@ export default function SavingsScreen({ navigation }: any) {
               activeOpacity={0.85}
               onPress={() => setIsModalVisible(true)}
             >
-              <Ionicons name="add-circle" size={16} color="#700F43" />
+              <Ionicons name="add-circle" size={16} color={colors.primaryDeep} />
               <AppText style={styles.heroOpenBtnText}>Mở sổ mới ngay</AppText>
             </TouchableOpacity>
 
@@ -199,7 +204,7 @@ export default function SavingsScreen({ navigation }: any) {
 
         {/* SECTION 1: CÁC GÓI TIẾT KIỆM NỔI BẬT */}
         <View style={styles.sectionHeaderRow}>
-          <AppText style={styles.sectionHeading}>Gói tiết kiệm đặc quyền</AppText>
+          <AppText style={[styles.sectionHeading, { color: colors.textPrimary }]}>Gói tiết kiệm đặc quyền</AppText>
           <View style={styles.badgeLotus}>
             <AppText style={styles.badgeLotusText}>Lãi suất tới 7.8%</AppText>
           </View>
@@ -210,7 +215,7 @@ export default function SavingsScreen({ navigation }: any) {
           return (
             <TouchableOpacity
               key={pkg.id}
-              style={[styles.pkgCard, isChosen && styles.pkgCardActive]}
+              style={[styles.pkgCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }, isChosen && styles.pkgCardActive]}
               activeOpacity={0.9}
               onPress={() => setSelectedPkg(pkg)}
             >
@@ -224,14 +229,14 @@ export default function SavingsScreen({ navigation }: any) {
                 </View>
               </View>
 
-              <AppText style={styles.pkgTitle}>{pkg.name}</AppText>
+              <AppText style={[styles.pkgTitle, { color: colors.textPrimary }]}>{pkg.name}</AppText>
               <AppText style={styles.pkgHighlight}>✨ {pkg.highlight}</AppText>
-              <AppText style={styles.pkgDesc}>{pkg.desc}</AppText>
+              <AppText style={[styles.pkgDesc, { color: colors.textSecondary }]}>{pkg.desc}</AppText>
 
-              <View style={styles.pkgFooterRow}>
-                <AppText style={styles.pkgMinTerm}>Kỳ hạn: <AppText style={{ fontWeight: '800', color: '#1E293B' }}>{pkg.term}</AppText></AppText>
+              <View style={[styles.pkgFooterRow, { borderTopColor: colors.border }]}>
+                <AppText style={[styles.pkgMinTerm, { color: colors.textSecondary }]}>Kỳ hạn: <AppText style={{ fontWeight: '800', color: colors.textPrimary }}>{pkg.term}</AppText></AppText>
                 <TouchableOpacity
-                  style={[styles.pkgChooseBtn, isChosen && styles.pkgChooseBtnActive]}
+                  style={[styles.pkgChooseBtn, { backgroundColor: colors.surfaceSecondary }, isChosen && styles.pkgChooseBtnActive]}
                   activeOpacity={0.8}
                   onPress={() => {
                     setSelectedPkg(pkg);
@@ -248,17 +253,17 @@ export default function SavingsScreen({ navigation }: any) {
         })}
 
         {/* SECTION 2: CÔNG CỤ DỰ TÍNH TIỀN LÃI */}
-        <View style={styles.calcCard}>
+        <View style={[styles.calcCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <MaterialCommunityIcons name="calculator-variant" size={22} color="#D2519D" />
-            <AppText style={styles.calcHeading}>Dự tính tiền lãi nhận được</AppText>
+            <MaterialCommunityIcons name="calculator-variant" size={22} color={colors.primary} />
+            <AppText style={[styles.calcHeading, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Dự tính tiền lãi nhận được</AppText>
           </View>
 
           {/* Amount Input */}
-          <AppText style={styles.calcLabel}>Số tiền dự định gửi (VNĐ)</AppText>
-          <View style={styles.calcInputRow}>
+          <AppText style={[styles.calcLabel, { color: colors.textSecondary }]}>Số tiền dự định gửi (VNĐ)</AppText>
+          <View style={[styles.calcInputRow, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
             <TextInput
-              style={styles.calcInput}
+              style={[styles.calcInput, { color: colors.textPrimary }]}
               keyboardType="numeric"
               value={numAmount.toLocaleString('vi-VN')}
               onChangeText={(txt) => setCalcAmount(txt.replace(/[^0-9]/g, ''))}
@@ -271,7 +276,7 @@ export default function SavingsScreen({ navigation }: any) {
             {['10000000', '20000000', '50000000', '100000000'].map((chip) => (
               <TouchableOpacity
                 key={chip}
-                style={[styles.calcChip, calcAmount === chip && styles.calcChipActive]}
+                style={[styles.calcChip, { backgroundColor: colors.surfaceSecondary }, calcAmount === chip && styles.calcChipActive]}
                 onPress={() => setCalcAmount(chip)}
               >
                 <AppText style={[styles.calcChipText, calcAmount === chip && styles.calcChipTextActive]}>
@@ -282,7 +287,7 @@ export default function SavingsScreen({ navigation }: any) {
           </View>
 
           {/* Months selector */}
-          <AppText style={[styles.calcLabel, { marginTop: 14 }]}>Kỳ hạn gửi</AppText>
+          <AppText style={[styles.calcLabel, { marginTop: 14, color: colors.textSecondary }]}>Kỳ hạn gửi</AppText>
           <View style={styles.monthsGrid}>
             {[
               { m: 1, label: '1 Tháng', r: '4.5%' },
@@ -292,10 +297,10 @@ export default function SavingsScreen({ navigation }: any) {
             ].map((item) => (
               <TouchableOpacity
                 key={item.m}
-                style={[styles.monthItem, calcMonths === item.m && styles.monthItemActive]}
+                style={[styles.monthItem, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }, calcMonths === item.m && styles.monthItemActive]}
                 onPress={() => setCalcMonths(item.m)}
               >
-                <AppText style={[styles.monthLabel, calcMonths === item.m && styles.monthLabelActive]}>
+                <AppText style={[styles.monthLabel, { color: colors.textPrimary }, calcMonths === item.m && styles.monthLabelActive]}>
                   {item.label}
                 </AppText>
                 <AppText style={[styles.monthRate, calcMonths === item.m && styles.monthRateActive]}>
@@ -306,35 +311,35 @@ export default function SavingsScreen({ navigation }: any) {
           </View>
 
           {/* Result Box */}
-          <View style={styles.calcResultBox}>
+          <View style={[styles.calcResultBox, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
             <View style={styles.resultRow}>
-              <AppText style={styles.resultLabel}>Lãi suất áp dụng:</AppText>
+              <AppText style={[styles.resultLabel, { color: colors.textSecondary }]}>Lãi suất áp dụng:</AppText>
               <AppText style={styles.resultValueHighlight}>{rateForCalc}% / năm</AppText>
             </View>
             <View style={styles.resultRow}>
-              <AppText style={styles.resultLabel}>Tiền lãi ước tính:</AppText>
+              <AppText style={[styles.resultLabel, { color: colors.textSecondary }]}>Tiền lãi ước tính:</AppText>
               <AppText style={styles.resultValueProfit}>+{estimatedProfit.toLocaleString('vi-VN')} đ</AppText>
             </View>
-            <View style={styles.resultDivider} />
+            <View style={[styles.resultDivider, { backgroundColor: colors.border }]} />
             <View style={styles.resultRow}>
-              <AppText style={styles.resultLabelBold}>Tổng nhận khi đáo hạn:</AppText>
-              <AppText style={styles.resultValueTotal}>{totalMaturity.toLocaleString('vi-VN')} đ</AppText>
+              <AppText style={[styles.resultLabelBold, { color: colors.textPrimary }]}>Tổng nhận khi đáo hạn:</AppText>
+              <AppText style={[styles.resultValueTotal, { color: colors.textPrimary }]}>{totalMaturity.toLocaleString('vi-VN')} đ</AppText>
             </View>
           </View>
         </View>
 
         {/* SECTION 3: SỔ TIẾT KIỆM HIỆN TẠI CỦA TÔI */}
         <View style={styles.sectionHeaderRow}>
-          <AppText style={styles.sectionHeading}>Sổ tiết kiệm của bạn (1)</AppText>
+          <AppText style={[styles.sectionHeading, { color: colors.textPrimary }]}>Sổ tiết kiệm của bạn (1)</AppText>
         </View>
 
-        <View style={styles.myBookCard}>
+        <View style={[styles.myBookCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View style={styles.myBookHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Image source={require('../../assets/sen-hong-logo.png')} style={{ width: 28, height: 28, borderRadius: 14 }} />
               <View>
-                <AppText style={styles.myBookTitle}>Sổ Tài Lộc #SEN-8892</AppText>
-                <AppText style={styles.myBookSub}>Mở ngày: 15/01/2026 • Kỳ hạn 12T</AppText>
+                <AppText style={[styles.myBookTitle, { color: colors.textPrimary }]}>Sổ Tài Lộc #SEN-8892</AppText>
+                <AppText style={[styles.myBookSub, { color: colors.textSecondary }]}>Mở ngày: 15/01/2026 • Kỳ hạn 12T</AppText>
               </View>
             </View>
             <View style={styles.myBookActivePill}>
@@ -344,11 +349,11 @@ export default function SavingsScreen({ navigation }: any) {
 
           <View style={styles.myBookNumbers}>
             <View>
-              <AppText style={styles.myBookNumLabel}>Số tiền gốc</AppText>
-              <AppText style={styles.myBookNumValue}>35.000.000 đ</AppText>
+              <AppText style={[styles.myBookNumLabel, { color: colors.textSecondary }]}>Số tiền gốc</AppText>
+              <AppText style={[styles.myBookNumValue, { color: colors.textPrimary }]}>35.000.000 đ</AppText>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <AppText style={styles.myBookNumLabel}>Lãi suất</AppText>
+              <AppText style={[styles.myBookNumLabel, { color: colors.textSecondary }]}>Lãi suất</AppText>
               <AppText style={styles.myBookRateValue}>7.8%/năm</AppText>
             </View>
           </View>
@@ -360,37 +365,37 @@ export default function SavingsScreen({ navigation }: any) {
       {/* MODAL MỞ SỔ TIẾT KIỆM */}
       <Modal visible={isModalVisible} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalSheetHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Image source={require('../../assets/sen-hong-logo.png')} style={{ width: 28, height: 28, borderRadius: 14 }} />
-                <AppText style={styles.modalSheetTitle}>Mở sổ tiết kiệm</AppText>
+                <AppText style={[styles.modalSheetTitle, { color: colors.textPrimary }]}>Mở sổ tiết kiệm</AppText>
               </View>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close-circle" size={24} color="#94A3B8" />
+                <Ionicons name="close-circle" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.selectedPkgSummary}>
-              <AppText style={styles.summaryPkgName}>{selectedPkg.name}</AppText>
-              <AppText style={styles.summaryRate}>Lãi suất ưu đãi: <AppText style={{ color: '#D2519D', fontWeight: '800' }}>{selectedPkg.rate}%/năm</AppText></AppText>
+            <View style={[styles.selectedPkgSummary, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+              <AppText style={[styles.summaryPkgName, { color: colors.textPrimary }]}>{selectedPkg.name}</AppText>
+              <AppText style={styles.summaryRate}>Lãi suất ưu đãi: <AppText style={{ color: colors.primary, fontWeight: '800' }}>{selectedPkg.rate}%/năm</AppText></AppText>
             </View>
 
-            <AppText style={styles.sheetInputLabel}>Nhập số tiền muốn gửi (VNĐ)</AppText>
-            <View style={styles.sheetInputRow}>
+            <AppText style={[styles.sheetInputLabel, { color: colors.textSecondary }]}>Nhập số tiền muốn gửi (VNĐ)</AppText>
+            <View style={[styles.sheetInputRow, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
               <TextInput
-                style={styles.sheetInput}
+                style={[styles.sheetInput, { color: colors.textPrimary }]}
                 keyboardType="numeric"
                 value={parseInt(depositAmount.replace(/[^0-9]/g, '') || '0', 10).toLocaleString('vi-VN')}
                 onChangeText={(t) => setDepositAmount(t.replace(/[^0-9]/g, ''))}
               />
-              <AppText style={{ fontWeight: '800', color: '#700F43' }}>VND</AppText>
+              <AppText style={{ fontWeight: '800', color: colors.primary }}>VND</AppText>
             </View>
 
             <View style={styles.walletBalanceNote}>
-              <AppText style={{ fontSize: 12, color: '#64748B' }}>
+              <AppText style={{ fontSize: 12, color: colors.textSecondary }}>
                 Số dư khả dụng ví SenBank:{' '}
-                <AppText style={{ fontWeight: '700', color: '#1E293B' }}>
+                <AppText style={{ fontWeight: '700', color: colors.textPrimary }}>
                   {wallet ? wallet.balance.toLocaleString('vi-VN') : '0'} đ
                 </AppText>
               </AppText>
@@ -402,7 +407,7 @@ export default function SavingsScreen({ navigation }: any) {
               onPress={handleOpenSavingsBook}
             >
               <LinearGradient
-                colors={['#700F43', '#D2519D']}
+                colors={[colors.primaryDeep, colors.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.confirmGradient}
@@ -417,7 +422,7 @@ export default function SavingsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -448,7 +453,7 @@ const styles = StyleSheet.create({
   headerSubText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#FFE4E6',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 2,
   },
   headerRightBtn: {
@@ -463,9 +468,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 20,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
@@ -533,7 +538,7 @@ const styles = StyleSheet.create({
   heroOpenBtnText: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   heroHistoryBtn: {
     flex: 1,
@@ -564,7 +569,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   badgeLotus: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
@@ -572,23 +577,23 @@ const styles = StyleSheet.create({
   badgeLotusText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#BE185D',
+    color: colors.primary,
   },
   pkgCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1.5,
     borderColor: '#F1F5F9',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
   },
   pkgCardActive: {
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     backgroundColor: '#FFFDFE',
   },
   pkgTopRow: {
@@ -613,7 +618,7 @@ const styles = StyleSheet.create({
   pkgRateNumber: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#D2519D',
+    color: colors.primary,
   },
   pkgRateUnit: {
     fontSize: 12,
@@ -629,7 +634,7 @@ const styles = StyleSheet.create({
   pkgHighlight: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginTop: 4,
   },
   pkgDesc: {
@@ -658,7 +663,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
   },
   pkgChooseBtnActive: {
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
   },
   pkgChooseBtnText: {
     fontSize: 12.5,
@@ -667,12 +672,12 @@ const styles = StyleSheet.create({
   },
   calcCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#FCE7F3',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -681,7 +686,7 @@ const styles = StyleSheet.create({
   calcHeading: {
     fontSize: 15.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   calcLabel: {
     fontSize: 12.5,
@@ -708,7 +713,7 @@ const styles = StyleSheet.create({
   calcCurrency: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   chipsRow: {
     flexDirection: 'row',
@@ -723,9 +728,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   calcChipActive: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
     borderWidth: 1,
-    borderColor: '#F43F5E',
+    borderColor: colors.primary,
   },
   calcChipText: {
     fontSize: 12,
@@ -733,7 +738,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   calcChipTextActive: {
-    color: '#BE185D',
+    color: colors.primary,
   },
   monthsGrid: {
     flexDirection: 'row',
@@ -749,7 +754,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   monthItemActive: {
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     backgroundColor: '#FDF2F8',
   },
   monthLabel: {
@@ -757,8 +762,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748B',
   },
-  monthLabelActive: {
-    color: '#700F43',
+  monthLabelActive: { color: colors.primaryDeep,
     fontWeight: '800',
   },
   monthRate: {
@@ -767,8 +771,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginTop: 2,
   },
-  monthRateActive: {
-    color: '#D2519D',
+  monthRateActive: { color: colors.primary,
   },
   calcResultBox: {
     backgroundColor: '#FDF2F8',
@@ -792,7 +795,7 @@ const styles = StyleSheet.create({
   resultValueHighlight: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   resultValueProfit: {
     fontSize: 14,
@@ -812,11 +815,11 @@ const styles = StyleSheet.create({
   resultValueTotal: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#D2519D',
+    color: colors.primary,
   },
   myBookCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -869,7 +872,7 @@ const styles = StyleSheet.create({
   myBookRateValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
     marginTop: 2,
   },
   // Modal
@@ -880,8 +883,8 @@ const styles = StyleSheet.create({
   },
   modalSheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     padding: 20,
     paddingBottom: 36,
   },
@@ -894,7 +897,7 @@ const styles = StyleSheet.create({
   modalSheetTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   selectedPkgSummary: {
     backgroundColor: '#FDF2F8',
@@ -951,4 +954,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
-});
+}));

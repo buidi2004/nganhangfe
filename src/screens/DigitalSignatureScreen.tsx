@@ -12,7 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Radius, Shadows, Spacing , Colors, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -21,36 +22,39 @@ interface DigitalSignatureScreenProps {
 }
 
 export default function DigitalSignatureScreen({ navigation }: DigitalSignatureScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   const handleTestSign = () => {
-    Alert.alert('Chữ ký số Smart CA', 'Ký số thử nghiệm thành công với mã bảo mật Digital OTP.');
+    Alert.alert('Chữ ký số Smart CA', 'Ký số thử nghiệm thành công với mã bảo mật Digital OTP của SenBank.');
   };
 
   const handleChangePIN = () => {
-    Alert.alert('Đổi mã PIN', 'Chuyển sang giao diện đổi mã PIN chữ ký số Smart CA.');
+    Alert.alert('Đổi mã PIN', 'Chuyển sang giao diện đổi mã PIN chữ ký số Smart CA SenBank.');
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Chữ ký số</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Chữ ký số</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -59,19 +63,19 @@ export default function DigitalSignatureScreen({ navigation }: DigitalSignatureS
         contentContainerStyle={styles.scrollContent}
       >
         {/* HERO SMART CA CARD */}
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, { borderColor: colors.border }]}>
           <LinearGradient
-            colors={['#FDF2F8', '#FCE7F3']}
+            colors={isDark ? ['#1E293B', '#0F172A'] : ['#FDF2F8', '#FCE7F3']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-          <View style={styles.heroIconCircle}>
-            <MaterialCommunityIcons name="draw-pen" size={40} color="#700F43" />
+          <View style={[styles.heroIconCircle, { backgroundColor: colors.primarySoft }]}>
+            <MaterialCommunityIcons name="draw-pen" size={36} color={colors.primary} />
           </View>
 
-          <AppText style={styles.heroTitle}>Chữ ký số Smart CA MB</AppText>
-          <AppText style={styles.heroSubtitle}>
+          <AppText style={[styles.heroTitle, { color: colors.textPrimary }]}>Chữ ký số Smart CA SenBank</AppText>
+          <AppText style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Giải pháp ký số từ xa an toàn tuyệt đối, tuân thủ tiêu chuẩn bảo mật quốc tế và Bộ Thông tin & Truyền thông.
           </AppText>
 
@@ -82,65 +86,65 @@ export default function DigitalSignatureScreen({ navigation }: DigitalSignatureS
         </View>
 
         {/* CERTIFICATE DETAILS CARD */}
-        <View style={styles.detailsCard}>
-          <AppText style={styles.sectionHeading}>Thông tin chứng thư số</AppText>
+        <View style={[styles.detailsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <AppText style={[styles.sectionHeading, { color: colors.textPrimary }]}>Thông tin chứng thư số</AppText>
 
           <View style={styles.infoRow}>
-            <AppText style={styles.infoLabel}>Chủ thể chứng thư</AppText>
-            <AppText style={styles.infoValue}>BÙI VĂN DĨ</AppText>
+            <AppText style={[styles.infoLabel, { color: colors.textSecondary }]}>Chủ thể chứng thư</AppText>
+            <AppText style={[styles.infoValue, { color: colors.textPrimary }]}>BÙI VĂN DĨ</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <AppText style={styles.infoLabel}>Số CMND/CCCD</AppText>
-            <AppText style={styles.infoValue}>079204012891</AppText>
+            <AppText style={[styles.infoLabel, { color: colors.textSecondary }]}>Số CMND/CCCD</AppText>
+            <AppText style={[styles.infoValue, { color: colors.textPrimary }]}>079204012891</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <AppText style={styles.infoLabel}>Nhà cung cấp CA</AppText>
-            <AppText style={styles.infoValue}>MBBank & Viettel-CA</AppText>
+            <AppText style={[styles.infoLabel, { color: colors.textSecondary }]}>Nhà cung cấp CA</AppText>
+            <AppText style={[styles.infoValue, { color: colors.textPrimary }]}>SenBank & Viettel-CA</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <AppText style={styles.infoLabel}>Thời hạn hiệu lực</AppText>
-            <AppText style={styles.infoValue}>25/08/2026 - 25/08/2028</AppText>
+            <AppText style={[styles.infoLabel, { color: colors.textSecondary }]}>Thời hạn hiệu lực</AppText>
+            <AppText style={[styles.infoValue, { color: colors.textPrimary }]}>25/08/2026 - 25/08/2028</AppText>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <AppText style={styles.infoLabel}>Thiết bị kích hoạt</AppText>
-            <AppText style={styles.infoValue}>Thiết bị này (Active)</AppText>
+            <AppText style={[styles.infoLabel, { color: colors.textSecondary }]}>Thiết bị kích hoạt</AppText>
+            <AppText style={[styles.infoValue, { color: colors.textPrimary }]}>Thiết bị này (Active)</AppText>
           </View>
         </View>
 
         {/* ACTION BUTTONS */}
-        <View style={styles.actionsList}>
-          <TouchableOpacity
-            style={styles.actionBtnRow}
-            activeOpacity={0.7}
-            onPress={handleTestSign}
-          >
-            <View style={styles.actionLeft}>
-              <MaterialCommunityIcons name="file-sign" size={24} color="#700F43" />
-              <AppText style={styles.actionTitle}>Ký thử giao dịch mẫu</AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
+        <View style={[styles.actionsList, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <TouchableOpacity
             style={styles.actionBtnRow}
             activeOpacity={0.7}
             onPress={handleChangePIN}
           >
             <View style={styles.actionLeft}>
-              <MaterialCommunityIcons name="key-change" size={24} color="#700F43" />
-              <AppText style={styles.actionTitle}>Đổi mã PIN chữ ký số</AppText>
+              <Ionicons name="key-outline" size={22} color={colors.primary} />
+              <AppText style={[styles.actionTitle, { color: colors.textPrimary }]}>Đổi mã PIN ký số</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <TouchableOpacity
+            style={styles.actionBtnRow}
+            activeOpacity={0.7}
+            onPress={handleTestSign}
+          >
+            <View style={styles.actionLeft}>
+              <Ionicons name="document-text-outline" size={22} color={colors.primary} />
+              <AppText style={[styles.actionTitle, { color: colors.textPrimary }]}>Ký số thử nghiệm tài liệu</AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -148,7 +152,7 @@ export default function DigitalSignatureScreen({ navigation }: DigitalSignatureS
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -182,14 +186,14 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FCE7F3',
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -205,7 +209,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1.5,
     borderColor: '#FCE7F3',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 19,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginBottom: 6,
   },
   heroSubtitle: {
@@ -247,12 +251,12 @@ const styles = StyleSheet.create({
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -286,11 +290,11 @@ const styles = StyleSheet.create({
   },
   actionsList: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -312,4 +316,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
   },
-});
+}));

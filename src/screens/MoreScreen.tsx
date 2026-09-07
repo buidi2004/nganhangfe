@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
 import { AppText } from '../components/typography/AppText';
 import { GlassCard } from '../components/GlassCard';
 import { useHideOnScroll } from '../hooks/useHideOnScroll';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
 import { Image } from 'expo-image';
 
@@ -57,6 +57,7 @@ const NEWS_FEED = [
 
 export default function MoreScreen({ navigation }: any) {
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const { onScroll } = useHideOnScroll();
   const { user } = useApp();
 
@@ -86,11 +87,12 @@ export default function MoreScreen({ navigation }: any) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.bgBase : '#F8FAFC' }]}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={isDark ? colors.bgBase : '#F8FAFC'} />
       {/* Nền trang trí */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <LinearGradient
-          colors={['#F8FAFC', '#F1F5F9']}
+          colors={isDark ? [colors.bgBase, '#1a0515', colors.bgBase] : ['#F8FAFC', '#F1F5F9']}
           style={StyleSheet.absoluteFill}
         />
       </View>
@@ -101,7 +103,7 @@ export default function MoreScreen({ navigation }: any) {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
-        <AppText style={styles.pageTitle}>Khám phá</AppText>
+        <AppText style={[styles.pageTitle, { color: colors.textPrimary }]}>Khám phá</AppText>
 
         {/* 1. User Profile VIP */}
         <TouchableOpacity style={styles.profileSection} activeOpacity={0.8} onPress={() => navigation.navigate('UserProfile')}>
@@ -125,7 +127,7 @@ export default function MoreScreen({ navigation }: any) {
               <AppText style={styles.profileName}>{user?.name || 'Nguyễn Văn A'}</AppText>
               <View style={styles.tierBadge}>
                 <MaterialCommunityIcons name="crown" size={14} color="#FBBF24" />
-                <AppText style={styles.tierText}>Hội viên MB Priority</AppText>
+                <AppText style={styles.tierText}>Hội viên SenBank Priority</AppText>
               </View>
             </View>
 
@@ -138,7 +140,7 @@ export default function MoreScreen({ navigation }: any) {
 
         {/* 2. Thị trường tài chính */}
         <View style={styles.section}>
-          <AppText style={styles.sectionTitle}>Tài chính & Thị trường</AppText>
+          <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tài chính & Thị trường</AppText>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -150,7 +152,7 @@ export default function MoreScreen({ navigation }: any) {
 
         {/* 3. Tiện ích Đời sống */}
         <View style={styles.section}>
-          <AppText style={[styles.sectionTitle, { marginLeft: SPACING }]}>Tiện ích Đời sống</AppText>
+          <AppText style={[styles.sectionTitle, { marginLeft: SPACING, color: colors.textPrimary }]}>Tiện ích Đời sống</AppText>
           <GlassCard style={styles.lifestyleCard}>
             <View style={styles.lifestyleGrid}>
               {LIFESTYLE_SERVICES.map((item) => (
@@ -158,14 +160,14 @@ export default function MoreScreen({ navigation }: any) {
                   <View style={[
                     styles.utilityIconWrap, 
                     { 
-                      backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
-                      borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
+                      backgroundColor: colors.primarySoft,
+                      borderColor: colors.border,
                       borderWidth: 1,
                     }
                   ]}>
-                    <Ionicons name={item.icon as any} size={24} color={isDark ? colors.primary : '#700F43'} />
+                    <Ionicons name={item.icon as any} size={24} color={isDark ? colors.primary : colors.primaryDeep} />
                   </View>
-                  <AppText style={styles.utilityLabel}>{item.label}</AppText>
+                  <AppText style={[styles.utilityLabel, { color: colors.textPrimary }]}>{item.label}</AppText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -174,10 +176,10 @@ export default function MoreScreen({ navigation }: any) {
 
         {/* 4. Tin tức & Khám phá */}
         <View style={styles.section}>
-          <AppText style={[styles.sectionTitle, { marginLeft: SPACING }]}>Cẩm nang & Tin tức</AppText>
+          <AppText style={[styles.sectionTitle, { marginLeft: SPACING, color: colors.textPrimary }]}>Cẩm nang & Tin tức</AppText>
           <View style={{ paddingHorizontal: SPACING }}>
             {NEWS_FEED.map((news) => (
-              <TouchableOpacity key={news.id} style={styles.newsCard} activeOpacity={0.8}>
+              <TouchableOpacity key={news.id} style={[styles.newsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border, borderWidth: isDark ? 1 : 0 }]} activeOpacity={0.8}>
                 <Image
                   source={{ uri: news.imageUrl }}
                   style={styles.newsImagePlaceholder}
@@ -185,7 +187,7 @@ export default function MoreScreen({ navigation }: any) {
                 />
                 <View style={styles.newsInfo}>
                   <AppText style={styles.newsCategory}>{news.category}</AppText>
-                  <AppText style={styles.newsTitle} numberOfLines={2}>{news.title}</AppText>
+                  <AppText style={[styles.newsTitle, { color: colors.textPrimary }]} numberOfLines={2}>{news.title}</AppText>
                   <AppText style={styles.newsTime}>{news.time}</AppText>
                 </View>
               </TouchableOpacity>
@@ -195,48 +197,59 @@ export default function MoreScreen({ navigation }: any) {
 
         {/* 5. Cài đặt hệ thống (Giữ lại từ bản cũ) */}
         <View style={[styles.section, { paddingHorizontal: SPACING, marginBottom: 120 }]}>
-          <AppText style={styles.sectionTitle}>Cài đặt hệ thống</AppText>
+          <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Cài đặt hệ thống</AppText>
           <GlassCard style={{ padding: 0, overflow: 'hidden' }}>
-            <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Config')}>
-              <View style={styles.settingLeft}>
-                <Ionicons name="options" size={24} color="#64748B" />
-                <AppText style={styles.settingTitle}>Cấu hình hiển thị</AppText>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-            </TouchableOpacity>
-            <View style={styles.divider} />
-            
             <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Settings')}>
               <View style={styles.settingLeft}>
-                <Ionicons name="settings-outline" size={24} color="#64748B" />
-                <AppText style={styles.settingTitle}>Cài đặt bảo mật</AppText>
+                <Ionicons name="color-palette-outline" size={24} color={colors.primary} />
+                <View>
+                  <AppText style={[styles.settingTitle, { color: colors.textPrimary }]}>Giao diện & Chủ đề màu sắc</AppText>
+                  <AppText style={{ fontSize: 12, color: colors.primary, fontWeight: '600', marginTop: 1 }}>
+                    {colors.themeName} • {isDark ? 'Chế độ Tối' : 'Chế độ Sáng'}
+                  </AppText>
+                </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-            <TouchableOpacity style={styles.settingRow}>
+            <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Config')}>
               <View style={styles.settingLeft}>
-                <Ionicons name="globe-outline" size={24} color="#64748B" />
-                <AppText style={styles.settingTitle}>Ngôn ngữ</AppText>
+                <Ionicons name="options" size={24} color={colors.primary} />
+                <AppText style={[styles.settingTitle, { color: colors.textPrimary }]}>Hạn mức giao dịch NHNN</AppText>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <AppText style={{ color: Colors.primary, fontWeight: '700' }}>Tiếng Việt 🇻🇳</AppText>
-                <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            
+            <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('SecuritySettings')}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} />
+                <AppText style={[styles.settingTitle, { color: colors.textPrimary }]}>Cài đặt bảo mật</AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('TermsOfService')}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="document-text-outline" size={24} color={colors.primary} />
+                <AppText style={[styles.settingTitle, { color: colors.textPrimary }]}>Điều khoản & Pháp lý</AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('Login')}>
               <View style={styles.settingLeft}>
-                <Ionicons name="log-out-outline" size={24} color="#E11D48" />
-                <AppText style={[styles.settingTitle, { color: '#E11D48' }]}>Đăng xuất</AppText>
+                <Ionicons name="log-out-outline" size={24} color={colors.error} />
+                <AppText style={[styles.settingTitle, { color: colors.error }]}>Đăng xuất</AppText>
               </View>
             </TouchableOpacity>
           </GlassCard>
           
           <View style={styles.versionFooter}>
-            <AppText style={styles.versionNumber}>Phiên bản v6.5.15 (763)</AppText>
+            <AppText style={styles.versionNumber}>Phiên bản SenBank v6.5.15 (763)</AppText>
           </View>
         </View>
 
@@ -245,7 +258,7 @@ export default function MoreScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -269,7 +282,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    borderRadius: 24,
+    borderRadius: Radius.card,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -340,7 +353,7 @@ const styles = StyleSheet.create({
   financeWidget: {
     width: 140,
     height: 110,
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 16,
     marginLeft: SPACING,
     justifyContent: 'space-between',
@@ -400,7 +413,7 @@ const styles = StyleSheet.create({
   newsCard: {
     flexDirection: 'row',
     backgroundColor: '#FFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     padding: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -413,6 +426,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 12,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -424,7 +438,7 @@ const styles = StyleSheet.create({
   newsCategory: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.primary,
+    color: colors.primary,
     marginBottom: 6,
   },
   newsTitle: {
@@ -468,4 +482,4 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontWeight: '500',
   }
-});
+}));

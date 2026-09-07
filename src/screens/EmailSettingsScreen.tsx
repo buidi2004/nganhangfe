@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,13 +10,16 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Radius , Colors, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
+import { WalletApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -25,44 +28,79 @@ interface EmailSettingsScreenProps {
 }
 
 export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useApp();
   const [currentEmail, setCurrentEmail] = useState((user as any)?.email || '');
   const [newEmail, setNewEmail] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveEmail = () => {
-    if (!newEmail.includes('@') || !newEmail.includes('.')) {
+  useEffect(() => {
+    let isMounted = true;
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        const res = await WalletApi.getMe();
+        if (isMounted && res?.data?.email) {
+          setCurrentEmail(res.data.email);
+        }
+      } catch (e) {
+        // Fallback to cached context user email
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    loadProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSaveEmail = async () => {
+    const trimmed = newEmail.trim();
+    if (!trimmed.includes('@') || !trimmed.includes('.')) {
       Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ email hợp lệ');
       return;
     }
-    setCurrentEmail(newEmail);
-    setIsEditing(false);
-    setNewEmail('');
-    Alert.alert('Thành công', 'Đã cập nhật địa chỉ Email nhận thông báo biến động & biên lai giao dịch.');
+
+    setIsSaving(true);
+    try {
+      await WalletApi.updateMe(undefined, trimmed);
+      setCurrentEmail(trimmed);
+      setIsEditing(false);
+      setNewEmail('');
+      Alert.alert('Thành công', 'Đã cập nhật địa chỉ Email nhận thông báo biến động & biên lai giao dịch.');
+    } catch (e: any) {
+      Alert.alert('Cập nhật thất bại', e.message || 'Không thể cập nhật email lúc này. Vui lòng thử lại sau.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Địa chỉ Email</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Địa chỉ Email</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -75,14 +113,14 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
         contentContainerStyle={styles.scrollContent}
       >
         {/* CURRENT EMAIL CARD */}
-        <View style={styles.currentEmailCard}>
-          <View style={styles.emailIconWrap}>
-            <Ionicons name="mail-outline" size={32} color="#700F43" />
+        <View style={[styles.currentEmailCard, { backgroundColor: colors.cardBackground, borderColor: colors.border, borderWidth: 1 }]}>
+          <View style={[styles.emailIconWrap, { backgroundColor: isDark ? colors.surface : colors.primarySoft }]}>
+            <Ionicons name="mail-outline" size={30} color={colors.primary} />
           </View>
 
           <View style={{ flex: 1 }}>
-            <AppText style={styles.emailCardLabel}>Email nhận thông báo & sao kê</AppText>
-            <AppText style={styles.emailValueText}>{currentEmail}</AppText>
+            <AppText style={[styles.emailCardLabel, { color: colors.textSecondary }]}>Email nhận thông báo & sao kê</AppText>
+            <AppText style={[styles.emailValueText, { color: colors.textPrimary }]}>{currentEmail || 'Chưa thiết lập email'}</AppText>
             <View style={styles.verifiedTag}>
               <Ionicons name="checkmark-circle" size={14} color="#10B981" />
               <AppText style={styles.verifiedTagText}>Đã xác thực</AppText>
@@ -92,14 +130,14 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
 
         {/* EDIT / UPDATE EMAIL SECTION */}
         {isEditing ? (
-          <View style={styles.editSectionCard}>
-            <AppText style={styles.editCardTitle}>Nhập địa chỉ Email mới</AppText>
+          <View style={[styles.editSectionCard, { backgroundColor: colors.cardBackground, borderColor: colors.border, borderWidth: 1 }]}>
+            <AppText style={[styles.editCardTitle, { color: colors.textPrimary }]}>Nhập địa chỉ Email mới</AppText>
 
-            <View style={styles.inputRow}>
+            <View style={[styles.inputRow, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC', borderColor: colors.border }]}>
               <TextInput
-                style={styles.emailInput}
+                style={[styles.emailInput, { color: colors.textPrimary }]}
                 placeholder="vidu@gmail.com"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors.textSecondary}
                 value={newEmail}
                 onChangeText={setNewEmail}
                 keyboardType="email-address"
@@ -109,28 +147,33 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
 
             <View style={styles.editBtnRow}>
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={[styles.cancelBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9' }]}
                 activeOpacity={0.7}
                 onPress={() => {
                   setIsEditing(false);
                   setNewEmail('');
                 }}
               >
-                <AppText style={styles.cancelBtnText}>Hủy</AppText>
+                <AppText style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Hủy</AppText>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.saveBtn}
+                style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
                 activeOpacity={0.9}
                 onPress={handleSaveEmail}
+                disabled={isSaving}
               >
                 <LinearGradient
-                  colors={['#D2519D', '#700F43']}
+                  colors={[colors.primary, colors.primaryDeep]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <AppText style={styles.saveBtnText}>Lưu Email</AppText>
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <AppText style={styles.saveBtnText}>Lưu Email</AppText>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -141,7 +184,7 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
             onPress={() => setIsEditing(true)}
           >
             <LinearGradient
-              colors={['#D2519D', '#700F43']}
+              colors={[colors.primary, colors.primaryDeep]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -152,19 +195,19 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
         )}
 
         {/* EMAIL BENEFITS CARD */}
-        <View style={styles.infoCard}>
-          <AppText style={styles.infoCardTitle}>Lợi ích khi đăng ký Email:</AppText>
+        <View style={[styles.infoCard, { backgroundColor: isDark ? 'rgba(244, 114, 182, 0.08)' : '#FDF2F8', borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : '#FCE7F3', borderWidth: 1 }]}>
+          <AppText style={[styles.infoCardTitle, { color: colors.primary }]}>Lợi ích khi đăng ký Email:</AppText>
           <View style={styles.benefitItem}>
-            <Ionicons name="document-text-outline" size={18} color="#D2519D" />
-            <AppText style={styles.benefitItemText}>Nhận bản sao kê tài khoản định kỳ hàng tháng</AppText>
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+            <AppText style={[styles.benefitItemText, { color: colors.textPrimary }]}>Nhận bản sao kê tài khoản định kỳ hàng tháng</AppText>
           </View>
           <View style={styles.benefitItem}>
-            <Ionicons name="receipt-outline" size={18} color="#D2519D" />
-            <AppText style={styles.benefitItemText}>Nhận biên lai điện tử cho mọi giao dịch thanh toán</AppText>
+            <Ionicons name="receipt-outline" size={18} color={colors.primary} />
+            <AppText style={[styles.benefitItemText, { color: colors.textPrimary }]}>Nhận biên lai điện tử cho mọi giao dịch thanh toán</AppText>
           </View>
           <View style={styles.benefitItem}>
-            <Ionicons name="shield-checkmark-outline" size={18} color="#D2519D" />
-            <AppText style={styles.benefitItemText}>Cảnh báo bảo mật tài khoản tức thì khi đăng nhập lạ</AppText>
+            <Ionicons name="shield-checkmark-outline" size={18} color={colors.primary} />
+            <AppText style={[styles.benefitItemText, { color: colors.textPrimary }]}>Cảnh báo bảo mật tài khoản tức thì khi đăng nhập lạ</AppText>
           </View>
         </View>
         </ScrollView>
@@ -173,7 +216,7 @@ export default function EmailSettingsScreen({ navigation }: EmailSettingsScreenP
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -198,7 +241,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -208,14 +251,14 @@ const styles = StyleSheet.create({
   },
   currentEmailCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -262,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -275,12 +318,12 @@ const styles = StyleSheet.create({
   },
   editSectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     marginBottom: 20,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -289,12 +332,12 @@ const styles = StyleSheet.create({
   editCardTitle: {
     fontSize: 14.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginBottom: 12,
   },
   inputRow: {
     borderBottomWidth: 1.5,
-    borderBottomColor: '#D2519D',
+    borderBottomColor: colors.primary,
     paddingBottom: 6,
     marginBottom: 16,
   },
@@ -336,11 +379,11 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -364,4 +407,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-});
+}));

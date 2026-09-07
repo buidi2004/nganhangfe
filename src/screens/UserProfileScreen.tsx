@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import { WalletApi } from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +18,8 @@ interface UserProfileScreenProps {
 }
 
 export default function UserProfileScreen({ navigation }: UserProfileScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { user, updateAvatar } = useApp();
   const [realName, setRealName] = useState(user?.name || 'Tên người dùng');
 
@@ -60,27 +63,27 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* 1. TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Hồ sơ người dùng</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Hồ sơ người dùng</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -89,7 +92,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
         contentContainerStyle={styles.scrollContent}
       >
         {/* 2. MAIN USER CARD (AVATAR + NAME + ID + 2 SUB-CARDS + LOYALTY) */}
-        <View style={styles.userMainCard}>
+        <View style={[styles.userMainCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {/* Avatar with Edit Pencil */}
           <View style={styles.avatarContainer}>
             <Image
@@ -97,54 +100,54 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
               style={styles.avatarImage}
             />
             <TouchableOpacity
-              style={styles.editPencilBtn}
+              style={[styles.editPencilBtn, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
               activeOpacity={0.8}
               onPress={handleEditAvatar}
             >
-              <Ionicons name="pencil-outline" size={15} color="#0F172A" />
+              <Ionicons name="pencil-outline" size={15} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
           {/* User Name & User ID */}
-          <AppText style={styles.userNameText}>{realName}</AppText>
-          <AppText style={styles.userIdText}>
-            User ID: <AppText style={{ color: '#700F43', fontWeight: '800' }}>{user?.phoneNumber || '0000000000'}</AppText>
+          <AppText style={[styles.userNameText, { color: colors.textPrimary }]}>{realName}</AppText>
+          <AppText style={[styles.userIdText, { color: colors.textSecondary }]}>
+            User ID: <AppText style={{ color: colors.primary, fontWeight: '800' }}>{user?.phoneNumber || '0000000000'}</AppText>
           </AppText>
 
           {/* 2 Sub-Cards Row */}
           <View style={styles.twoSubCardsRow}>
             {/* Left Card: Đang được bảo vệ */}
             <TouchableOpacity
-              style={styles.subCard}
+              style={[styles.subCard, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: colors.border }]}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('SecuritySettings')}
             >
               <MaterialCommunityIcons name="shield-check" size={26} color="#10B981" />
-              <AppText style={styles.subCardText}>
+              <AppText style={[styles.subCardText, { color: colors.textPrimary }]}>
                 Đang được{'\n'}bảo vệ
               </AppText>
             </TouchableOpacity>
 
-            {/* Right Card: Gói hội viên MB Basic */}
+            {/* Right Card: Gói hội viên SenBank Basic */}
             <TouchableOpacity
-              style={styles.subCard}
+              style={[styles.subCard, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', borderColor: colors.border }]}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('KycLevel')}
             >
               <MaterialCommunityIcons name="crown" size={22} color="#94A3B8" />
               <View>
-                <AppText style={styles.subCardLabel}>Gói hội viên MB</AppText>
-                <AppText style={styles.subCardValue}>Basic</AppText>
+                <AppText style={[styles.subCardLabel, { color: colors.textSecondary }]}>Hội viên SenBank</AppText>
+                <AppText style={[styles.subCardValue, { color: colors.textPrimary }]}>Basic</AppText>
               </View>
             </TouchableOpacity>
           </View>
 
           {/* Loyalty Score Card Inside Main Container */}
-          <View style={styles.loyaltyBox}>
+          <View style={[styles.loyaltyBox, { backgroundColor: isDark ? colors.surface : colors.primarySoft, borderColor: isDark ? colors.border : colors.primarySoft }]}>
             <View style={styles.loyaltyLeftCol}>
-              <AppText style={styles.loyaltySmallLabel}>ĐIỂM LOYALTY</AppText>
+              <AppText style={[styles.loyaltySmallLabel, { color: colors.textSecondary }]}>ĐIỂM LOYALTY</AppText>
               <View style={styles.loyaltyScoreRow}>
-                <AppText style={styles.loyaltyScoreNumber}>0</AppText>
+                <AppText style={[styles.loyaltyScoreNumber, { color: colors.primary }]}>0</AppText>
                 <MaterialCommunityIcons name="crown" size={16} color="#F59E0B" style={{ marginLeft: 6 }} />
               </View>
 
@@ -153,8 +156,8 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
                 activeOpacity={0.7}
                 onPress={() => navigation.navigate('Promotions')}
               >
-                <AppText style={styles.collectPointsText}>Tích điểm</AppText>
-                <Ionicons name="chevron-forward" size={13} color="#700F43" />
+                <AppText style={[styles.collectPointsText, { color: colors.primary }]}>Tích điểm</AppText>
+                <Ionicons name="chevron-forward" size={13} color={colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -165,7 +168,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
               onPress={() => navigation.navigate('Promotions')}
             >
               <LinearGradient
-                colors={['#D2519D', '#700F43']}
+                colors={[colors.primary, colors.primaryDeep]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFill}
@@ -176,7 +179,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
         </View>
 
         {/* 3. SETTINGS & KYC GROUPED MENU LIST */}
-        <View style={styles.menuGroupCard}>
+        <View style={[styles.menuGroupCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {/* Item 1: Mức định danh */}
           <TouchableOpacity
             style={styles.menuItemRow}
@@ -184,13 +187,13 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
             onPress={() => navigation.navigate('KycLevel')}
           >
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="face-recognition" size={22} color="#700F43" />
-              <AppText style={styles.menuItemTitle}>Mức định danh</AppText>
+              <MaterialCommunityIcons name="face-recognition" size={22} color={colors.primary} />
+              <AppText style={[styles.menuItemTitle, { color: colors.textPrimary }]}>Mức định danh</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
 
-          <View style={styles.menuDivider} />
+          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
 
           {/* Item 2: Chữ ký số */}
           <TouchableOpacity
@@ -199,13 +202,13 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
             onPress={() => navigation.navigate('DigitalSignature')}
           >
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="draw-pen" size={22} color="#700F43" />
-              <AppText style={styles.menuItemTitle}>Chữ ký số</AppText>
+              <MaterialCommunityIcons name="draw-pen" size={22} color={colors.primary} />
+              <AppText style={[styles.menuItemTitle, { color: colors.textPrimary }]}>Chữ ký số</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
 
-          <View style={styles.menuDivider} />
+          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
 
           {/* Item 3: Giấy tờ tùy thân */}
           <TouchableOpacity
@@ -214,13 +217,13 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
             onPress={() => navigation.navigate('IdentityDocument')}
           >
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="card-account-details-outline" size={22} color="#700F43" />
-              <AppText style={styles.menuItemTitle}>Giấy tờ tùy thân</AppText>
+              <MaterialCommunityIcons name="card-account-details-outline" size={22} color={colors.primary} />
+              <AppText style={[styles.menuItemTitle, { color: colors.textPrimary }]}>Giấy tờ tùy thân</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
 
-          <View style={styles.menuDivider} />
+          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
 
           {/* Item 4: Email */}
           <TouchableOpacity
@@ -229,13 +232,13 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
             onPress={() => navigation.navigate('EmailSettings')}
           >
             <View style={styles.menuItemLeft}>
-              <Ionicons name="mail-outline" size={22} color="#700F43" />
-              <AppText style={styles.menuItemTitle}>Email</AppText>
+              <Ionicons name="mail-outline" size={22} color={colors.primary} />
+              <AppText style={[styles.menuItemTitle, { color: colors.textPrimary }]}>Email</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
 
-          <View style={styles.menuDivider} />
+          <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
 
           {/* Item 5: Đổi mật khẩu */}
           <TouchableOpacity
@@ -244,10 +247,10 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
             onPress={() => navigation.navigate('ForgotPassword')}
           >
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="lock-reset" size={22} color="#700F43" />
-              <AppText style={styles.menuItemTitle}>Đổi mật khẩu</AppText>
+              <MaterialCommunityIcons name="lock-reset" size={22} color={colors.primary} />
+              <AppText style={[styles.menuItemTitle, { color: colors.textPrimary }]}>Đổi mật khẩu</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#700F43" />
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -255,7 +258,7 @@ export default function UserProfileScreen({ navigation }: UserProfileScreenProps
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -290,12 +293,12 @@ const styles = StyleSheet.create({
   },
   userMainCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     padding: 18,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -310,6 +313,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
+    overflow: 'hidden',
     borderWidth: 3,
     borderColor: '#FCE7F3',
   },
@@ -392,7 +396,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -425,14 +429,14 @@ const styles = StyleSheet.create({
   collectPointsText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   redeemGiftBtn: {
     borderRadius: 20,
     overflow: 'hidden',
     paddingHorizontal: 18,
     paddingVertical: 9,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -445,11 +449,11 @@ const styles = StyleSheet.create({
   },
   menuGroupCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -475,4 +479,4 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F1F5F9',
   },
-});
+}));

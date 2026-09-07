@@ -19,6 +19,7 @@ import { AppText } from '../components/typography/AppText';
 import { WalletApi } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
+import { Radius , Colors, createThemedStyles } from '../theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 32;
@@ -31,6 +32,7 @@ interface PaymentMethodsScreenProps {
 export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScreenProps) {
   const { user, wallet } = useApp();
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const [cards, setCards] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCardLocked, setIsCardLocked] = useState(false);
@@ -108,9 +110,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
       setCvv('');
       fetchCards();
     } catch (e: any) {
-      // Mock thành công nếu backend chạy offline
-      Alert.alert('Thành công 🎉', 'Thẻ của bạn đã được liên kết thành công.');
-      setIsAddModalVisible(false);
+      Alert.alert('Liên kết thất bại', e.message || 'Không thể liên kết thẻ lúc này. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,9 +129,8 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
             try {
               await WalletApi.unlinkFundingSource(cardId);
               fetchCards();
-            } catch (err) {
-              // Mock xóa
-              setCards(prev => prev.filter(c => c.id !== cardId));
+            } catch (err: any) {
+              Alert.alert('Lỗi', err.message || 'Không thể hủy liên kết thẻ. Vui lòng thử lại sau.');
             }
           },
         },
@@ -175,7 +174,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
             colors={
               isCardLocked
                 ? ['#334155', '#475569', '#64748B']
-                : ['#3B0724', '#700F43', '#831843', '#D2519D']
+                : [colors.heroGradEnd, colors.primaryDeep, colors.heroGradMid, colors.primary]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -230,7 +229,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
 
             {/* CARD NUMBER */}
             <AppText style={styles.cardNumberText}>
-              ••••   ••••   ••••   {defaultCard?.number ? defaultCard.number.slice(-4) : '8888'}
+              ••••   ••••   ••••   {defaultCard?.number ? defaultCard.number.slice(-4) : '••••'}
             </AppText>
 
             {/* CARD FOOTER */}
@@ -238,14 +237,14 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
               <View>
                 <AppText style={styles.cardSubTitle}>CHỦ THẺ</AppText>
                 <AppText style={styles.cardHolderText} numberOfLines={1}>
-                  {defaultCard?.cardHolderName || user?.name?.toUpperCase() || 'BUI GIA HUY'}
+                  {defaultCard?.cardHolderName || user?.name?.toUpperCase() || 'CHỦ TÀI KHOẢN'}
                 </AppText>
               </View>
 
               <View>
                 <AppText style={styles.cardSubTitle}>HẾT HẠN</AppText>
                 <AppText style={styles.cardExpiryText}>
-                  {defaultCard?.expiryDate || '12/28'}
+                  {defaultCard?.expiryDate || '••/••'}
                 </AppText>
               </View>
 
@@ -332,7 +331,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
                     )}
                   </View>
                   <AppText style={[styles.savedCardSub, { color: colors.textSecondary }]}>
-                    Hết hạn: {card.expiryDate || '12/28'} • {card.cardHolderName || 'BUI GIA HUY'}
+                    Hết hạn: {card.expiryDate || '••/••'} • {card.cardHolderName || user?.name?.toUpperCase() || 'CHỦ TÀI KHOẢN'}
                   </AppText>
                 </View>
               </View>
@@ -593,7 +592,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
               disabled={isSubmitting}
             >
               <LinearGradient
-                colors={['#700F43', '#D2519D']}
+                colors={[colors.primaryDeep, colors.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.submitGradient}
@@ -612,7 +611,7 @@ export default function PaymentMethodsScreen({ navigation }: PaymentMethodsScree
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -654,7 +653,7 @@ const styles = StyleSheet.create({
   addPillText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   scrollBody: {
     padding: 16,
@@ -665,11 +664,11 @@ const styles = StyleSheet.create({
   cardGraphic: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 20,
     justifyContent: 'space-between',
     overflow: 'hidden',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
@@ -860,7 +859,7 @@ const styles = StyleSheet.create({
   sectionActionText: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#D2519D',
+    color: colors.primary,
   },
   loadingBox: {
     flexDirection: 'row',
@@ -966,7 +965,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     paddingHorizontal: 16,
     paddingVertical: 9,
     borderRadius: 20,
@@ -978,7 +977,7 @@ const styles = StyleSheet.create({
   },
   methodsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: Radius.card,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1069,8 +1068,8 @@ const styles = StyleSheet.create({
   },
   modalContentSheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     padding: 20,
     paddingBottom: 36,
   },
@@ -1083,7 +1082,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   inputLabel: {
     fontSize: 12.5,
@@ -1101,13 +1100,13 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1.2,
     borderColor: '#E2E8F0',
-    borderRadius: 10,
+    borderRadius: Radius.sm,
     paddingVertical: 8,
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
   },
   cardTypeOptionActive: {
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     backgroundColor: '#FDF2F8',
   },
   cardTypeText: {
@@ -1115,8 +1114,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B',
   },
-  cardTypeTextActive: {
-    color: '#700F43',
+  cardTypeTextActive: { color: colors.primaryDeep,
     fontWeight: '800',
   },
   inputBox: {
@@ -1167,4 +1165,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
-});
+}));

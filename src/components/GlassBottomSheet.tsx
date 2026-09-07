@@ -14,7 +14,8 @@ import {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Typography } from '../theme';
+import { Typography, Colors, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -41,6 +42,8 @@ export function NestedGlassButton({
   variant?: 'primary' | 'secondary';
   icon?: React.ReactNode;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -86,8 +89,8 @@ export function NestedGlassButton({
         <LinearGradient
           colors={
             isPrimary
-              ? ['#D2519D', '#700F43']
-              : ['rgba(255, 255, 255, 0.85)', 'rgba(253, 242, 248, 0.65)']
+              ? [Colors.primary, Colors.primaryDeep]
+              : ['rgba(255, 255, 255, 0.85)', Colors.primarySoft]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -101,7 +104,7 @@ export function NestedGlassButton({
             <Text
               style={[
                 styles.buttonLabel,
-                { color: isPrimary ? '#FFFFFF' : '#700F43' },
+                { color: isPrimary ? '#FFFFFF' : Colors.primaryDeep },
               ]}
             >
               {label}
@@ -123,6 +126,8 @@ export function GlassBottomSheet({
   onAction,
   sheetHeight = 360,
 }: GlassBottomSheetProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const slideAnim = useRef(new Animated.Value(sheetHeight)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -254,7 +259,7 @@ export function GlassBottomSheet({
                   onPress={onClose}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close-circle" size={24} color="#700F43" />
+                  <Ionicons name="close-circle" size={24} color={Colors.primaryDeep} />
                 </TouchableOpacity>
               </View>
             )}
@@ -279,7 +284,7 @@ export function GlassBottomSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   overlayContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -299,7 +304,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderBottomWidth: 0,
     borderColor: 'rgba(255, 255, 255, 0.90)',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: 'rgba(112, 15, 67, 0.25)',
+    backgroundColor: colors.primarySoft,
   },
   headerContainer: {
     marginBottom: 12,
@@ -342,13 +347,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: Typography.heading.fontFamily,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: 0.3,
   },
   subtitleText: {
     fontSize: 13,
     fontFamily: Typography.bodySm.fontFamily,
-    color: 'rgba(112, 15, 67, 0.70)',
+    color: Colors.textSecondary,
     marginTop: 3,
   },
   closeBtn: {
@@ -371,7 +376,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.90)',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
@@ -406,4 +411,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.4,
   },
-});
+}));

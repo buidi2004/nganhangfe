@@ -1,3 +1,4 @@
+import { Colors, createThemedStyles } from '../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -12,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
@@ -23,6 +24,8 @@ interface OtpVerificationScreenProps {
 }
 
 export default function OtpVerificationScreen({ route, navigation }: OtpVerificationScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { phone = '0923158725', fromScreen = 'ForgotPassword' } = route?.params || {};
   const [pinDigits, setPinDigits] = useState<string[]>([]);
 
@@ -62,40 +65,40 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Xác thực OTP</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Xác thực OTP</AppText>
 
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={22} color="#700F43" />
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         {/* HERO ICON */}
-        <View style={styles.heroIconWrapper}>
+        <View style={[styles.heroIconWrapper, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#F0FDF4' }]}>
           <MaterialCommunityIcons name="shield-check" size={44} color="#10B981" />
         </View>
 
-        <AppText style={styles.title}>Nhập mã xác thực OTP</AppText>
-        <AppText style={styles.subtitle}>
+        <AppText style={[styles.title, { color: colors.primary }]}>Nhập mã xác thực OTP</AppText>
+        <AppText style={[styles.subtitle, { color: colors.textSecondary }]}>
           Mã xác thực gồm 6 chữ số đã được gửi tới số điện thoại{' '}
-          <AppText style={{ fontWeight: '800', color: '#700F43' }}>{phone}</AppText>
+          <AppText style={{ fontWeight: '800', color: colors.primary }}>{phone}</AppText>
         </AppText>
 
         {/* 6 PIN CIRCLE DOTS */}
@@ -107,10 +110,11 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
                 key={index}
                 style={[
                   styles.pinCircle,
-                  isFilled && styles.pinCircleFilled,
+                  { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                  isFilled && { borderColor: colors.primary },
                 ]}
               >
-                {isFilled && <View style={styles.pinInnerDot} />}
+                {isFilled && <View style={[styles.pinInnerDot, { backgroundColor: colors.primary }]} />}
               </View>
             );
           })}
@@ -122,12 +126,12 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
           activeOpacity={0.7}
           onPress={() => setPinDigits([])}
         >
-          <AppText style={styles.resendText}>Chưa nhận được mã? <AppText style={styles.resendHighlight}>Gửi lại (45s)</AppText></AppText>
+          <AppText style={[styles.resendText, { color: colors.textSecondary }]}>Chưa nhận được mã? <AppText style={[styles.resendHighlight, { color: colors.primary }]}>Gửi lại (45s)</AppText></AppText>
         </TouchableOpacity>
       </View>
 
       {/* NUMERIC KEYPAD */}
-      <View style={styles.keypadContainer}>
+      <View style={[styles.keypadContainer, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
         {[
           ['1', '2', '3'],
           ['4', '5', '6'],
@@ -144,7 +148,7 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
                     activeOpacity={0.7}
                     onPress={() => setPinDigits([])}
                   >
-                    <AppText style={styles.keypadActionText}>Xóa hết</AppText>
+                    <AppText style={[styles.keypadActionText, { color: colors.textSecondary }]}>Xóa hết</AppText>
                   </TouchableOpacity>
                 );
               }
@@ -156,7 +160,7 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
                     activeOpacity={0.7}
                     onPress={handleDelete}
                   >
-                    <Ionicons name="backspace-outline" size={26} color="#700F43" />
+                    <Ionicons name="backspace-outline" size={26} color={colors.primary} />
                   </TouchableOpacity>
                 );
               }
@@ -167,7 +171,7 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
                   activeOpacity={0.7}
                   onPress={() => handleKeyPress(item)}
                 >
-                  <AppText style={styles.keypadDigitText}>{item}</AppText>
+                  <AppText style={[styles.keypadDigitText, { color: colors.textPrimary }]}>{item}</AppText>
                 </TouchableOpacity>
               );
             })}
@@ -178,7 +182,7 @@ export default function OtpVerificationScreen({ route, navigation }: OtpVerifica
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   content: {
@@ -260,14 +264,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   pinCircleFilled: {
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     backgroundColor: '#FDF2F8',
   },
   pinInnerDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
   },
   resendBtn: {
     paddingVertical: 8,
@@ -277,8 +281,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontWeight: '600',
   },
-  resendHighlight: {
-    color: '#700F43',
+  resendHighlight: { color: colors.primaryDeep,
     fontWeight: '800',
   },
   keypadContainer: {
@@ -309,4 +312,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B',
   },
-});
+}));

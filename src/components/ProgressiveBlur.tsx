@@ -10,7 +10,7 @@ export interface ProgressiveBlurProps {
   direction?: 'bottom-up' | 'top-down' | 'left-to-right' | 'right-to-left';
   /** Độ mờ tối đa (1-100) */
   maxIntensity?: number;
-  /** Màu phủ tint hòa trộn (mặc định '#FFFFFF' hoặc '#700F43') */
+  /** Màu phủ tint hòa trộn (mặc định Colors.white hoặc Colors.primaryDeep) */
   tintColor?: string;
   /** Cường độ tint (0.0 -> 1.0) */
   tintIntensity?: number;

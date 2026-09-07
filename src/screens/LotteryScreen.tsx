@@ -15,6 +15,8 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { AppText } from '../components/typography/AppText';
+import { useTheme } from '../context/ThemeContext';
+import { Radius , Colors, createThemedStyles } from '../theme';
 
 interface LotteryScreenProps {
   navigation: any;
@@ -53,8 +55,8 @@ const LOTTERY_TYPES = [
 ];
 
 const LATEST_RESULTS = [
-  { id: '1', name: 'Power 6/55', date: 'Kỳ quay #01124 - 15/10/2024', numbers: ['05', '12', '24', '33', '41', '50', '52'], color: '#D97706' },
-  { id: '2', name: 'Mega 6/45', date: 'Kỳ quay #01089 - 14/10/2024', numbers: ['08', '14', '22', '31', '39', '44'], color: '#E11D48' },
+  { id: '1', name: 'Power 6/55', date: 'Kỳ quay #01124 - 07/09/2026', numbers: ['05', '12', '24', '33', '41', '50', '52'], color: '#D97706' },
+  { id: '2', name: 'Mega 6/45', date: 'Kỳ quay #01089 - 06/09/2026', numbers: ['08', '14', '22', '31', '39', '44'], color: '#E11D48' },
 ];
 
 export default function LotteryScreen({ navigation }: LotteryScreenProps) {
@@ -147,13 +149,16 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
     };
   });
 
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.bgBase : '#FCE7F3' }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
       {/* Background Gradient */}
       <LinearGradient
-        colors={['#700F43', '#E11D48', '#FCE7F3']}
+        colors={isDark ? [colors.heroGradEnd, colors.primaryDeep, colors.background] : [colors.primaryDeep, colors.badgeRed, colors.primarySoft]}
         locations={[0, 0.4, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -227,12 +232,12 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
 
           {/* LOTTERY TYPES LIST */}
           <View style={styles.sectionContainer}>
-            <AppText style={styles.sectionTitle}>Giải thưởng cực lớn</AppText>
+            <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Giải thưởng cực lớn</AppText>
             
             {LOTTERY_TYPES.map((lottery) => (
-              <TouchableOpacity key={lottery.id} style={styles.lotteryCard} activeOpacity={0.9}>
+              <TouchableOpacity key={lottery.id} style={[styles.lotteryCard, { borderColor: colors.border }]} activeOpacity={0.9}>
                 <LinearGradient
-                  colors={['#FFFFFF', '#F8FAFC']}
+                  colors={isDark ? [colors.cardBackground, colors.surfaceSecondary] : ['#FFFFFF', '#F8FAFC']}
                   style={StyleSheet.absoluteFillObject}
                 />
                 
@@ -241,14 +246,14 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
                     <View style={[styles.lotteryBrandBadge, { borderColor: lottery.color }]}>
                       <AppText style={[styles.lotteryBrandText, { color: lottery.color }]}>{lottery.logoText}</AppText>
                     </View>
-                    <AppText style={styles.lotteryName}>{lottery.name}</AppText>
+                    <AppText style={[styles.lotteryName, { color: colors.textPrimary }]}>{lottery.name}</AppText>
                   </View>
                   <AppText style={styles.nextDrawText}>Kỳ quay: {lottery.nextDraw}</AppText>
                 </View>
 
                 <View style={styles.lotteryCardBottom}>
                   <View>
-                    <AppText style={styles.jackpotLabel}>Jackpot ước tính</AppText>
+                    <AppText style={[styles.jackpotLabel, { color: colors.textSecondary }]}>Jackpot ước tính</AppText>
                     <AppText style={[styles.jackpotAmount, { color: lottery.color }]}>{lottery.jackpot}</AppText>
                   </View>
                   <View style={[styles.buyBtn, { backgroundColor: lottery.color }]}>
@@ -261,19 +266,19 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
 
           {/* LATEST RESULTS SECTION */}
           <View style={[styles.sectionContainer, { marginTop: 16 }]}>
-            <AppText style={styles.sectionTitle}>Kết quả quay số gần nhất</AppText>
+            <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Kết quả quay số gần nhất</AppText>
             
             {LATEST_RESULTS.map((result) => (
-              <View key={result.id} style={styles.resultCard}>
+              <View key={result.id} style={[styles.resultCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
                 <View style={styles.resultHeader}>
-                  <AppText style={styles.resultName}>{result.name}</AppText>
-                  <AppText style={styles.resultDate}>{result.date}</AppText>
+                  <AppText style={[styles.resultName, { color: colors.textPrimary }]}>{result.name}</AppText>
+                  <AppText style={[styles.resultDate, { color: colors.textSecondary }]}>{result.date}</AppText>
                 </View>
                 
                 <View style={styles.resultNumbersRow}>
                   {result.numbers.map((num, idx) => (
-                    <View key={idx} style={[styles.resultBall, idx === result.numbers.length - 1 && result.id === '1' ? { backgroundColor: '#E11D48' } : {}]}>
-                      <AppText style={[styles.resultBallText, idx === result.numbers.length - 1 && result.id === '1' ? { color: '#FFFFFF' } : {}]}>{num}</AppText>
+                    <View key={idx} style={[styles.resultBall, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }, idx === result.numbers.length - 1 && result.id === '1' ? { backgroundColor: '#E11D48' } : {}]}>
+                      <AppText style={[styles.resultBallText, { color: colors.textPrimary }, idx === result.numbers.length - 1 && result.id === '1' ? { color: '#FFFFFF' } : {}]}>{num}</AppText>
                     </View>
                   ))}
                 </View>
@@ -287,7 +292,7 @@ export default function LotteryScreen({ navigation }: LotteryScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: '#FCE7F3',
@@ -325,7 +330,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   luckyCard: {
-    borderRadius: 24,
+    borderRadius: Radius.card,
     padding: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
@@ -376,7 +381,7 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#700F43',
+    color: colors.primaryDeep,
     includeFontPadding: false,
     lineHeight: 20,
     textAlignVertical: 'center',
@@ -422,10 +427,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   lotteryCard: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -542,4 +547,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
   },
-});
+}));

@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, TouchableOpacity, ScrollView } from 'react-native';
 import { AppIcon } from './icons/AppIcon';
-import { Colors, Radius, Spacing } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Spacing, createThemedStyles, ThemeColors } from '../theme';
 import { AppText } from './typography/AppText';
+import { useTheme } from '../context/ThemeContext';
 
 interface ProviderIconGridProps {
   providers: Array<{
@@ -13,25 +13,28 @@ interface ProviderIconGridProps {
   }>;
 }
 
-export const ProviderIconGrid: React.FC<ProviderIconGridProps> = ({ providers }) => (
-  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.container}>
-    {providers.map((provider, i) => (
-      <TouchableOpacity
-        key={i}
-        style={styles.providerItem}
-        onPress={provider.onPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.iconWrapper}>
-          <AppIcon name={provider.icon as any} size="md" color={Colors.primary} />
-        </View>
-        <AppText variant="caption" style={styles.providerLabel}>{provider.label}</AppText>
-      </TouchableOpacity>
-    ))}
-  </ScrollView>
-);
+export const ProviderIconGrid: React.FC<ProviderIconGridProps> = ({ providers }) => {
+  const { colors } = useTheme();
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.container}>
+      {providers.map((provider, i) => (
+        <TouchableOpacity
+          key={i}
+          style={styles.providerItem}
+          onPress={provider.onPress}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrapper, { backgroundColor: colors.primarySoft }]}>
+            <AppIcon name={provider.icon as any} size="md" color={colors.primary} />
+          </View>
+          <AppText variant="caption" style={[styles.providerLabel, { color: colors.textPrimary }]}>{provider.label}</AppText>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+};
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flexDirection: 'row',
     paddingBottom: Spacing.sm,
@@ -45,13 +48,13 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.xs,
   },
   providerLabel: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
-});
+}));

@@ -256,7 +256,7 @@ export type RootStackParamList = {
   
   // Transaction Stack
   Transfer: undefined;
-  TransferConfirm: {transferData: TransferRequest};
+  ConfirmTransfer: any;
   TransactionDetail: {transactionId: string};
   TransactionHistory: {walletId: string};
   

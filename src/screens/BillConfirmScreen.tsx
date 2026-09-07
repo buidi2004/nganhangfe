@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, StatusBar, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Alert, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Radius, Shadows, Spacing , Colors } from '../theme';
 import { AppText } from '../components/typography/AppText';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { PinAuthModal } from '../components/PinAuthModal';
 import { WalletApi } from '../services/api';
 import { useApp } from '../context/AppContext';
-
-const { width } = Dimensions.get('window');
+import { useTheme } from '../context/ThemeContext';
 
 interface BillConfirmScreenProps {
   route: any;
@@ -14,122 +16,368 @@ interface BillConfirmScreenProps {
 }
 
 export default function BillConfirmScreen({ route, navigation }: BillConfirmScreenProps) {
-  const { provider = 'Tiền điện', billId = 'BILL-12345', amount = 350000 } = route.params || {};
-  const { user } = useApp();
-  const [pinDigits, setPinDigits] = useState<string[]>([]);
+  const { provider = 'Tiền điện EVN', billId = 'PE010088921', amount = 350000 } = route.params || {};
+  const { user, wallet, refreshBalance } = useApp();
+  const { colors, isDark } = useTheme();
+
+  const [walletBalance, setWalletBalance] = useState<number>(wallet?.balance ?? 0);
+  const [showPinModal, setShowPinModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const displayAmount = amount.toLocaleString('vi-VN') + ' VND';
-
-  const handleKeyPress = async (val: string) => {
-    if (pinDigits.length < 6 && !isProcessing) {
-      const nextPins = [...pinDigits, val];
-      setPinDigits(nextPins);
-
-      if (nextPins.length === 6) {
-        setIsProcessing(true);
-        try {
-          if (!user?.walletId) throw new Error('Không tìm thấy ví');
-
-          // Directly call payBill 
-          const res = await WalletApi.payBill(user.walletId, billId, amount);
-
-          navigation.navigate('TransferResult', {
-            success: true,
-            amount: displayAmount,
-            recipient: { name: provider, phone: billId },
-            selectedBank: 'Thanh toán hóa đơn',
-            notes: `Thanh toán ${provider}`,
-            transactionId: res.data?.id || 'TXN-BILL-000',
-            timestamp: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          setIsProcessing(false);
-          setPinDigits([]);
-          Alert.alert('Lỗi thanh toán', e.message || 'Thanh toán thất bại');
-        }
-      }
+  useEffect(() => {
+    if (wallet?.balance !== undefined) {
+      setWalletBalance(wallet.balance);
+    } else if (user?.walletId) {
+      WalletApi.getWallet(user.walletId)
+        .then((res) => {
+          if (res.data?.balance !== undefined) {
+            setWalletBalance(res.data.balance);
+          }
+        })
+        .catch((e) => console.warn('Failed to load wallet balance:', e));
     }
+  }, [user?.walletId, wallet?.balance]);
+
+  const displayAmount = amount.toLocaleString('vi-VN') + ' đ';
+
+  const getServiceIcon = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('điện')) return 'flash-outline';
+    if (lower.includes('nước')) return 'water-outline';
+    if (lower.includes('internet') || lower.includes('mạng')) return 'wifi-outline';
+    return 'receipt-outline';
   };
 
-  const handleDelete = () => {
-    if (pinDigits.length > 0) {
-      setPinDigits(pinDigits.slice(0, -1));
+  const handleOpenPinModal = () => {
+    if (walletBalance !== null && walletBalance < amount) {
+      Alert.alert(
+        'Số dư không đủ',
+        `Số dư ví hiện tại (${walletBalance.toLocaleString('vi-VN')} đ) không đủ để thanh toán hóa đơn ${displayAmount}.\n\nBạn có muốn nạp thêm tiền vào ví ngay không?`,
+        [
+          { text: 'Đóng', style: 'cancel' },
+          {
+            text: 'Nạp tiền ngay',
+            onPress: () => navigation.navigate('Deposit'),
+          },
+        ]
+      );
+      return;
+    }
+    setShowPinModal(true);
+  };
+
+  const handleConfirmPin = async (pin: string) => {
+    setIsProcessing(true);
+    try {
+      if (!user?.walletId) throw new Error('Không tìm thấy thông tin ví');
+
+      // 1. Xác thực mã PIN với Core Banking
+      try {
+        await WalletApi.verifyPin(pin);
+      } catch (pinErr: any) {
+        setIsProcessing(false);
+        Alert.alert('Mã PIN không đúng', pinErr.message || 'Mã PIN giao dịch không chính xác. Vui lòng thử lại.');
+        return;
+      }
+
+      // 2. Thực hiện thanh toán hóa đơn
+      const res = await WalletApi.payBill(user.walletId, billId, amount);
+
+      // 3. Cập nhật số dư sau thanh toán
+      try {
+        await refreshBalance();
+      } catch (refErr) {
+        console.warn('refreshBalance error:', refErr);
+      }
+
+      setShowPinModal(false);
+      setIsProcessing(false);
+
+      navigation.navigate('TransferResult', {
+        success: true,
+        amount: displayAmount,
+        recipient: { name: provider, phone: billId },
+        selectedBank: 'Thanh toán hóa đơn',
+        notes: `Thanh toán hóa đơn ${provider}`,
+        transactionId: res.data?.id || (res.data as any)?.transactionId || `BILL${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e: any) {
+      setIsProcessing(false);
+      setShowPinModal(false);
+      Alert.alert(
+        'Thanh toán không thành công',
+        e.message || 'Không thể hoàn tất thanh toán hóa đơn. Vui lòng kiểm tra lại số dư hoặc thử lại sau.'
+      );
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} activeOpacity={0.7} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
+
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          activeOpacity={0.7}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>Xác nhận thanh toán</AppText>
-        <View style={{ width: 40 }} />
+        <AppText style={[styles.headerTitle, { color: colors.textPrimary }]}>Xác nhận thanh toán</AppText>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Ionicons name="home-outline" size={22} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <AppText style={styles.title}>Nhập mã PIN</AppText>
-        <AppText style={styles.subtitle}>Thanh toán {displayAmount} cho {provider}</AppText>
-        
-        <View style={styles.pinCirclesRow}>
-          {[0, 1, 2, 3, 4, 5].map((index) => {
-            const isFilled = index < pinDigits.length;
-            return (
-              <View key={index} style={[styles.pinCircle, isFilled && styles.pinCircleFilled]}>
-                {isFilled && <View style={styles.pinInnerDot} />}
-              </View>
-            );
-          })}
-        </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Bill Summary Hero Card */}
+        <View style={[styles.billCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <View style={[styles.iconCircle, { backgroundColor: colors.primarySoft }]}>
+            <Ionicons name={getServiceIcon(provider) as any} size={28} color={colors.primary} />
+          </View>
 
-        {isProcessing && <AppText style={styles.processingText}>Đang xử lý giao dịch...</AppText>}
+          <AppText style={[styles.providerName, { color: colors.textPrimary }]}>{provider}</AppText>
+          <AppText style={[styles.customerCode, { color: colors.textSecondary }]}>Mã KH: {billId}</AppText>
 
-        <View style={styles.keyboardContainer}>
-          {[
-            ['1', '2', '3'],
-            ['4', '5', '6'],
-            ['7', '8', '9'],
-          ].map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.keyboardRow}>
-              {row.map((key) => (
-                <TouchableOpacity key={key} style={styles.keyBtn} disabled={isProcessing} onPress={() => handleKeyPress(key)}>
-                  <AppText style={styles.keyText}>{key}</AppText>
-                </TouchableOpacity>
-              ))}
+          <View style={styles.amountBadge}>
+            <AppText style={[styles.amountText, { color: colors.primary }]}>{displayAmount}</AppText>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Details list */}
+          <View style={styles.specList}>
+            <View style={styles.specRow}>
+              <AppText style={[styles.specLabel, { color: colors.textSecondary }]}>Kỳ thanh toán</AppText>
+              <AppText style={[styles.specValue, { color: colors.textPrimary }]}>Tháng 09/2026</AppText>
             </View>
-          ))}
-          <View style={styles.keyboardRow}>
-            <View style={styles.keyBtn} />
-            <TouchableOpacity style={styles.keyBtn} disabled={isProcessing} onPress={() => handleKeyPress('0')}>
-              <AppText style={styles.keyText}>0</AppText>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.keyBtn} disabled={isProcessing} onPress={handleDelete}>
-              <Ionicons name="backspace-outline" size={28} color="#0F172A" />
-            </TouchableOpacity>
+
+            <View style={styles.specRow}>
+              <AppText style={[styles.specLabel, { color: colors.textSecondary }]}>Trạng thái gạch nợ</AppText>
+              <View style={[styles.instantTag, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5' }]}>
+                <Ionicons name="flash" size={12} color={isDark ? '#34D399' : '#059669'} />
+                <AppText style={[styles.instantTagText, { color: isDark ? '#34D399' : '#059669' }]}>Gạch nợ tức thì</AppText>
+              </View>
+            </View>
+
+            <View style={styles.specRow}>
+              <AppText style={[styles.specLabel, { color: colors.textSecondary }]}>Phí giao dịch</AppText>
+              <AppText style={[styles.specValue, { color: '#10B981', fontWeight: '700' }]}>Miễn phí (0 đ)</AppText>
+            </View>
           </View>
         </View>
+
+        {/* Source Wallet Card */}
+        <View style={[styles.sourceCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <View style={styles.sourceLeft}>
+            <View style={[styles.walletIconCircle, { backgroundColor: colors.primarySoft }]}>
+              <MaterialCommunityIcons name="wallet-outline" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.walletInfo}>
+              <AppText style={[styles.sourceTitle, { color: colors.textPrimary }]}>Ví Sen Hồng</AppText>
+              <AppText style={[styles.sourceBalance, { color: colors.textSecondary }]}>
+                Số dư: {walletBalance !== null ? `${walletBalance.toLocaleString('vi-VN')} đ` : 'Đang tải...'}
+              </AppText>
+            </View>
+          </View>
+          <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+        </View>
+
+        {/* Security Assurance */}
+        <View style={[styles.securityNotice, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC' }]}>
+          <MaterialCommunityIcons name="shield-check-outline" size={20} color="#10B981" />
+          <AppText style={[styles.securityNoticeText, { color: colors.textSecondary }]}>
+            Giao dịch được bảo mật đa tầng chuẩn Ngân hàng Nhà nước. Hóa đơn sẽ được gạch nợ ngay khi xác thực.
+          </AppText>
+        </View>
+      </ScrollView>
+
+      {/* Footer CTA */}
+      <View style={[styles.footer, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
+        <View style={styles.totalRow}>
+          <AppText style={[styles.totalLabel, { color: colors.textSecondary }]}>Tổng thanh toán</AppText>
+          <AppText style={[styles.totalAmount, { color: colors.primary }]}>{displayAmount}</AppText>
+        </View>
+        <PrimaryButton
+          title="Xác nhận thanh toán"
+          onPress={handleOpenPinModal}
+        />
       </View>
+
+      {/* PinAuthModal */}
+      <PinAuthModal
+        visible={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handleConfirmPin}
+        title="Xác thực thanh toán hóa đơn"
+        subtitle={`Nhập mã PIN để thanh toán ${displayAmount} cho ${provider}`}
+        isProcessing={isProcessing}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, height: 56, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  content: { flex: 1, alignItems: 'center', paddingTop: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: '#0F172A', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 32 },
-  pinCirclesRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 40 },
-  pinCircle: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: '#CBD5E1', justifyContent: 'center', alignItems: 'center' },
-  pinCircleFilled: { borderColor: '#700F43' },
-  pinInnerDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#700F43' },
-  processingText: { fontSize: 14, color: '#700F43', marginBottom: 20 },
-  keyboardContainer: { width: '100%', paddingHorizontal: 24, marginTop: 'auto', paddingBottom: 40 },
-  keyboardRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  keyBtn: { width: (width - 48 - 32) / 3, height: 60, justifyContent: 'center', alignItems: 'center', borderRadius: 30, backgroundColor: '#F8FAFC' },
-  keyText: { fontSize: 28, fontWeight: '600', color: '#0F172A' },
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  headerBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  billCard: {
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  providerName: {
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  customerCode: {
+    fontSize: 13,
+    marginBottom: Spacing.md,
+  },
+  amountBadge: {
+    marginVertical: Spacing.xs,
+  },
+  amountText: {
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    marginVertical: Spacing.lg,
+  },
+  specList: {
+    width: '100%',
+    gap: 12,
+  },
+  specRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  specLabel: {
+    fontSize: 13,
+  },
+  specValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  instantTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  instantTagText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  sourceCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+  sourceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  walletIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  walletInfo: {
+    gap: 2,
+  },
+  sourceTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  sourceBalance: {
+    fontSize: 12,
+  },
+  securityNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+  },
+  securityNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  footer: {
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    gap: Spacing.md,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  totalAmount: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
 });

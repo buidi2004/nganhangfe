@@ -12,7 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import { WalletApi } from '../services/api';
 import { ActivityIndicator, Alert } from 'react-native';
@@ -61,6 +62,8 @@ interface ConfirmTransferScreenProps {
 }
 
 export default function ConfirmTransferScreen({ route, navigation }: ConfirmTransferScreenProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const { user, wallet } = useApp();
   const {
     recipient = { name: 'Người nhận', phone: '' },
@@ -166,20 +169,20 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.cardBackground} />
 
       {/* 1. TOP HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
 
-        <AppText style={styles.headerTitle}>Xác nhận thông tin</AppText>
+        <AppText style={[styles.headerTitle, { color: colors.primary }]}>Xác nhận thông tin</AppText>
         <View style={{ width: 40 }} />
       </View>
 
@@ -188,93 +191,93 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
         contentContainerStyle={styles.scrollContent}
       >
         {/* 2. MAIN DETAILS CARD */}
-        <View style={styles.detailsCard}>
+        <View style={[styles.detailsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {/* SỐ TIỀN GIAO DỊCH */}
           <View style={styles.amountSection}>
-            <AppText style={styles.amountLabel}>Số tiền giao dịch</AppText>
-            <AppText style={styles.amountValueText}>{displayAmount}</AppText>
-            <AppText style={styles.amountWordsText}>
+            <AppText style={[styles.amountLabel, { color: colors.textSecondary }]}>Số tiền giao dịch</AppText>
+            <AppText style={[styles.amountValueText, { color: colors.primary }]}>{displayAmount}</AppText>
+            <AppText style={[styles.amountWordsText, { color: colors.textSecondary }]}>
               {numberToVietnameseWords(amount)}
             </AppText>
           </View>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
           {/* NGƯỜI CHUYỂN */}
           <View style={styles.partySection}>
-            <AppText style={styles.partyHeaderLabel}>Người chuyển</AppText>
+            <AppText style={[styles.partyHeaderLabel, { color: colors.textPrimary }]}>Người chuyển</AppText>
 
             <View style={styles.partyInfoRow}>
               {/* SenBank Logo */}
-              <View style={[styles.mbLogoCircle, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
-                <AppText style={{ color: '#D2519D', fontSize: 20, fontWeight: '900' }}>★</AppText>
+              <View style={[styles.senLogoCircle, { backgroundColor: isDark ? colors.surface : colors.primarySoft, borderColor: isDark ? colors.border : colors.primarySoft }]}>
+                <AppText style={{ color: colors.primary, fontSize: 20, fontWeight: '900' }}>★</AppText>
               </View>
 
               <View style={styles.partyDetailsCol}>
-                <AppText style={styles.partyName}>{user?.name?.toUpperCase() || 'NGƯỜI GỬI'}</AppText>
-                <AppText style={styles.partySubInfo}>{user?.phoneNumber}</AppText>
-                <AppText style={styles.partySubInfo}>SenBank (Nội bộ)</AppText>
+                <AppText style={[styles.partyName, { color: colors.textPrimary }]}>{user?.name?.toUpperCase() || 'NGƯỜI GỬI'}</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>{user?.phoneNumber}</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>SenBank (Nội bộ)</AppText>
               </View>
             </View>
           </View>
 
           {/* NGƯỜI NHẬN */}
           <View style={styles.partySection}>
-            <AppText style={styles.partyHeaderLabel}>Người nhận</AppText>
+            <AppText style={[styles.partyHeaderLabel, { color: colors.textPrimary }]}>Người nhận</AppText>
 
             <View style={styles.partyInfoRow}>
               {/* Recipient Bank Logo */}
               {selectedBank.includes('SenBank') ? (
-                <View style={[styles.vcbLogoCircle, { backgroundColor: '#FDF2F8', borderColor: '#FCE7F3' }]}>
-                  <AppText style={{ color: '#D2519D', fontSize: 16, fontWeight: '900' }}>★</AppText>
+                <View style={[styles.vcbLogoCircle, { backgroundColor: isDark ? colors.surface : colors.primarySoft, borderColor: isDark ? colors.border : colors.primarySoft }]}>
+                  <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: '900' }}>★</AppText>
                 </View>
               ) : selectedBank.includes('MB') ? (
-                <View style={[styles.vcbLogoCircle, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}>
+                <View style={[styles.vcbLogoCircle, { backgroundColor: isDark ? '#3B0D14' : '#FFF1F2', borderColor: isDark ? '#881337' : '#FECDD3' }]}>
                   <AppText style={{ color: '#E11D48', fontSize: 16, fontWeight: '900' }}>★</AppText>
                 </View>
               ) : selectedBank.includes('Techcombank') || selectedBank.includes('TCB') ? (
-                <View style={[styles.vcbLogoCircle, { backgroundColor: '#FEF2F2', borderColor: '#FEE2E2' }]}>
+                <View style={[styles.vcbLogoCircle, { backgroundColor: isDark ? '#3B0D14' : '#FEF2F2', borderColor: isDark ? '#881337' : '#FEE2E2' }]}>
                   <MaterialCommunityIcons name="view-grid" size={16} color="#E21A22" />
                 </View>
               ) : (
-                <View style={styles.vcbLogoCircle}>
+                <View style={[styles.vcbLogoCircle, { backgroundColor: isDark ? '#052E16' : '#F0FDF4', borderColor: isDark ? '#14532D' : '#DCFCE7' }]}>
                   <Ionicons name="triangle" size={17} color="#15803D" />
                 </View>
               )}
 
               <View style={styles.partyDetailsCol}>
-                <AppText style={styles.partyName}>{recipient?.name || 'BÙI VĂN DĨ'}</AppText>
-                <AppText style={styles.partySubInfo}>{recipient?.phone || '0923158725'}</AppText>
-                <AppText style={styles.partySubInfo}>
+                <AppText style={[styles.partyName, { color: colors.textPrimary }]}>{recipient?.name || 'BÙI VĂN DĨ'}</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>{recipient?.phone || '0923158725'}</AppText>
+                <AppText style={[styles.partySubInfo, { color: colors.textSecondary }]}>
                   {selectedBank}
                 </AppText>
               </View>
             </View>
           </View>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
           {/* THÔNG TIN BỔ SUNG */}
           <View style={styles.extraInfoBlock}>
             {/* Nội dung chuyển tiền */}
             <View style={styles.extraInfoRow}>
-              <AppText style={styles.extraInfoLabel}>Nội dung chuyển tiền</AppText>
-              <AppText style={styles.extraInfoValue}>{notes || `${user?.name?.toUpperCase() || user?.phoneNumber || 'Khach hang'} chuyen tien`}</AppText>
+              <AppText style={[styles.extraInfoLabel, { color: colors.textSecondary }]}>Nội dung chuyển tiền</AppText>
+              <AppText style={[styles.extraInfoValue, { color: colors.textPrimary }]}>{notes || `${user?.name?.toUpperCase() || user?.phoneNumber || 'Khach hang'} chuyen tien`}</AppText>
             </View>
 
             {/* Hình thức chuyển tiền */}
             <View style={[styles.extraInfoRow, { marginTop: 10 }]}>
-              <AppText style={styles.extraInfoLabel}>Hình thức chuyển tiền</AppText>
-              <AppText style={styles.extraInfoValue}>Chuyển nhanh</AppText>
+              <AppText style={[styles.extraInfoLabel, { color: colors.textSecondary }]}>Hình thức chuyển tiền</AppText>
+              <AppText style={[styles.extraInfoValue, { color: colors.textPrimary }]}>Chuyển nhanh</AppText>
             </View>
 
             {/* Phí giao dịch */}
             <View style={[styles.extraInfoRow, { marginTop: 10 }]}>
-              <AppText style={styles.extraInfoLabel}>Phí giao dịch</AppText>
+              <AppText style={[styles.extraInfoLabel, { color: colors.textSecondary }]}>Phí giao dịch</AppText>
               {isFetchingFee ? (
-                <ActivityIndicator size="small" color="#D2519D" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <AppText style={styles.extraInfoValue}>
+                <AppText style={[styles.extraInfoValue, { color: colors.textPrimary }]}>
                   {feeAmount === 0 ? 'Miễn phí' : `${feeAmount?.toLocaleString('vi-VN')} đ`}
                 </AppText>
               )}
@@ -283,23 +286,23 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
         </View>
 
         {/* 3. WARNING ALERT BOX */}
-        <View style={styles.warningAlertBox}>
+        <View style={[styles.warningAlertBox, { backgroundColor: isDark ? '#2D2305' : '#FFFBEB', borderColor: isDark ? '#4D3B0A' : '#FEF08A' }]}>
           <Ionicons name="warning" size={20} color="#EAB308" />
-          <AppText style={styles.warningAlertText}>
+          <AppText style={[styles.warningAlertText, { color: isDark ? '#FDE047' : '#854D0E' }]}>
             Vui lòng kiểm tra chính xác thông tin trước khi xác nhận giao dịch.
           </AppText>
         </View>
       </ScrollView>
 
       {/* 4. BOTTOM ACTION BUTTONS */}
-      <View style={styles.bottomFooter}>
+      <View style={[styles.bottomFooter, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
         {/* Nút Quay lại */}
         <TouchableOpacity
-          style={styles.backActionButton}
+          style={[styles.backActionButton, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}
           activeOpacity={0.8}
           onPress={() => navigation.goBack()}
         >
-          <AppText style={styles.backActionText}>Quay lại</AppText>
+          <AppText style={[styles.backActionText, { color: colors.primary }]}>Quay lại</AppText>
         </TouchableOpacity>
 
         {/* Nút Xác nhận -> Mở BottomSheet Xác Thực Digital OTP */}
@@ -312,7 +315,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
           }}
         >
           <LinearGradient
-            colors={['#D2519D', '#700F43']}
+            colors={[colors.primary, colors.primaryDeep]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -337,16 +340,16 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
             onPress={() => setIsOtpModalVisible(false)}
           />
 
-          <View style={styles.otpSheetContainer}>
+          <View style={[styles.otpSheetContainer, { backgroundColor: colors.cardBackground }]}>
             {/* Top Drag Handle */}
-            <View style={styles.sheetHandleBar} />
+            <View style={[styles.sheetHandleBar, { backgroundColor: isDark ? '#475569' : '#CBD5E1' }]} />
 
             {/* Sheet Title */}
-            <AppText style={styles.otpSheetTitle}>Xác thực Digital OTP</AppText>
+            <AppText style={[styles.otpSheetTitle, { color: colors.primary }]}>Xác thực Digital OTP</AppText>
 
             {/* Subtitle Prompt */}
-            <AppText style={styles.otpSubtitle}>
-              Vui lòng nhập mã <AppText style={{ fontWeight: '800', color: '#0F172A' }}>PIN Digital OTP</AppText> để nhận mã{'\n'}xác thực giao dịch
+            <AppText style={[styles.otpSubtitle, { color: colors.textSecondary }]}>
+              Vui lòng nhập mã <AppText style={{ fontWeight: '800', color: colors.textPrimary }}>PIN Digital OTP</AppText> để nhận mã{'\n'}xác thực giao dịch
             </AppText>
 
             {/* 6 PIN Input Dots Circles */}
@@ -358,8 +361,9 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
                     key={index}
                     style={[
                       styles.pinCircle,
+                      { backgroundColor: colors.cardBackground, borderColor: colors.border },
                       isFilled && styles.pinCircleFilled,
-                      index === 0 && !isFilled && styles.pinCircleFirstEmpty,
+                      index === 0 && !isFilled && { borderColor: colors.primary },
                     ]}
                   >
                     {isFilled && <View style={styles.pinInnerDot} />}
@@ -370,8 +374,8 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
 
             {isTransferring ? (
               <View style={{ height: 300, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#D2519D" />
-                <AppText style={{ marginTop: 12, color: '#700F43', fontWeight: 'bold' }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <AppText style={{ marginTop: 12, color: colors.primary, fontWeight: 'bold' }}>
                   Đang xử lý giao dịch...
                 </AppText>
               </View>
@@ -383,7 +387,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
                   style={styles.resetPinBtn}
                   onPress={() => setPinDigits([])}
                 >
-                  <AppText style={styles.resetPinText}>Đặt lại mã PIN</AppText>
+                  <AppText style={[styles.resetPinText, { color: colors.primary }]}>Đặt lại mã PIN</AppText>
                 </TouchableOpacity>
 
             {/* Numeric Keypad Grid */}
@@ -400,7 +404,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
                       return (
                         <TouchableOpacity
                           key={cIdx}
-                          style={styles.keypadBtn}
+                          style={[styles.keypadBtn, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC' }]}
                           activeOpacity={0.7}
                           onPress={() => {
                             // Biometric Quick Auth
@@ -417,7 +421,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
                             }, 250);
                           }}
                         >
-                          <MaterialCommunityIcons name="fingerprint" size={30} color="#D2519D" />
+                          <MaterialCommunityIcons name="fingerprint" size={30} color={colors.primary} />
                         </TouchableOpacity>
                       );
                     }
@@ -425,22 +429,22 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
                       return (
                         <TouchableOpacity
                           key={cIdx}
-                          style={styles.keypadBtn}
+                          style={[styles.keypadBtn, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC' }]}
                           activeOpacity={0.7}
                           onPress={handleDelete}
                         >
-                          <Ionicons name="backspace-outline" size={26} color="#700F43" />
+                          <Ionicons name="backspace-outline" size={26} color={colors.primary} />
                         </TouchableOpacity>
                       );
                     }
                     return (
                       <TouchableOpacity
                         key={cIdx}
-                        style={styles.keypadBtn}
+                        style={[styles.keypadBtn, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC' }]}
                         activeOpacity={0.7}
                         onPress={() => handleKeyPress(item)}
                       >
-                        <AppText style={styles.keypadDigitText}>{item}</AppText>
+                        <AppText style={[styles.keypadDigitText, { color: colors.textPrimary }]}>{item}</AppText>
                       </TouchableOpacity>
                     );
                   })}
@@ -455,12 +459,12 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
         {/* Custom Error Alert Dialog: Card hồng trắng + nút OK đỏ (hiển thị đè lên trên PIN modal) */}
         {errorMessage && (
           <View style={styles.errorModalOverlay}>
-            <View style={styles.errorCardContainer}>
+            <View style={[styles.errorCardContainer, { backgroundColor: colors.cardBackground, borderColor: colors.danger }]}>
               <View style={styles.errorIconCircle}>
                 <Ionicons name="alert-circle" size={44} color="#EF4444" />
               </View>
-              <AppText style={styles.errorCardTitle}>Lỗi chuyển tiền</AppText>
-              <AppText style={styles.errorCardMessage}>{errorMessage}</AppText>
+              <AppText style={[styles.errorCardTitle, { color: colors.textPrimary }]}>Lỗi chuyển tiền</AppText>
+              <AppText style={[styles.errorCardMessage, { color: colors.textSecondary }]}>{errorMessage}</AppText>
               
               <TouchableOpacity
                 style={styles.errorRedOkBtn}
@@ -477,12 +481,12 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
       {/* Custom Error Alert Dialog khi OTP modal không mở */}
       <Modal visible={!!errorMessage && !isOtpModalVisible} transparent animationType="fade" onRequestClose={() => setErrorMessage(null)}>
         <View style={styles.errorModalOverlay}>
-          <View style={styles.errorCardContainer}>
+          <View style={[styles.errorCardContainer, { backgroundColor: colors.cardBackground, borderColor: colors.danger }]}>
             <View style={styles.errorIconCircle}>
               <Ionicons name="alert-circle" size={44} color="#EF4444" />
             </View>
-            <AppText style={styles.errorCardTitle}>Lỗi chuyển tiền</AppText>
-            <AppText style={styles.errorCardMessage}>{errorMessage}</AppText>
+            <AppText style={[styles.errorCardTitle, { color: colors.textPrimary }]}>Lỗi chuyển tiền</AppText>
+            <AppText style={[styles.errorCardMessage, { color: colors.textSecondary }]}>{errorMessage}</AppText>
             
             <TouchableOpacity
               style={styles.errorRedOkBtn}
@@ -498,7 +502,7 @@ export default function ConfirmTransferScreen({ route, navigation }: ConfirmTran
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -523,7 +527,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -533,11 +537,11 @@ const styles = StyleSheet.create({
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -556,7 +560,7 @@ const styles = StyleSheet.create({
   amountValueText: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.5,
   },
   amountWordsText: {
@@ -584,13 +588,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  mbLogoCircle: {
+  senLogoCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFF1F2',
+    backgroundColor: colors.badgePinkSoft,
     borderWidth: 1,
-    borderColor: '#FECDD3',
+    borderColor: colors.badgePinkBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -675,7 +679,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -683,7 +687,7 @@ const styles = StyleSheet.create({
   backActionText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   confirmActionButton: {
     flex: 1.4,
@@ -692,7 +696,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -715,8 +719,8 @@ const styles = StyleSheet.create({
   },
   otpSheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     paddingTop: 12,
     paddingHorizontal: 20,
     paddingBottom: 30,
@@ -737,7 +741,7 @@ const styles = StyleSheet.create({
   otpSheetTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -766,17 +770,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   pinCircleFirstEmpty: {
-    borderColor: '#700F43',
+    borderColor: colors.primaryDeep,
   },
   pinCircleFilled: {
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     backgroundColor: '#FDF2F8',
   },
   pinInnerDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
   },
   resetPinBtn: {
     alignSelf: 'center',
@@ -787,7 +791,7 @@ const styles = StyleSheet.create({
   resetPinText: {
     fontSize: 14.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   keypadGrid: {
     paddingHorizontal: 10,
@@ -826,14 +830,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: Radius.card,
     paddingHorizontal: 22,
     paddingTop: 26,
     paddingBottom: 22,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#FFE4E6', // Viền hồng phấn nhẹ đặc trưng Sen Hồng
-    shadowColor: '#D2519D', // Đổ bóng hồng cao cấp
+    borderColor: colors.badgePinkBorder,
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.18,
     shadowRadius: 18,
@@ -883,4 +887,4 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-});
+}));

@@ -1,3 +1,4 @@
+import { Colors } from '../theme';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ImageSourcePropType } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, G, Path } from 'react-native-svg';
@@ -153,8 +154,8 @@ type Props = {
 export default function LotusIntroAnimation({
   logoSource,
   size = 240,
-  petalColorLight = '#F472B6',
-  petalColorDark = '#DB2777',
+  petalColorLight = Colors.lotusPetal || Colors.primaryGlow,
+  petalColorDark = Colors.primary,
   onFinish,
   onReady,
 }: Props) {

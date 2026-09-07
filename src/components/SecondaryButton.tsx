@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { Colors, Radius, Shadows, Opacity } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Opacity , Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { AppText } from './typography/AppText';
 
 interface SecondaryButtonProps {
@@ -18,29 +18,39 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   style,
   textStyle,
   disabled,
-}) => (
-  <TouchableOpacity
-    style={[styles.container, disabled ? styles.disabled : null, style]}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <AppText variant="body" style={[styles.text, textStyle]}>{title}</AppText>
-  </TouchableOpacity>
-);
+}) => {
+  const { colors } = useTheme();
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.container,
+        { borderColor: colors.primary },
+        disabled ? styles.disabled : null,
+        style,
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <AppText variant="body" style={[styles.text, { color: colors.primary }, textStyle]}>
+        {title}
+      </AppText>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    color: Colors.primary,
-    },
+    fontWeight: '600',
+  },
   disabled: {
     opacity: Opacity.disabled,
   },

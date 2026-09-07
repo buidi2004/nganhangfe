@@ -2,34 +2,39 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Colors, Radius } from '../theme';
 
+import { useTheme } from '../context/ThemeContext';
+
 interface OtpBoxProps {
   value?: string;
   isActive?: boolean;
 }
 
-export const OtpBox: React.FC<OtpBoxProps> = ({ value, isActive }) => (
-  <View
-    style={[
-      styles.container,
-      {
-        borderColor: isActive ? Colors.primary : Colors.primarySoft,
-        backgroundColor: isActive ? Colors.primarySoft : Colors.surface,
-      },
-    ]}
-  >
+export const OtpBox: React.FC<OtpBoxProps> = ({ value, isActive }) => {
+  const { colors } = useTheme();
+  return (
     <View
       style={[
-        styles.dot,
+        styles.container,
         {
-          width: 8,
-          height: 8,
-          borderRadius: Radius.xs,
-          backgroundColor: value ? Colors.primary : 'transparent',
+          borderColor: isActive ? colors.primary : colors.primarySoft,
+          backgroundColor: isActive ? colors.primarySoft : colors.surface,
         },
       ]}
-    />
-  </View>
-);
+    >
+      <View
+        style={[
+          styles.dot,
+          {
+            width: 8,
+            height: 8,
+            borderRadius: Radius.xs,
+            backgroundColor: value ? colors.primary : 'transparent',
+          },
+        ]}
+      />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

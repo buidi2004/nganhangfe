@@ -12,6 +12,7 @@ import { getMessaging, AuthorizationStatus, type RemoteMessage } from '@react-na
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { Colors } from '../theme';
 import { WalletApi } from './api';
 import { navigate } from '../navigation/navigationRef';
 
@@ -26,7 +27,7 @@ export async function initNotificationChannel() {
         name: 'Giao dịch',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#D2519D',
+        lightColor: Colors.primary,
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         bypassDnd: true,
         showBadge: true,

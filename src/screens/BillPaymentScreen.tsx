@@ -1,11 +1,19 @@
-import { Image } from 'expo-image';
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  StatusBar,
+  TextInput,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
 import { useTheme } from '../context/ThemeContext';
+import { Radius, Colors, createThemedStyles } from '../theme';
 
 interface BillPaymentScreenProps {
   navigation: any;
@@ -15,26 +23,24 @@ const { width } = Dimensions.get('window');
 const GRID_ITEM_WIDTH = (width - 32 - 48) / 4; // 4 items per row with gaps
 
 const PROVIDERS = [
-  { id: '1', icon: 'flash', label: 'Điện' },
-  { id: '2', icon: 'water', label: 'Nước' },
-  { id: '3', icon: 'wifi', label: 'Internet' },
-  { id: '4', icon: 'cellphone', label: 'Di động' },
-  { id: '5', icon: 'television-classic', label: 'Truyền hình' },
-  { id: '6', icon: 'school', label: 'Học phí' },
-  { id: '7', icon: 'shield-check', label: 'Bảo hiểm' },
-  { id: '8', icon: 'home-city', label: 'Chung cư' },
+  { id: '1', label: 'Điện lực\nEVN', icon: 'flash', color: '#F59E0B' },
+  { id: '2', label: 'Nước sinh hoạt', icon: 'water', color: '#0EA5E9' },
+  { id: '3', label: 'Internet\nTruyền hình', icon: 'wifi', color: '#8B5CF6' },
+  { id: '4', label: 'Học phí\nEduPay', icon: 'school', color: '#10B981' },
+  { id: '5', label: 'Cước di động\nTrả sau', icon: 'phone-portrait-outline', color: '#EC4899' },
+  { id: '6', label: 'Chung cư\nPhí dịch vụ', icon: 'business', color: '#6366F1' },
+  { id: '7', label: 'Truyền hình cáp', icon: 'tv-outline', color: '#F97316' },
+  { id: '8', label: 'Dịch vụ công\nThuế đất', icon: 'document-text-outline', color: '#14B8A6' },
 ];
 
 const SAVED_BILLS = [
   { 
     id: '1', 
-    provider: 'Điện lực Miền Nam', 
+    provider: 'Điện lực TP.HCM', 
     customerCode: 'PE01928374',
     amount: '350.000 đ', 
-    dueDate: '15/10/2024',
+    dueDate: '15/09/2026',
     icon: 'flash',
-    color: '#D97706',
-    bg: '#FEF3C7',
     status: 'Chưa thanh toán'
   },
   { 
@@ -42,25 +48,44 @@ const SAVED_BILLS = [
     provider: 'Nước sạch Chợ Lớn', 
     customerCode: 'WA98273645',
     amount: '180.000 đ', 
-    dueDate: '20/10/2024',
+    dueDate: '20/09/2026',
     icon: 'water',
-    color: '#0284C7',
-    bg: '#E0F2FE',
     status: 'Đã thanh toán'
   },
 ];
 
 export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps) {
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Lọc danh mục dịch vụ theo từ khóa tìm kiếm
+  const filteredProviders = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return PROVIDERS;
+    return PROVIDERS.filter(p => p.label.toLowerCase().includes(q));
+  }, [searchQuery]);
+
+  // Lọc danh sách hóa đơn theo từ khóa tìm kiếm
+  const filteredBills = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return SAVED_BILLS;
+    return SAVED_BILLS.filter(
+      b => b.provider.toLowerCase().includes(q) || b.customerCode.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+    <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
       
       {/* Background Gradient */}
       <LinearGradient
-        colors={['#FCE7F3', '#FFFFFF', '#FFFFFF']}
+        colors={isDark ? [colors.bgBase, colors.primaryDeep, colors.bgBase] : [colors.badgePinkBorder, colors.surface, colors.surface]}
         locations={[0, 0.25, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -69,117 +94,168 @@ export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps
         {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
-            style={styles.backBtn}
+            style={[styles.backBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={24} color="#700F43" />
+            <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
-          <AppText style={styles.headerTitle}>Thanh toán hoá đơn</AppText>
-          <TouchableOpacity style={styles.backBtn} activeOpacity={0.7}>
-            <Ionicons name="receipt-outline" size={22} color="#700F43" />
+          <AppText style={[styles.headerTitle, { color: colors.primary }]}>Thanh toán hoá đơn</AppText>
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('TransactionHistory')}
+          >
+            <Ionicons name="receipt-outline" size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
-          {/* SEARCH BAR */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#94A3B8" />
-            <AppText style={styles.searchText}>Tìm kiếm dịch vụ, nhà cung cấp...</AppText>
+          {/* SEARCH BAR - REAL INTERACTIVE INPUT */}
+          <View style={[
+            styles.searchContainer,
+            { 
+              backgroundColor: colors.cardBackground,
+              borderColor: isDark ? colors.border : 'rgba(226, 232, 240, 0.8)',
+            }
+          ]}>
+            <Ionicons name="search" size={20} color={colors.textSecondary} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.textPrimary }]}
+              placeholder="Tìm kiếm dịch vụ, nhà cung cấp, mã KH..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* PROVIDER GRID */}
           <View style={styles.sectionContainer}>
-            <AppText style={styles.sectionTitle}>Danh mục dịch vụ</AppText>
-            <View style={styles.providerGrid}>
-              {PROVIDERS.map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={styles.providerItem}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate('BillInput', { provider: p.label })}
-                >
-                  <View style={[
-                    styles.providerIconBg, 
-                    { 
-                      backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
-                      borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
-                      borderWidth: 1,
-                    }
-                  ]}>
-                    <MaterialCommunityIcons name={p.icon as any} size={24} color={isDark ? colors.primary : '#700F43'} />
-                  </View>
-                  <AppText style={[styles.providerLabel, { color: colors.textPrimary }]}>{p.label}</AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Danh mục dịch vụ</AppText>
+            {filteredProviders.length === 0 ? (
+              <View style={styles.emptySearchWrap}>
+                <AppText style={[styles.emptySearchText, { color: colors.textSecondary }]}>
+                  Không có dịch vụ nào khớp với từ khóa
+                </AppText>
+              </View>
+            ) : (
+              <View style={styles.providerGrid}>
+                {filteredProviders.map((p) => (
+                  <TouchableOpacity
+                    key={p.id}
+                    style={styles.providerItem}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('BillInput', { provider: p.label })}
+                  >
+                    <View style={[
+                      styles.providerIconBg, 
+                      { 
+                        backgroundColor: colors.primarySoft,
+                        borderColor: colors.border,
+                        borderWidth: 1,
+                      }
+                    ]}>
+                      <MaterialCommunityIcons name={p.icon as any} size={26} color={isDark ? colors.primary : colors.primaryDeep} />
+                    </View>
+                    <AppText style={[styles.providerLabel, { color: colors.textPrimary }]}>{p.label}</AppText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
 
           {/* SAVED BILLS */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeaderRow}>
-              <AppText style={styles.sectionTitle}>Hoá đơn đã lưu</AppText>
-              <TouchableOpacity>
-                <AppText style={styles.seeAllText}>Quản lý</AppText>
+              <AppText style={[styles.sectionTitle, { color: colors.textPrimary }]}>Hoá đơn đã lưu</AppText>
+              <TouchableOpacity onPress={() => navigation.navigate('BillInput', { provider: 'Tất cả' })}>
+                <AppText style={styles.seeAllText}>Thêm mới +</AppText>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.billsList}>
-              {SAVED_BILLS.map((bill) => {
-                const isUnpaid = bill.status === 'Chưa thanh toán';
-                return (
-                  <TouchableOpacity
-                    key={bill.id}
-                    style={styles.billCard}
-                    activeOpacity={0.8}
-                    onPress={() => navigation.navigate('BillInput', { provider: bill.provider })}
-                  >
-                    <View style={[
-                      styles.billIconWrap, 
-                      { 
-                        backgroundColor: isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)',
-                        borderColor: isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(112, 15, 67, 0.1)',
-                        borderWidth: 1,
-                      }
-                    ]}>
-                      <MaterialCommunityIcons name={bill.icon as any} size={26} color={isDark ? colors.primary : '#700F43'} />
-                    </View>
-
-                    <View style={styles.billCenter}>
-                      <AppText style={styles.billProviderName}>{bill.provider}</AppText>
-                      <AppText style={styles.billCustomerCode}>{bill.customerCode}</AppText>
-                      <AppText style={styles.billDueDate}>Kỳ cước: {bill.dueDate}</AppText>
-                    </View>
-
-                    <View style={styles.billRight}>
-                      <AppText style={[styles.billAmount, !isUnpaid && { color: '#64748B' }]}>
-                        {bill.amount}
-                      </AppText>
-                      <View style={[styles.statusBadge, isUnpaid ? styles.statusBadgeUnpaid : styles.statusBadgePaid]}>
-                        <AppText style={[styles.statusText, isUnpaid ? styles.statusTextUnpaid : styles.statusTextPaid]}>
-                          {bill.status}
-                        </AppText>
+            {filteredBills.length === 0 ? (
+              <View style={styles.emptySearchWrap}>
+                <AppText style={[styles.emptySearchText, { color: colors.textSecondary }]}>
+                  Không tìm thấy hóa đơn phù hợp
+                </AppText>
+              </View>
+            ) : (
+              <View style={styles.billsList}>
+                {filteredBills.map((bill) => {
+                  const isUnpaid = bill.status === 'Chưa thanh toán';
+                  return (
+                    <TouchableOpacity
+                      key={bill.id}
+                      style={[
+                        styles.billCard,
+                        { 
+                          backgroundColor: colors.cardBackground,
+                          borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9',
+                        }
+                      ]}
+                      activeOpacity={0.8}
+                      onPress={() => navigation.navigate('BillInput', { provider: bill.provider, customerCode: bill.customerCode })}
+                    >
+                      <View style={[
+                        styles.billIconWrap, 
+                        { 
+                          backgroundColor: colors.primarySoft,
+                          borderColor: colors.border,
+                          borderWidth: 1,
+                        }
+                      ]}>
+                        <MaterialCommunityIcons name={bill.icon as any} size={26} color={isDark ? colors.primary : colors.primaryDeep} />
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+
+                      <View style={styles.billCenter}>
+                        <AppText style={[styles.billProviderName, { color: colors.textPrimary }]}>{bill.provider}</AppText>
+                        <AppText style={[styles.billCustomerCode, { color: colors.textSecondary }]}>Mã KH: {bill.customerCode}</AppText>
+                        <AppText style={styles.billDueDate}>Kỳ cước: {bill.dueDate}</AppText>
+                      </View>
+
+                      <View style={styles.billRight}>
+                        <AppText style={[styles.billAmount, !isUnpaid && { color: colors.textSecondary }]}>
+                          {bill.amount}
+                        </AppText>
+                        <View style={[styles.statusBadge, isUnpaid ? styles.statusBadgeUnpaid : (isDark ? styles.statusBadgePaidDark : styles.statusBadgePaid)]}>
+                          <AppText style={[styles.statusText, isUnpaid ? styles.statusTextUnpaid : (isDark ? styles.statusTextPaidDark : styles.statusTextPaid)]}>
+                            {bill.status}
+                          </AppText>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
           </View>
           
           {/* AUTO PAY BANNER */}
-          <TouchableOpacity style={styles.autoPayBanner} activeOpacity={0.9}>
+          <TouchableOpacity
+            style={styles.autoPayBanner}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('Config')}
+          >
             <LinearGradient
-              colors={['#700F43', '#D2519D']}
+              colors={[colors.primaryDeep, colors.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.autoPayContent}>
               <View style={styles.autoPayTextWrap}>
-                <AppText style={styles.autoPayTitle}>Đăng ký Trích nợ tự động</AppText>
-                <AppText style={styles.autoPaySub}>Không lo trễ hạn, rảnh rang tận hưởng.</AppText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <Ionicons name="flash-outline" size={16} color="#FDE047" />
+                  <AppText style={styles.autoPayTitle}>Đăng ký Trích nợ tự động</AppText>
+                </View>
+                <AppText style={styles.autoPaySub}>Thanh toán định kỳ đúng hạn, an tâm tuyệt đối không lo ngắt dịch vụ.</AppText>
               </View>
               <View style={styles.autoPayBtn}>
                 <AppText style={styles.autoPayBtnText}>Đăng ký ngay</AppText>
@@ -193,10 +269,9 @@ export default function BillPaymentScreen({ navigation }: BillPaymentScreenProps
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   safeArea: {
     flex: 1,
@@ -212,14 +287,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#700F43',
     letterSpacing: -0.3,
   },
   scrollContent: {
@@ -229,25 +302,24 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginBottom: 24,
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     gap: 12,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: 'rgba(226, 232, 240, 0.6)',
   },
-  searchText: {
-    color: '#94A3B8',
+  searchInput: {
+    flex: 1,
     fontSize: 14,
     fontWeight: '600',
+    padding: 0,
   },
   sectionContainer: {
     marginBottom: 28,
@@ -262,14 +334,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#0F172A',
     paddingHorizontal: 16,
     marginBottom: 16,
   },
   seeAllText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#D2519D',
+    fontWeight: '800',
+    color: colors.primary,
   },
   providerGrid: {
     flexDirection: 'row',
@@ -285,7 +356,7 @@ const styles = StyleSheet.create({
   providerIconBg: {
     width: GRID_ITEM_WIDTH,
     height: GRID_ITEM_WIDTH,
-    borderRadius: 18, // Squircle
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -298,8 +369,16 @@ const styles = StyleSheet.create({
   providerLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#334155',
     textAlign: 'center',
+  },
+  emptySearchWrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  emptySearchText: {
+    fontSize: 13.5,
+    fontStyle: 'italic',
   },
   billsList: {
     paddingHorizontal: 16,
@@ -308,16 +387,14 @@ const styles = StyleSheet.create({
   billCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 16,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
   },
   billIconWrap: {
     width: 52,
@@ -334,12 +411,10 @@ const styles = StyleSheet.create({
   billProviderName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 2,
   },
   billCustomerCode: {
     fontSize: 13,
-    color: '#64748B',
     fontWeight: '600',
     marginBottom: 2,
   },
@@ -354,7 +429,7 @@ const styles = StyleSheet.create({
   billAmount: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#D2519D',
+    color: colors.primary,
     marginBottom: 8,
   },
   statusBadge: {
@@ -363,27 +438,33 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusBadgeUnpaid: {
-    backgroundColor: '#FFE4E6',
+    backgroundColor: colors.badgePinkSoft,
   },
   statusBadgePaid: {
     backgroundColor: '#F1F5F9',
+  },
+  statusBadgePaidDark: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   statusText: {
     fontSize: 10,
     fontWeight: '800',
   },
   statusTextUnpaid: {
-    color: '#E11D48',
+    color: colors.primary,
   },
   statusTextPaid: {
     color: '#64748B',
   },
+  statusTextPaidDark: {
+    color: '#94A3B8',
+  },
   autoPayBanner: {
     marginHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: Radius.card,
     overflow: 'hidden',
     marginTop: 8,
-    shadowColor: '#700F43',
+    shadowColor: Colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -401,14 +482,13 @@ const styles = StyleSheet.create({
   },
   autoPayTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15.5,
     fontWeight: '900',
-    marginBottom: 4,
   },
   autoPaySub: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 12.5,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 17,
   },
   autoPayBtn: {
     backgroundColor: '#FFFFFF',
@@ -416,9 +496,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
-  autoPayBtnText: {
-    color: '#700F43',
+  autoPayBtnText: { color: colors.primaryDeep,
     fontSize: 12,
     fontWeight: '800',
   },
-});
+}));

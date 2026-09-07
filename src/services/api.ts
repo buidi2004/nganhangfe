@@ -300,6 +300,9 @@ export const WalletApi = {
     ),
 
   // --- Transactions & Statement ---
+  getTransaction: (transactionId: string) =>
+    request<any>(`/transactions/${transactionId}`),
+
   getTransactionHistory: (walletId: string, page = 0, size = 20, type?: string) => {
     const params = new URLSearchParams({ walletId, page: page.toString(), size: size.toString() });
     if (type) params.append('type', type);
@@ -338,6 +341,14 @@ export const WalletApi = {
   getMe: () =>
     request<{ userId: string; fullName: string; email: string; dob: string; avatarUrl: string; kycStatus: string }>('/users/me'),
 
+  updateMe: (fullName?: string, email?: string, dob?: string) => {
+    const params = new URLSearchParams();
+    if (fullName) params.append('fullName', fullName);
+    if (email) params.append('email', email);
+    if (dob) params.append('dob', dob);
+    return request<any>(`/users/me?${params.toString()}`, { method: 'PUT' });
+  },
+
   // --- Notifications ---
   getNotifications: (page = 0, size = 20, type?: string) => {
     const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
@@ -373,6 +384,9 @@ export const WalletApi = {
   // --- Legal Limits & Terms ---
   getLimitsConfig: () =>
     request<any>('/config/limits'),
+
+  getLimitsStatus: () =>
+    request<any>('/config/limits/status'),
 
   getTerms: () =>
     request<string>('/legal/terms'),

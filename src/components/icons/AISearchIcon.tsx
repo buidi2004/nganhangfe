@@ -1,3 +1,4 @@
+import { Colors } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, Easing } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';

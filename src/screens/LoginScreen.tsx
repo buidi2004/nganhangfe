@@ -1,3 +1,4 @@
+import { useTheme } from '../context/ThemeContext';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
 import { ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { saveCredentials, getCredentials, getSavedCredentialsInfo, clearCredentials, checkBiometricSupport } from '../services/secureStore';
@@ -26,7 +27,9 @@ import * as ImagePicker from 'expo-image-picker';
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }: any) {
-  const { login, isLoading, lastError, clearError, customBackgroundUri, setCustomBackgroundUri } = useApp();
+  const { colors, isDark, themeColor } = useTheme();
+  const styles = getStyles(colors);
+  const { login, loginDemo, isLoading, lastError, clearError, customBackgroundUri, setCustomBackgroundUri } = useApp();
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -128,7 +131,20 @@ export default function LoginScreen({ navigation }: any) {
         await login(credentials.phone, credentials.password);
         navigation.navigate('MainTabs');
       } catch (e: any) {
-        Alert.alert('Đăng nhập thất bại', lastError || e.message);
+        Alert.alert(
+          'Đăng nhập thất bại',
+          (lastError || e.message) + '\n\nBạn có muốn vào chế độ Trải nghiệm Ngân hàng (Demo Mode) không?',
+          [
+            { text: 'Thử lại', style: 'cancel' },
+            {
+              text: 'Vào trải nghiệm',
+              onPress: () => {
+                loginDemo(credentials.phone || '0923158725');
+                navigation.navigate('MainTabs');
+              }
+            }
+          ]
+        );
         clearError();
       }
     } else if (credentials && credentials.phone) {
@@ -183,7 +199,20 @@ export default function LoginScreen({ navigation }: any) {
         navigation.navigate('MainTabs');
       }
     } catch (e: any) {
-      Alert.alert('Đăng nhập thất bại', lastError || e.message);
+      Alert.alert(
+        'Đăng nhập thất bại',
+        (lastError || e.message) + '\n\nBạn có muốn vào chế độ Trải nghiệm Ngân hàng (Demo Mode) để kiểm tra tất cả màn hình không?',
+        [
+          { text: 'Thử lại', style: 'cancel' },
+          {
+            text: 'Vào trải nghiệm',
+            onPress: () => {
+              loginDemo(phone || '0923158725');
+              navigation.navigate('MainTabs');
+            }
+          }
+        ]
+      );
       clearError();
     }
   };
@@ -225,7 +254,7 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1F0413" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       {/* BACKGROUND */}
       {customBackgroundUri ? (
         <ImageBackground 
@@ -233,10 +262,19 @@ export default function LoginScreen({ navigation }: any) {
           style={StyleSheet.absoluteFill} 
           resizeMode="cover"
         />
+      ) : themeColor === 'amber' ? (
+        <ImageBackground
+          source={require('../../assets/theme-amber-bg.png')}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        >
+          {/* Lớp overlay nhẹ giữ độ tương phản chuẩn mực và làm nổi bật các thẻ kính */}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15, 8, 0, 0.45)' }]} />
+        </ImageBackground>
       ) : (
         <>
           <LinearGradient
-            colors={['#1F0413', '#700F43', '#3B0724']}
+            colors={[colors.heroGradEnd, colors.primaryDeep, colors.heroGradStart]}
             start={{ x: 0.1, y: 0 }}
             end={{ x: 0.9, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -279,7 +317,11 @@ export default function LoginScreen({ navigation }: any) {
               <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.supportBeeBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.supportBeeBtn}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('HelpCenter')}
+            >
               <AppText style={{ fontSize: 22 }}>🐝</AppText>
               <View style={styles.supportPillBadge}>
                 <AppText style={styles.supportPillText}>HỖ TRỢ</AppText>
@@ -322,11 +364,11 @@ export default function LoginScreen({ navigation }: any) {
                   {/* Fingerprint Button floating to the right */}
                   {hasBiometricsEnabled && (
                     <TouchableOpacity
-                      style={[styles.biometricBtn, { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(210, 81, 157, 0.2)', borderColor: 'rgba(244, 114, 182, 0.4)' }]}
+                      style={[styles.biometricBtn, { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 255, 255, 0.3)' }]}
                       activeOpacity={0.8}
                       onPress={handleBiometricLogin}
                     >
-                      <MaterialCommunityIcons name="fingerprint" size={32} color="#F472B6" />
+                      <MaterialCommunityIcons name="fingerprint" size={32} color="#FFFFFF" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -339,11 +381,11 @@ export default function LoginScreen({ navigation }: any) {
                   <>
                     <AppText style={styles.label}>Số điện thoại</AppText>
                     <View style={[styles.inputWrapper, { marginBottom: 20 }]}>
-                      <Ionicons name="call-outline" size={20} color="#700F43" style={styles.inputIcon} />
+                      <Ionicons name="call-outline" size={20} color="#FFFFFF" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="Nhập số điện thoại"
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor="rgba(255,255,255,0.6)"
                         value={phone}
                         onChangeText={setPhone}
                         keyboardType="numeric"
@@ -361,7 +403,7 @@ export default function LoginScreen({ navigation }: any) {
 
                 <AppText style={[styles.label, isRemembered && { display: 'none' }]}>Mật khẩu</AppText>
                 <View style={[styles.inputWrapper, isRemembered && { backgroundColor: 'transparent', borderTopWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0, height: 46 }]}>
-                  {!isRemembered && <Ionicons name="lock-closed-outline" size={20} color="#F472B6" style={styles.inputIcon} />}
+                  {!isRemembered && <Ionicons name="lock-closed-outline" size={20} color="#FFFFFF" style={styles.inputIcon} />}
                   <TextInput
                     ref={passwordRef}
                     style={[styles.input, isRemembered && { fontSize: 18, paddingLeft: 4 }]}
@@ -375,7 +417,7 @@ export default function LoginScreen({ navigation }: any) {
                     onSubmitEditing={handleLogin}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#64748B" />
+                    <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -398,6 +440,16 @@ export default function LoginScreen({ navigation }: any) {
                   </TouchableOpacity>
                 )}
 
+                <TouchableOpacity 
+                  activeOpacity={0.7} 
+                  onPress={() => {
+                    loginDemo('0987654321');
+                    navigation.navigate('MainTabs');
+                  }}
+                >
+                  <AppText style={[styles.linkText, { color: '#FFFFFF', fontWeight: '700' }]}>✦ Demo</AppText>
+                </TouchableOpacity>
+
                 <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPassword')}>
                   <AppText style={styles.linkText}>Quên mật khẩu?</AppText>
                 </TouchableOpacity>
@@ -412,7 +464,7 @@ export default function LoginScreen({ navigation }: any) {
               disabled={isLoading}
             >
               <LinearGradient
-                colors={['#D2519D', '#E11D48']}
+                colors={[colors.primary, colors.primaryDeep]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFill}
@@ -435,10 +487,10 @@ export default function LoginScreen({ navigation }: any) {
             <TouchableOpacity
               style={styles.bottomActionItem}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('QR')}
+              onPress={() => navigation.navigate('ScanQR')}
             >
-              <MaterialCommunityIcons name="qrcode-scan" size={24} color="#F472B6" />
-              <AppText style={styles.bottomActionLabelPink}>Quét QR</AppText>
+              <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFFFFF" />
+              <AppText style={styles.bottomActionLabel}>Quét QR</AppText>
             </TouchableOpacity>
 
             {/* Xác thực D-OTP */}
@@ -447,8 +499,8 @@ export default function LoginScreen({ navigation }: any) {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('OtpVerification')}
             >
-              <MaterialCommunityIcons name="shield-key-outline" size={25} color="#F472B6" />
-              <AppText style={styles.bottomActionLabelPink}>Xác thực D-OTP</AppText>
+              <MaterialCommunityIcons name="shield-key-outline" size={25} color="#FFFFFF" />
+              <AppText style={styles.bottomActionLabel}>Xác thực D-OTP</AppText>
             </TouchableOpacity>
 
             {/* Thay ảnh nền */}
@@ -458,12 +510,12 @@ export default function LoginScreen({ navigation }: any) {
               onPress={handlePickBackground}
             >
               <View style={styles.iconWithBadgeWrap}>
-                <Ionicons name="images-outline" size={24} color="#F472B6" />
+                <Ionicons name="images-outline" size={24} color="#FFFFFF" />
                 <View style={styles.newBadgePill}>
                   <AppText style={styles.newBadgeText}>NEW</AppText>
                 </View>
               </View>
-              <AppText style={styles.bottomActionLabelPink}>Thay ảnh nền</AppText>
+              <AppText style={styles.bottomActionLabel}>Thay ảnh nền</AppText>
             </TouchableOpacity>
           </View>
 
@@ -476,8 +528,8 @@ export default function LoginScreen({ navigation }: any) {
                   activeOpacity={0.85}
                   onPress={action.onPress}
                 >
-                  <Ionicons name={action.icon} size={24} color="#F472B6" />
-                  <AppText style={styles.bottomActionLabelPink}>{action.label}</AppText>
+                  <Ionicons name={action.icon} size={24} color="#FFFFFF" />
+                  <AppText style={styles.bottomActionLabel}>{action.label}</AppText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -492,7 +544,7 @@ export default function LoginScreen({ navigation }: any) {
             <MaterialCommunityIcons
               name={isBottomActionsExpanded ? 'chevron-double-down' : 'chevron-double-up'}
               size={24}
-              color="#F472B6"
+              color="#FFFFFF"
             />
           </TouchableOpacity>
         </View>
@@ -502,7 +554,7 @@ export default function LoginScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -558,7 +610,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   supportPillBadge: {
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 4,
     paddingVertical: 1,
@@ -577,8 +629,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   glassLoginCard: {
-    backgroundColor: 'rgba(112, 15, 67, 0.65)',
-    borderRadius: 24,
+    backgroundColor: colors.primaryDeep,
+    borderRadius: Radius.card,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.25)',
     overflow: 'hidden',
@@ -603,10 +655,10 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderWidth: 1.2,
-    borderColor: 'rgba(244, 114, 182, 0.5)',
+    borderColor: colors.primaryGlow,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#F472B6',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
@@ -615,7 +667,7 @@ const styles = StyleSheet.create({
   greetingText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#E4ACB2',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginBottom: 4,
   },
   userNameLine1: {
@@ -668,7 +720,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     marginRight: 12,
-    color: '#F472B6',
+    color: colors.primaryGlow,
   },
   input: {
     flex: 1,
@@ -747,7 +799,7 @@ const styles = StyleSheet.create({
   bottomActionLabelPink: {
     fontSize: 12.5,
     fontWeight: '600',
-    color: '#F472B6',
+    color: '#FFFFFF',
   },
   expandedActionsGrid: {
     width: '100%',
@@ -767,4 +819,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 4,
   },
-});
+}));

@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../components/typography/AppText';
+import { Radius , Colors, createThemedStyles } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import { WalletApi } from '../services/api';
@@ -33,6 +34,7 @@ const { width } = Dimensions.get('window');
 
 export default function HelpCenterScreen({ navigation }: { navigation: any }) {
   const { isDark, colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,9 +70,9 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Đồng nhất màu thương hiệu SenBank cho icon
-  const brandIconColor = isDark ? colors.primary : '#700F43';
-  const brandIconBoxBg = isDark ? 'rgba(244, 114, 182, 0.12)' : 'rgba(112, 15, 67, 0.06)';
-  const brandIconBoxBorder = isDark ? 'rgba(244, 114, 182, 0.22)' : 'rgba(112, 15, 67, 0.12)';
+  const brandIconColor = isDark ? colors.primary : colors.primaryDeep;
+  const brandIconBoxBg = colors.primarySoft;
+  const brandIconBoxBorder = colors.border;
 
   // Tải FAQs từ server ngầm (nếu có)
   useEffect(() => {
@@ -166,23 +168,26 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
     }
 
     setIsSubmittingTicket(true);
-    const ticketCode = `TK-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
     try {
-      await WalletApi.createSupportTicket(ticketSubject, ticketCategory, ticketMessage);
-    } catch (e) {
-      // Hỗ trợ lưu trữ offline
-    } finally {
-      setIsSubmittingTicket(false);
+      const res = await WalletApi.createSupportTicket(ticketSubject, ticketCategory, ticketMessage);
+      const ticketId = res.data?.id || `TK-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
       setIsTicketModalVisible(false);
       setTicketSubject('');
       setTicketMessage('');
 
       Alert.alert(
         'Tiếp nhận yêu cầu thành công',
-        `Yêu cầu của quý khách đã được chuyển tới Bộ phận Tra soát & Xử lý Khiếu nại SenBank.\n\n• Mã phiếu tiếp nhận: ${ticketCode}\n• Thời gian phản hồi: Trong vòng 15 - 30 phút\n\nSenBank sẽ gửi thông báo kết quả xử lý trực tiếp trên ứng dụng.`,
+        `Yêu cầu của quý khách đã được chuyển tới Bộ phận Tra soát & Xử lý Khiếu nại SenBank.\n\n• Mã phiếu tiếp nhận: ${ticketId}\n• Thời gian phản hồi: Trong vòng 15 - 30 phút\n\nSenBank sẽ gửi thông báo kết quả xử lý trực tiếp trên ứng dụng.`,
         [{ text: 'Đã hiểu' }]
       );
+    } catch (e: any) {
+      Alert.alert(
+        'Gửi yêu cầu thất bại',
+        e.message || 'Không thể gửi yêu cầu tra soát lúc này. Quý khách vui lòng thử lại sau hoặc liên hệ Hotline 1900 8888.'
+      );
+    } finally {
+      setIsSubmittingTicket(false);
     }
   };
 
@@ -272,7 +277,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
         {/* 2. LUXURY 24/7 HOTLINE BANNER (Chuẩn ngân hàng thương mại Việt Nam) */}
         <View style={styles.bannerWrapper}>
           <LinearGradient
-            colors={['#3B0724', '#700F43', '#831843', '#A21D62']}
+            colors={[colors.heroGradEnd, colors.primaryDeep, colors.heroGradMid, colors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.bannerGradient}
@@ -304,7 +309,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
                 onPress={() => handleCallHotline(SUPPORT_CONTACTS.tollFreeHotline)}
               >
                 <View style={styles.callCardIconBoxRuby}>
-                  <Ionicons name="headset-outline" size={17} color="#700F43" />
+                  <Ionicons name="headset-outline" size={17} color={colors.primaryDeep} />
                 </View>
                 <View>
                   <AppText style={styles.callCardLabel}>MIỄN CƯỚC 24/7</AppText>
@@ -760,7 +765,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
               onPress={handleSubmitTicket}
             >
               <LinearGradient
-                colors={['#700F43', '#831843', '#A21D62']}
+                colors={[colors.primaryDeep, colors.heroGradMid, colors.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFill}
@@ -916,7 +921,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
             {/* Chat Header */}
             <View style={styles.chatModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={[styles.chatBotAvatar, { backgroundColor: '#700F43' }]}>
+                <View style={[styles.chatBotAvatar, { backgroundColor: colors.primaryDeep }]}>
                   <Ionicons name="headset-outline" size={18} color="#FFFFFF" />
                   <View style={styles.chatOnlineDot} />
                 </View>
@@ -949,7 +954,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
                     style={[
                       styles.chatBubble,
                       msg.sender === 'user'
-                        ? [styles.chatBubbleUser, { backgroundColor: '#700F43' }]
+                        ? [styles.chatBubbleUser, { backgroundColor: colors.primaryDeep }]
                         : [styles.chatBubbleBot, { backgroundColor: colors.surface, borderColor: colors.border }],
                     ]}
                   >
@@ -1005,7 +1010,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
                 returnKeyType="send"
               />
               <TouchableOpacity
-                style={[styles.chatSendBtn, { backgroundColor: '#700F43' }]}
+                style={[styles.chatSendBtn, { backgroundColor: colors.primaryDeep }]}
                 onPress={handleSendChatMessage}
               >
                 <Ionicons name="send" size={15} color="#FFFFFF" />
@@ -1018,7 +1023,7 @@ export default function HelpCenterScreen({ navigation }: { navigation: any }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
   },
@@ -1075,11 +1080,11 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   bannerWrapper: {
-    borderRadius: 20,
+    borderRadius: Radius.card,
     overflow: 'hidden',
     marginBottom: 16,
     elevation: 4,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -1166,13 +1171,13 @@ const styles = StyleSheet.create({
   callCardLabel: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: 0.2,
   },
   callCardNumber: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   callCardGeneral: {
     flex: 1,
@@ -1446,8 +1451,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContentSheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
     padding: 18,
     elevation: 10,
   },
@@ -1740,4 +1745,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-});
+}));

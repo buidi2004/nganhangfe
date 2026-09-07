@@ -1,20 +1,23 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, Radius, Shadows } from '../theme';
+import { View, StyleProp, ViewStyle } from 'react-native';
+import { Radius, Shadows, createThemedStyles, ThemeColors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface SolidCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const SolidCard: React.FC<SolidCardProps> = ({ children, style }) => (
-  <View style={[styles.container, style]}>{children}</View>
-);
+export const SolidCard: React.FC<SolidCardProps> = ({ children, style }) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+  return <View style={[styles.container, style]}>{children}</View>;
+};
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors: ThemeColors) => ({
   container: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.md,
     ...Shadows.card,
   },
-});
+}));

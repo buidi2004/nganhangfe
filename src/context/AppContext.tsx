@@ -57,6 +57,7 @@ interface AppContextValue {
   isLoggedIn: boolean;
   isLoading: boolean;
   login: (phone: string, password: string) => Promise<UserProfile>;
+  loginDemo: (phone?: string) => void;
   register: (phone: string, password: string, fullName: string) => Promise<{ walletId: string }>;
   logout: () => void;
   wallet: WalletData | null;
@@ -300,14 +301,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const d = res.data as any;
       setAuthTokens(d.token || d.accessToken, d.refreshToken);
 
-      let realWalletId = phone;
+      let realWalletId = '';
       let realName = phone;
       try {
         const infoRes = await WalletApi.getRecipientInfo(undefined, phone);
         if (infoRes.data?.walletId) {
           realWalletId = infoRes.data.walletId;
         }
-        
         // Fetch unmasked name from /users/me
         try {
           const meRes = await WalletApi.getMe();
@@ -318,7 +318,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.warn('Failed to fetch unmasked name:', meErr);
         }
       } catch (e) {
-        console.warn('Failed to fetch real walletId on login:', e);
+        console.warn('[LOGIN] Failed to fetch real walletId:', e);
+      }
+
+      // Guard: walletId phải là UUID (có dấu "-"), không phải số điện thoại
+      const isValidUUID = realWalletId.includes('-');
+      if (!isValidUUID) {
+        console.error('[LOGIN] walletId không hợp lệ — không thể kết nối WS đúng topic. walletId =', realWalletId);
+        throw new Error('Không lấy được walletId hợp lệ. Vui lòng thử lại.');
       }
 
       const profile: UserProfile = {
@@ -358,6 +365,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [connectWS]);
 
+  // ── loginDemo (Chế độ Trải nghiệm & Kiểm thử) ──────────────────────────
+  const loginDemo = useCallback((phoneStr: string = '0923158725') => {
+    const demoProfile: UserProfile = {
+      userId: 'demo-user-senhong-01',
+      phoneNumber: phoneStr,
+      name: 'BÙI VĂN DĨ',
+      walletId: 'w-demo-senhong-888',
+    };
+    setUser(demoProfile);
+    setWallet({
+      walletId: 'w-demo-senhong-888',
+      balance: 15500000,
+      currency: 'VND',
+    });
+  }, []);
+
   // ── register ───────────────────────────────────────────────────────────
   const register = useCallback(async (phone: string, password: string, fullName: string) => {
     setIsLoading(true);
@@ -369,14 +392,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const d = res.data as any;
       setAuthTokens(d.token || d.accessToken, d.refreshToken);
 
-      let realWalletId = phone;
+      let realWalletId = '';
       try {
         const infoRes = await WalletApi.getRecipientInfo(undefined, phone);
         if (infoRes.data?.walletId) {
           realWalletId = infoRes.data.walletId;
         }
       } catch (e) {
-        console.warn('Failed to fetch real walletId on register:', e);
+        console.warn('[REGISTER] Failed to fetch real walletId:', e);
+      }
+
+      // Guard: walletId phải là UUID (có dấu "-"), không phải số điện thoại
+      const isValidUUID = realWalletId.includes('-');
+      if (!isValidUUID) {
+        console.error('[REGISTER] walletId không hợp lệ — không thể kết nối WS đúng topic. walletId =', realWalletId);
+        throw new Error('Không lấy được walletId hợp lệ sau đăng ký. Vui lòng thử lại.');
       }
 
       const profile: UserProfile = {
@@ -443,22 +473,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── notifications ──────────────────────────────────────────────────────
-  const _loadNotifications = async () => {
+  const _loadNotifications = async (walletId?: string) => {
     try {
       const res = await WalletApi.getNotifications(0, 30);
       const items: any[] = Array.isArray(res.data) ? res.data : (res.data as any)?.content || [];
       setNotifications(items.map((n: any) => ({
         id: String(n.id),
         title: n.title || 'Thông báo',
-        body: n.body || n.message || '',
+        body: n.content || n.body || n.message || '',
         time: n.createdAt
           ? new Date(n.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
           : '',
-        isUnread: !(n.isRead || n.read),
+        isUnread: !(n.isRead ?? n.read ?? false),
         type: n.type,
       })));
     } catch (e: any) { console.warn('[Notif] Load error:', e.message); }
   };
+
 
   const markRead = useCallback(async (id: string) => {
     try {
@@ -527,7 +558,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const contextValue = useMemo<AppContextValue>(() => ({
     user, isLoggedIn: !!user, isLoading,
-    login, register, logout,
+    login, loginDemo, register, logout,
     wallet, refreshBalance, isBalanceLoading,
     notifications, unreadCount,
     markRead, markAllRead,
@@ -539,7 +570,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCustomBackgroundUri: updateCustomBackground,
     updateAvatar,
   }), [
-    user, isLoading, login, register, logout,
+    user, isLoading, login, loginDemo, register, logout,
     wallet, refreshBalance, isBalanceLoading,
     notifications, unreadCount, markRead, markAllRead,
     pendingTransactionId, wsConnected, lastError, clearError,

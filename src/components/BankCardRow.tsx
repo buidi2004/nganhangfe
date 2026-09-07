@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { AppIcon } from './icons/AppIcon';
-import { Colors, Radius, Spacing } from '../theme';
-import { Typography } from '../theme';
+import { Radius, Spacing, createThemedStyles, ThemeColors } from '../theme';
 import { AppText } from './typography/AppText';
+import { useTheme } from '../context/ThemeContext';
 
 interface BankCardRowProps {
   bankName: string;
@@ -17,29 +17,32 @@ export const BankCardRow: React.FC<BankCardRowProps> = ({
   accountNumber,
   isDefault,
   onPress,
-}) => (
-  <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
-    <View style={styles.leftSection}>
-      <View style={styles.bankIcon}>
-        <AppIcon name="bank" size="sm" color={Colors.primary} />
-      </View>
-      <View style={styles.info}>
-        <AppText variant="body" style={styles.bankName}>{bankName}</AppText>
-        <AppText variant="bodySm" style={styles.accountNumber}>{accountNumber}</AppText>
-      </View>
-    </View>
-    <View style={styles.rightSection}>
-      {isDefault && (
-        <View style={styles.defaultBadge}>
-          <AppText variant="captionSm" style={styles.defaultBadgeText}>Mặc định</AppText>
+}) => {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.leftSection}>
+        <View style={[styles.bankIcon, { backgroundColor: colors.primarySoft }]}>
+          <AppIcon name="bank" size="sm" color={colors.primary} />
         </View>
-      )}
-      <AppIcon name="chevronRight" size="sm" color={Colors.textSecondary} />
-    </View>
-  </TouchableOpacity>
-);
+        <View style={styles.info}>
+          <AppText variant="body" style={[styles.bankName, { color: colors.textPrimary }]}>{bankName}</AppText>
+          <AppText variant="bodySm" style={[styles.accountNumber, { color: colors.textSecondary }]}>{accountNumber}</AppText>
+        </View>
+      </View>
+      <View style={styles.rightSection}>
+        {isDefault && (
+          <View style={[styles.defaultBadge, { backgroundColor: colors.primarySoft }]}>
+            <AppText variant="caption" style={[styles.defaultBadgeText, { color: colors.primary }]}>Mặc định</AppText>
+          </View>
+        )}
+        <AppIcon name="chevronRight" size="sm" color={colors.textSecondary} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -57,7 +60,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -66,10 +69,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   bankName: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   accountNumber: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   rightSection: {
     flexDirection: 'row',
@@ -77,12 +80,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   defaultBadge: {
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.pill,
   },
   defaultBadgeText: {
-    color: Colors.primary,
+    color: colors.primary,
   },
-});
+}));

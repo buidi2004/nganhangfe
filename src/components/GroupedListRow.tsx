@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Colors, Radius, ListDivider } from '../theme';
+import { Radius, ListDivider, createThemedStyles, ThemeColors } from '../theme';
 import { Typography } from '../theme';
 import { AppText } from './typography/AppText';
+
+import { useTheme } from '../context/ThemeContext';
 
 interface GroupedListRowProps {
   icon?: React.ReactNode;
@@ -31,6 +33,7 @@ export const GroupedListRow: React.FC<GroupedListRowProps> = ({
   isLast = false,
   hasBadge = false,
 }) => {
+  const { colors } = useTheme();
   const borderTopRadius = isFirst ? Radius.sm : 0;
   const borderBottomRadius = isLast ? Radius.sm : 0;
 
@@ -38,18 +41,24 @@ export const GroupedListRow: React.FC<GroupedListRowProps> = ({
     <TouchableOpacity
       style={[
         styles.container,
-        { borderTopLeftRadius: borderTopRadius, borderBottomLeftRadius: borderBottomRadius },
+        {
+          backgroundColor: colors.surface,
+          borderTopLeftRadius: borderTopRadius,
+          borderTopRightRadius: borderTopRadius,
+          borderBottomLeftRadius: borderBottomRadius,
+          borderBottomRightRadius: borderBottomRadius,
+        },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       {/* Left section */}
       <View style={styles.leftSection}>
-        {icon && <View style={styles.iconWrapper}>{icon}</View>}
+        {icon && <View style={[styles.iconWrapper, { backgroundColor: colors.primarySoft }]}>{icon}</View>}
         <View style={styles.textGroup}>
-          <AppText variant="body" style={styles.title} numberOfLines={1}>{title}</AppText>
+          <AppText variant="body" style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{title}</AppText>
           {(subtitle || date) && (
-            <AppText variant="caption" style={styles.meta}>
+            <AppText variant="caption" style={[styles.meta, { color: colors.textSecondary }]}>
               {subtitle}
               {subtitle && date ? ' • ' : ''}
               {date}
@@ -61,28 +70,28 @@ export const GroupedListRow: React.FC<GroupedListRowProps> = ({
       {/* Right section */}
       <View style={styles.rightSection}>
         {amount ? (
-          <AppText variant="body" style={[styles.amount, amountColor ? { color: amountColor } : null]}>
+          <AppText variant="body" style={[styles.amount, { color: colors.textPrimary }, amountColor ? { color: amountColor } : null]}>
             {amount}
           </AppText>
         ) : null}
         {right ?? null}
-        {hasBadge && <View style={styles.badge} />}
+        {hasBadge && <View style={[styles.badge, { backgroundColor: colors.primary }]} />}
       </View>
 
       {/* Divider (except last row) */}
       {!isLast && (
-        <View style={[styles.divider, { marginLeft: icon ? 60 : 16 }]} />
+        <View style={[styles.divider, { marginLeft: icon ? 60 : 16, backgroundColor: colors.borderSubtle || colors.primarySoft }]} />
       )}
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors: ThemeColors) => ({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -96,7 +105,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: Radius.xs,
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: colors.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -105,17 +114,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   meta: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   rightSection: {
     alignItems: 'flex-end',
     gap: 4,
   },
   amount: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   divider: {
     position: 'absolute',
@@ -129,6 +138,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
-});
+}));

@@ -21,14 +21,17 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { scanFromURLAsync } from 'expo-camera';
 import { AppText } from '../components/typography/AppText';
-import { Colors } from '../theme';
+import { Colors, Radius, createThemedStyles } from '../theme';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { WalletApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function ChooseRecipientScreen({ navigation }: any) {
   const { user } = useApp();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
   const [keyword, setKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [foundRecipient, setFoundRecipient] = useState<any | null>(null);
@@ -479,20 +482,20 @@ export default function ChooseRecipientScreen({ navigation }: any) {
 
   // 5 Danh mục chuyển tiền ngang với Icon chuẩn từ Expo Vector Icons
   const TRANSFER_METHODS = [
-    { id: '1', title: 'Số\ntài khoản', icon: <MaterialCommunityIcons name="bank-outline" size={26} color="#D2519D" /> },
-    { id: '2', title: 'Số\nđiện thoại', icon: <Ionicons name="call-outline" size={25} color="#D2519D" /> },
-    { id: '3', title: 'Số thẻ', icon: <Ionicons name="card-outline" size={26} color="#D2519D" /> },
-    { id: '4', title: 'Mẫu\nchuyển', icon: <Ionicons name="receipt-outline" size={25} color="#D2519D" /> },
-    { id: '5', title: 'Thẻ\nquốc tế', icon: <MaterialCommunityIcons name="earth" size={26} color="#D2519D" /> },
+    { id: '1', title: 'Số\ntài khoản', icon: <MaterialCommunityIcons name="bank-outline" size={26} color={colors.primary} /> },
+    { id: '2', title: 'Số\nđiện thoại', icon: <Ionicons name="call-outline" size={25} color={colors.primary} /> },
+    { id: '3', title: 'Số thẻ', icon: <Ionicons name="card-outline" size={26} color={colors.primary} /> },
+    { id: '4', title: 'Mẫu\nchuyển', icon: <Ionicons name="receipt-outline" size={25} color={colors.primary} /> },
+    { id: '5', title: 'Thẻ\nquốc tế', icon: <MaterialCommunityIcons name="earth" size={26} color={colors.primary} /> },
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FDF2F8" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={['top']}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={isDark ? colors.cardBackground : '#FDF2F8'} />
 
       {/* TOP BACKGROUND SOFT LOTUS PINK GRADIENT AURA */}
       <LinearGradient
-        colors={['#FDF2F8', '#FCE7F3', '#F8FAFC']}
+        colors={isDark ? [colors.heroGradEnd, colors.bgBase, colors.bgBase] : [colors.primarySoft, colors.badgeBlueSoft, colors.background]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 0.4 }}
         style={styles.topGradientAura}
@@ -505,7 +508,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="#700F43" />
+          <Ionicons name="chevron-back" size={24} color={isDark ? colors.primaryGlow : colors.primaryDeep} />
         </TouchableOpacity>
 
         <View style={styles.navRightActions}>
@@ -514,7 +517,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Notifications')}
           >
-            <Ionicons name="notifications-outline" size={22} color="#700F43" />
+            <Ionicons name="notifications-outline" size={22} color={isDark ? colors.primaryGlow : colors.primaryDeep} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -522,7 +525,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Home')}
           >
-            <Ionicons name="home-outline" size={22} color="#700F43" />
+            <Ionicons name="home-outline" size={22} color={isDark ? colors.primaryGlow : colors.primaryDeep} />
           </TouchableOpacity>
         </View>
       </View>
@@ -533,7 +536,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
         keyboardShouldPersistTaps="handled"
       >
         {/* 2. PAGE TITLE */}
-        <AppText style={styles.pageHeading}>Siêu chuyển tiền</AppText>
+        <AppText style={[styles.pageHeading, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Siêu chuyển tiền</AppText>
 
         {/* 3. HORIZONTAL METHODS CAROUSEL */}
         <ScrollView
@@ -550,16 +553,16 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('EnterAmount', { method: method.title, selectedBank: 'SenBank (Nội bộ)' })}
             >
-              <View style={styles.methodIconCircle}>
+              <View style={[styles.methodIconCircle, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
                 {method.icon}
               </View>
-              <AppText style={styles.methodTitle}>{method.title}</AppText>
+              <AppText style={[styles.methodTitle, { color: colors.textPrimary }]}>{method.title}</AppText>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         {/* 4. SENAI SMART TRANSFER CARD */}
-        <View style={styles.senaiCard}>
+        <View style={[styles.senaiCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
           {/* Top-Left SenAI Pill Badge */}
           <View style={styles.senaiBadge}>
             <Ionicons name="sparkles" size={11} color="#FFFFFF" />
@@ -569,9 +572,9 @@ export default function ChooseRecipientScreen({ navigation }: any) {
           {/* Input & QR Scanner Viewfinder Row */}
           <View style={styles.senaiInputRow}>
             <TextInput
-              style={styles.senaiTextInput}
+              style={[styles.senaiTextInput, { color: colors.textPrimary }]}
               placeholder="Nhập SĐT chuyển nội bộ SenBank..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textSecondary}
               value={keyword}
               onChangeText={setKeyword}
               keyboardType="numeric"
@@ -580,7 +583,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             />
 
             {isSearching ? (
-              <ActivityIndicator size="small" color="#D2519D" style={{ marginRight: 6 }} />
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 6 }} />
             ) : keyword.length > 0 ? (
               <TouchableOpacity
                 style={styles.clearBtn}
@@ -596,7 +599,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               activeOpacity={0.7}
               onPress={() => navigation.navigate('ScanQR')}
             >
-              <MaterialCommunityIcons name="qrcode-scan" size={22} color="#D2519D" />
+              <MaterialCommunityIcons name="qrcode-scan" size={22} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -649,8 +652,8 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               onPress={handleTakePhoto}
             >
               <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="camera-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+                <Ionicons name="sparkles" size={11} color={colors.primary} />
+                <Ionicons name="camera-outline" size={19} color={colors.primary} style={{ marginLeft: 3 }} />
               </View>
               <AppText style={styles.actionBtnLabel}>Chụp ảnh</AppText>
             </TouchableOpacity>
@@ -664,8 +667,8 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               onPress={handlePickImage}
             >
               <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="images-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+                <Ionicons name="sparkles" size={11} color={colors.primary} />
+                <Ionicons name="images-outline" size={19} color={colors.primary} style={{ marginLeft: 3 }} />
               </View>
               <AppText style={styles.actionBtnLabel}>Tải ảnh</AppText>
             </TouchableOpacity>
@@ -679,8 +682,8 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               onPress={handlePaste}
             >
               <View style={styles.actionIconWrap}>
-                <Ionicons name="sparkles" size={11} color="#D2519D" />
-                <Ionicons name="clipboard-outline" size={19} color="#D2519D" style={{ marginLeft: 3 }} />
+                <Ionicons name="sparkles" size={11} color={colors.primary} />
+                <Ionicons name="clipboard-outline" size={19} color={colors.primary} style={{ marginLeft: 3 }} />
               </View>
               <AppText style={styles.actionBtnLabel}>Dán</AppText>
             </TouchableOpacity>
@@ -691,13 +694,13 @@ export default function ChooseRecipientScreen({ navigation }: any) {
         <View style={styles.twoCardsRow}>
           {/* Card Trái: Gần đây */}
           <TouchableOpacity
-            style={styles.quickCard}
+            style={[styles.quickCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('EnterAmount')}
           >
             <View style={styles.quickCardHeader}>
-              <AppText style={styles.quickCardTitle}>Gần đây</AppText>
-              <Ionicons name="chevron-forward" size={16} color="#D2519D" />
+              <AppText style={[styles.quickCardTitle, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Gần đây</AppText>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </View>
 
             <View style={styles.quickCardLogosRow}>
@@ -714,21 +717,21 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               </View>
 
               {/* Badge +8 */}
-              <View style={styles.plusCountBadge}>
-                <AppText style={styles.plusCountText}>+8</AppText>
+              <View style={[styles.plusCountBadge, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+                <AppText style={[styles.plusCountText, { color: colors.primary }]}>+8</AppText>
               </View>
             </View>
           </TouchableOpacity>
 
           {/* Card Phải: Ví điện tử & đối tác */}
           <TouchableOpacity
-            style={styles.quickCard}
+            style={[styles.quickCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('PaymentMethods')}
           >
             <View style={styles.quickCardHeader}>
-              <AppText style={styles.quickCardTitle} numberOfLines={1}>Ví điện tử & đối tác</AppText>
-              <Ionicons name="chevron-forward" size={16} color="#D2519D" />
+              <AppText style={[styles.quickCardTitle, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]} numberOfLines={1}>Ví điện tử & đối tác</AppText>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </View>
 
             <View style={styles.quickCardLogosRow}>
@@ -738,8 +741,8 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               </View>
 
               {/* ZaloPay Green Text */}
-              <View style={[styles.miniBrandLogo, { backgroundColor: '#ECFDF5' }]}>
-                <AppText style={{ color: '#059669', fontSize: 7.5, fontWeight: '900', textAlign: 'center' }}>Zalo{'\n'}pay</AppText>
+              <View style={[styles.miniBrandLogo, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5' }]}>
+                <AppText style={{ color: '#10B981', fontSize: 7.5, fontWeight: '900', textAlign: 'center' }}>Zalo{'\n'}pay</AppText>
               </View>
 
               {/* MoMo mini */}
@@ -748,8 +751,8 @@ export default function ChooseRecipientScreen({ navigation }: any) {
               </View>
 
               {/* Badge +3 */}
-              <View style={styles.plusCountBadge}>
-                <AppText style={styles.plusCountText}>+3</AppText>
+              <View style={[styles.plusCountBadge, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+                <AppText style={[styles.plusCountText, { color: colors.primary }]}>+3</AppText>
               </View>
             </View>
           </TouchableOpacity>
@@ -757,11 +760,11 @@ export default function ChooseRecipientScreen({ navigation }: any) {
 
         {/* 6. MONEY CHAT SECTION */}
         <View style={styles.moneyChatHeader}>
-          <AppText style={styles.moneyChatTitle}>Money Chat</AppText>
+          <AppText style={[styles.moneyChatTitle, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Money Chat</AppText>
 
           <View style={styles.moneyChatActions}>
-            <TouchableOpacity style={styles.searchCircleBtn} activeOpacity={0.7}>
-              <Ionicons name="search-outline" size={18} color="#700F43" />
+            <TouchableOpacity style={[styles.searchCircleBtn, { backgroundColor: colors.surfaceSecondary }]} activeOpacity={0.7}>
+              <Ionicons name="search-outline" size={18} color={isDark ? colors.primaryGlow : colors.primaryDeep} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.newChatPillBtn} activeOpacity={0.8}>
@@ -771,13 +774,13 @@ export default function ChooseRecipientScreen({ navigation }: any) {
         </View>
 
         {/* 7. RECENT MONEY CHAT ITEM */}
-        <View style={styles.emptyContainer}>
-          <AppText style={styles.emptySub}>Chưa có giao dịch gần đây</AppText>
+        <View style={[styles.emptyContainer, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+          <AppText style={[styles.emptySub, { color: colors.textSecondary }]}>Chưa có giao dịch gần đây</AppText>
         </View>
 
         {/* 8. SAVED RECIPIENTS SECTION */}
         <View style={styles.moneyChatHeader}>
-          <AppText style={styles.moneyChatTitle}>Người nhận đã lưu</AppText>
+          <AppText style={[styles.moneyChatTitle, { color: isDark ? colors.primaryGlow : colors.primaryDeep }]}>Người nhận đã lưu</AppText>
 
           <TouchableOpacity
             style={styles.addRecipientPillBtn}
@@ -798,12 +801,12 @@ export default function ChooseRecipientScreen({ navigation }: any) {
 
         {isLoadingBeneficiaries ? (
           <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-            <ActivityIndicator size="small" color="#D2519D" />
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : savedRecipients.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconHalo}>
-              <MaterialCommunityIcons name="account-search-outline" size={48} color="#D2519D" />
+              <MaterialCommunityIcons name="account-search-outline" size={48} color={colors.primary} />
             </View>
             <AppText style={styles.emptyTitle}>Chưa có người nhận đã lưu</AppText>
             <AppText style={styles.emptySub}>
@@ -835,7 +838,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             return (
               <TouchableOpacity
                 key={recipient.id || index.toString()}
-                style={styles.savedRecipientCard}
+                style={[styles.savedRecipientCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 activeOpacity={0.8}
                 onPress={() =>
                   navigation.navigate('EnterAmount', {
@@ -864,12 +867,12 @@ export default function ChooseRecipientScreen({ navigation }: any) {
 
                 <View style={styles.savedRecipientInfo}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <AppText style={styles.savedRecipientName}>{displayName}</AppText>
+                    <AppText style={[styles.savedRecipientName, { color: colors.textPrimary }]}>{displayName}</AppText>
                     <View style={styles.senTagSmall}>
                       <AppText style={styles.senTagSmallText}>SenBank</AppText>
                     </View>
                   </View>
-                  <AppText style={styles.savedRecipientSub}>
+                  <AppText style={[styles.savedRecipientSub, { color: colors.textSecondary }]}>
                     {displayPhone} • {isInternal ? 'SenBank (Nội bộ)' : recipient.bankCode}
                   </AppText>
                 </View>
@@ -906,7 +909,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             />
           </View>
 
-          <View style={styles.modalCard}>
+          <View style={[styles.modalCard, { backgroundColor: colors.cardBackground }]}>
             {/* Modal Header */}
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -916,51 +919,51 @@ export default function ChooseRecipientScreen({ navigation }: any) {
                   resizeMode="contain"
                 />
                 <View>
-                  <AppText style={styles.modalTitle}>Thêm người nhận</AppText>
-                  <AppText style={styles.modalSubTitle}>Ngân hàng nội bộ SenBank</AppText>
+                  <AppText style={[styles.modalTitle, { color: colors.textPrimary }]}>Thêm người nhận</AppText>
+                  <AppText style={[styles.modalSubTitle, { color: colors.textSecondary }]}>Ngân hàng nội bộ SenBank</AppText>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={styles.modalCloseBtn}
+                style={[styles.modalCloseBtn, { backgroundColor: colors.surfaceSecondary }]}
                 activeOpacity={0.7}
                 onPress={() => setIsAddModalVisible(false)}
               >
-                <Ionicons name="close" size={20} color="#64748B" />
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             {/* Field 1: Phone number */}
             <View style={styles.modalFieldGroup}>
-              <AppText style={styles.fieldLabel}>Số điện thoại ví SenBank *</AppText>
-              <View style={styles.fieldInputRow}>
-                <Ionicons name="call-outline" size={18} color="#D2519D" style={{ marginRight: 8 }} />
+              <AppText style={[styles.fieldLabel, { color: colors.textPrimary }]}>Số điện thoại ví SenBank *</AppText>
+              <View style={[styles.fieldInputRow, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+                <Ionicons name="call-outline" size={18} color={colors.primary} style={{ marginRight: 8 }} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={[styles.fieldInput, { color: colors.textPrimary }]}
                   placeholder="Ví dụ: 0900000001"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={colors.textSecondary}
                   value={newPhone}
                   onChangeText={setNewPhone}
                   keyboardType="numeric"
                   maxLength={11}
                 />
-                {isLookingUp && <ActivityIndicator size="small" color="#D2519D" />}
+                {isLookingUp && <ActivityIndicator size="small" color={colors.primary} />}
               </View>
             </View>
 
             {/* Verified recipient feedback */}
             {lookupName ? (
-              <View style={styles.modalVerifiedBox}>
+              <View style={[styles.modalVerifiedBox, { backgroundColor: isDark ? '#064E3B' : '#ECFDF5', borderColor: isDark ? '#059669' : '#A7F3D0' }]}>
                 <Ionicons name="checkmark-circle" size={18} color="#10B981" />
                 <View style={{ flex: 1 }}>
-                  <AppText style={styles.verifiedHolderLabel}>Chủ tài khoản SenBank:</AppText>
-                  <AppText style={styles.verifiedHolderName}>{lookupName}</AppText>
+                  <AppText style={[styles.verifiedHolderLabel, { color: isDark ? '#A7F3D0' : '#047857' }]}>Chủ tài khoản SenBank:</AppText>
+                  <AppText style={[styles.verifiedHolderName, { color: isDark ? '#FFFFFF' : '#065F46' }]}>{lookupName}</AppText>
                 </View>
               </View>
             ) : null}
 
             {lookupError ? (
-              <View style={styles.modalErrorBox}>
+              <View style={[styles.modalErrorBox, { backgroundColor: isDark ? '#450A0A' : '#FEF2F2', borderColor: isDark ? '#7F1D1D' : '#FECACA' }]}>
                 <Ionicons name="alert-circle" size={16} color="#EF4444" />
                 <AppText style={styles.modalErrorText}>{lookupError}</AppText>
               </View>
@@ -968,13 +971,13 @@ export default function ChooseRecipientScreen({ navigation }: any) {
 
             {/* Field 2: Nickname */}
             <View style={styles.modalFieldGroup}>
-              <AppText style={styles.fieldLabel}>Tên gợi nhớ / Biệt danh (Tùy chọn)</AppText>
-              <View style={styles.fieldInputRow}>
-                <Ionicons name="bookmark-outline" size={18} color="#D2519D" style={{ marginRight: 8 }} />
+              <AppText style={[styles.fieldLabel, { color: colors.textPrimary }]}>Tên gợi nhớ / Biệt danh (Tùy chọn)</AppText>
+              <View style={[styles.fieldInputRow, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+                <Ionicons name="bookmark-outline" size={18} color={colors.primary} style={{ marginRight: 8 }} />
                 <TextInput
-                  style={styles.fieldInput}
+                  style={[styles.fieldInput, { color: colors.textPrimary }]}
                   placeholder="Ví dụ: Bạn thân, Tiền trọ..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={colors.textSecondary}
                   value={newNickname}
                   onChangeText={setNewNickname}
                 />
@@ -984,11 +987,11 @@ export default function ChooseRecipientScreen({ navigation }: any) {
             {/* Actions */}
             <View style={styles.modalActionsRow}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, { backgroundColor: colors.surfaceSecondary }]}
                 activeOpacity={0.7}
                 onPress={() => setIsAddModalVisible(false)}
               >
-                <AppText style={styles.modalCancelText}>Hủy</AppText>
+                <AppText style={[styles.modalCancelText, { color: colors.textSecondary }]}>Hủy</AppText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1014,7 +1017,7 @@ export default function ChooseRecipientScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -1052,7 +1055,7 @@ const styles = StyleSheet.create({
   pageHeading: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     letterSpacing: -0.5,
     marginTop: 4,
     marginBottom: 20,
@@ -1072,7 +1075,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -1090,14 +1093,14 @@ const styles = StyleSheet.create({
   },
   senaiCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1.5,
-    borderColor: '#D2519D',
+    borderColor: colors.primary,
     paddingTop: 12,
     paddingBottom: 12,
     paddingHorizontal: 14,
     marginBottom: 16,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
@@ -1107,7 +1110,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -1173,7 +1176,7 @@ const styles = StyleSheet.create({
   foundNameText: {
     fontSize: 14.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   verifiedSenBadge: {
     flexDirection: 'row',
@@ -1198,7 +1201,7 @@ const styles = StyleSheet.create({
   transferNowPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
@@ -1246,7 +1249,7 @@ const styles = StyleSheet.create({
   actionBtnLabel: {
     fontSize: 13.5,
     fontWeight: '700',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   verticalDivider: {
     width: 1,
@@ -1263,7 +1266,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -1280,7 +1283,7 @@ const styles = StyleSheet.create({
   quickCardTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     flex: 1,
   },
   quickCardLogosRow: {
@@ -1306,7 +1309,7 @@ const styles = StyleSheet.create({
   plusCountText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   moneyChatHeader: {
     flexDirection: 'row',
@@ -1317,7 +1320,7 @@ const styles = StyleSheet.create({
   moneyChatTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   moneyChatActions: {
     flexDirection: 'row',
@@ -1335,11 +1338,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   newChatPillBtn: {
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1358,7 +1361,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginBottom: 32,
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 5,
@@ -1398,7 +1401,7 @@ const styles = StyleSheet.create({
     borderColor: '#FCE7F3',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -1407,7 +1410,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
     marginTop: 14,
     textAlign: 'center',
   },
@@ -1423,11 +1426,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#D2519D',
+    backgroundColor: colors.primary,
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 14,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
@@ -1442,12 +1445,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
     marginTop: 14,
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1467,7 +1470,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#FCE7F3',
-    shadowColor: '#D2519D',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
@@ -1514,7 +1517,7 @@ const styles = StyleSheet.create({
   senTagSmallText: {
     fontSize: 9.5,
     fontWeight: '800',
-    color: '#D2519D',
+    color: colors.primary,
   },
   savedRecipientSub: {
     fontSize: 12.5,
@@ -1540,7 +1543,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 380,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: Radius.card,
     padding: 20,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
@@ -1557,7 +1560,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16.5,
     fontWeight: '800',
-    color: '#700F43',
+    color: colors.primaryDeep,
   },
   modalSubTitle: {
     fontSize: 11.5,
@@ -1659,10 +1662,10 @@ const styles = StyleSheet.create({
     flex: 2,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#700F43',
+    backgroundColor: colors.primaryDeep,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#700F43',
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1673,4 +1676,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
-});
+}));
