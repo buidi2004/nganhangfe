@@ -113,7 +113,7 @@ export default function MainTabs() {
           name="Menu" 
           component={MoreScreen} 
           options={{ 
-            title: "Menu",
+            title: "Thêm",
             transitionSpec: tabTransitionSpec,
             sceneStyleInterpolator: forSmoothTabShift,
           }} 

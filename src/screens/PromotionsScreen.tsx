@@ -9,10 +9,8 @@ import { AppText } from '../components/typography/AppText';
 import { Colors, Radius, createThemedStyles, ThemeColors } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 
-import { AppIcon } from '../components/icons/AppIcon';
-import { BlurView } from 'expo-blur';
 import { useThrottledNavBarScroll } from '../hooks/useThrottledNavBarScroll';
-import AnimatedRainbowPill from '../components/AnimatedRainbowPill';
+import StickyCurvedHeader from '../components/StickyCurvedHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -185,49 +183,10 @@ export default function PromotionsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDeep} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* 1. TOP CURVED LOTUS PINK HEADER */}
-      <View style={styles.headerContainer}>
-        <BlurView intensity={70} tint="light" style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          colors={['rgba(228, 172, 178, 0.65)', 'rgba(210, 81, 157, 0.75)', 'rgba(112, 15, 67, 0.85)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <SafeAreaView edges={['top']}>
-          <View style={styles.headerContent}>
-            {/* 1. Ô Dán chuyển tiền AI dạng viên thuốc viền 7 màu chạy động */}
-            <AnimatedRainbowPill
-              title="Dán chuyển tiền AI"
-              height={40}
-              style={{ flex: 1, marginRight: 16 }}
-              onPress={() => navigation.navigate('Search')}
-            />
-
-            {/* 2. Cụm Icon: Chuông 🔔 + 3 Gạch ☰ */}
-            <View style={styles.headerActions}>
-              <TouchableOpacity
-                style={styles.glassHeaderBtn}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('Notifications')}
-              >
-                <AppIcon name="notification" size="sm" color={Colors.white} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.glassHeaderBtn}
-                activeOpacity={0.7}
-                onPress={() => DeviceEventEmitter.emit('openSideMenu')}
-              >
-                <AppIcon name="menu" size="sm" color={Colors.white} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </View>
+      {/* 1. TOP CURVED GRADIENT HEADER */}
+      <StickyCurvedHeader navigation={navigation} />
 
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}

@@ -28,7 +28,7 @@ const TABS = [
   { name: 'Card', label: 'Thẻ', icon: 'credit-card-multiple-outline', iconFocused: 'credit-card-multiple', lib: 'MaterialCommunityIcons' },
   { name: 'QR', label: '', icon: 'qrcode-scan', iconFocused: 'qrcode-scan', lib: 'MaterialCommunityIcons', isCenter: true },
   { name: 'Gift', label: 'Ưu đãi', icon: 'gift-outline', iconFocused: 'gift', lib: 'Ionicons' },
-  { name: 'Menu', label: 'Menu', icon: 'grid-outline', iconFocused: 'grid', lib: 'Ionicons' },
+  { name: 'Menu', label: 'Thêm', icon: 'grid-outline', iconFocused: 'grid', lib: 'Ionicons' },
 ];
 
 interface TabItemButtonProps {

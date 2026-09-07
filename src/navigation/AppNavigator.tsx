@@ -58,7 +58,7 @@ const Stack = createStackNavigator();
 import { navigationRef } from './navigationRef';
 
 export default function AppNavigator() {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, themeColor } = useTheme();
 
   const navigationTheme = useMemo(() => {
     const baseTheme = isDark ? DarkTheme : DefaultTheme;
@@ -170,7 +170,13 @@ export default function AppNavigator() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {!isDark ? (
         <ImageBackground 
-          source={require('../assets/images/bg-white-pink-pattern.png')} 
+          source={
+            themeColor === 'amber'
+              ? require('../assets/images/bg-white-amber-pattern.png')
+              : themeColor === 'purple'
+              ? require('../assets/images/bg-white-purple-pattern.png')
+              : require('../assets/images/bg-white-pink-pattern.png')
+          } 
           style={{ flex: 1 }}
           resizeMode="cover"
         >

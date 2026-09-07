@@ -786,14 +786,22 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.headerBackground} pointerEvents="none">
         {customBackgroundUri ? (
           <Image cachePolicy="memory-disk" source={{ uri: customBackgroundUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        ) : (themeColor === 'amber' ? (
+        ) : themeColor === 'amber' ? (
           <Image
             source={require('../../assets/theme-amber-bg.png')}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             contentPosition="top"
           />
-        ) : <LinearGradient
+        ) : themeColor === 'purple' ? (
+          <Image
+            source={require('../../assets/theme-purple-bg.png')}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            contentPosition="top"
+          />
+        ) : (
+          <LinearGradient
             colors={[colors.heroGradStart, colors.heroGradMid, colors.heroGradEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -801,7 +809,7 @@ export default function HomeScreen({ navigation }: any) {
           />
         )}
         {/* Thêm các đường nét trang trí uốn lượn (Waves & Rings) */}
-        {!customBackgroundUri && themeColor !== 'amber' && (
+        {!customBackgroundUri && themeColor !== 'amber' && themeColor !== 'purple' && (
           <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
             {/* Đường cong mềm mại */}
             <Path d="M-50 150 Q 150 50 400 180 T 600 100" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" fill="none" />
@@ -976,12 +984,29 @@ export default function HomeScreen({ navigation }: any) {
         </SafeAreaView>
 
         {/* MAIN FULL-WIDTH BODY CONTAINER (Chuyển nền tối khi bật Dark Mode) */}
-        <View style={[styles.whiteBodyContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.whiteBodyContainer, { backgroundColor: isDark ? colors.background : (themeColor === 'amber' || themeColor === 'purple' || themeColor === 'lotus' ? 'transparent' : colors.background) }]}>
+          {!isDark && themeColor === 'amber' && (
+            <ImageBackground 
+              source={require('../assets/images/bg-white-amber-pattern.png')}
+              style={StyleSheet.absoluteFill}
+              imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+              resizeMode="cover"
+            />
+          )}
+          {!isDark && themeColor === 'purple' && (
+            <ImageBackground 
+              source={require('../assets/images/bg-white-purple-pattern.png')}
+              style={StyleSheet.absoluteFill}
+              imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+              resizeMode="cover"
+            />
+          )}
           {!isDark && themeColor === 'lotus' && (
             <ImageBackground 
               source={require('../assets/images/bg-white-pink-pattern.png')}
               style={StyleSheet.absoluteFill}
               imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+              resizeMode="cover"
             />
           )}
           {/* 4 Quick Actions Row */}

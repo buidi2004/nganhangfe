@@ -29,6 +29,7 @@ interface RegisterScreenProps {
 
 export default function RegisterScreen({ navigation }: any) {
   const { colors, isDark, themeColor } = useTheme();
+  const isThemedBg = themeColor === 'amber' || themeColor === 'purple';
   const styles = getStyles(colors);
   const { register, isLoading, lastError, clearError } = useApp();
   const [fullName, setFullName] = useState('');
@@ -58,12 +59,12 @@ export default function RegisterScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <StatusBar
-        barStyle={themeColor === 'amber' || isDark ? 'light-content' : 'dark-content'}
+        barStyle={isThemedBg || isDark ? 'light-content' : 'dark-content'}
         backgroundColor="transparent"
         translucent
       />
 
-      {/* BACKGROUND KHI CHỌN THEME VÀNG */}
+      {/* BACKGROUND KHI CHỌN THEME VÀNG HOẶC TÍM */}
       {themeColor === 'amber' ? (
         <ImageBackground
           source={require('../../assets/theme-amber-bg.png')}
@@ -73,11 +74,20 @@ export default function RegisterScreen({ navigation }: any) {
           {/* Lớp overlay nhẹ giữ độ tương phản chuẩn mực và làm nổi bật các thẻ nhập liệu */}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15, 8, 2, 0.45)' }]} />
         </ImageBackground>
+      ) : themeColor === 'purple' ? (
+        <ImageBackground
+          source={require('../../assets/theme-purple-bg.png')}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        >
+          {/* Lớp overlay nhẹ giữ độ tương phản chuẩn mực và làm nổi bật các thẻ nhập liệu */}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(25, 8, 40, 0.45)' }]} />
+        </ImageBackground>
       ) : null}
 
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         {/* TOP HEADER */}
-        <View style={[styles.header, themeColor === 'amber' && styles.headerAmber]}>
+        <View style={[styles.header, isThemedBg && styles.headerAmber]}>
           <TouchableOpacity
             style={styles.headerBtn}
             activeOpacity={0.7}
@@ -86,14 +96,14 @@ export default function RegisterScreen({ navigation }: any) {
             <Ionicons
               name="chevron-back"
               size={24}
-              color={themeColor === 'amber' ? '#FFFFFF' : colors.primaryDeep}
+              color={isThemedBg ? '#FFFFFF' : colors.primaryDeep}
             />
           </TouchableOpacity>
 
           <AppText
             style={[
               styles.headerTitle,
-              themeColor === 'amber' && { color: '#FFFFFF' },
+              isThemedBg && { color: '#FFFFFF' },
             ]}
           >
             Mở tài khoản MBBank
@@ -107,7 +117,7 @@ export default function RegisterScreen({ navigation }: any) {
             <Ionicons
               name="home-outline"
               size={22}
-              color={themeColor === 'amber' ? '#FFFFFF' : colors.primaryDeep}
+              color={isThemedBg ? '#FFFFFF' : colors.primaryDeep}
             />
           </TouchableOpacity>
         </View>
@@ -125,8 +135,8 @@ export default function RegisterScreen({ navigation }: any) {
               <View
                 style={[
                   styles.mbLogoCircle,
-                  themeColor === 'amber' && {
-                    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                  isThemedBg && {
+                    backgroundColor: themeColor === 'purple' ? 'rgba(192, 132, 252, 0.2)' : 'rgba(251, 191, 36, 0.2)',
                     borderColor: colors.primaryGlow,
                   },
                 ]}
@@ -136,7 +146,7 @@ export default function RegisterScreen({ navigation }: any) {
               <AppText
                 style={[
                   styles.heroHeading,
-                  themeColor === 'amber' && { color: '#FFFFFF' },
+                  isThemedBg && { color: '#FFFFFF' },
                 ]}
               >
                 Tài khoản số đẹp miễn phí
@@ -144,7 +154,7 @@ export default function RegisterScreen({ navigation }: any) {
               <AppText
                 style={[
                   styles.heroSub,
-                  themeColor === 'amber' && { color: 'rgba(255, 255, 255, 0.85)' },
+                  isThemedBg && { color: 'rgba(255, 255, 255, 0.85)' },
                 ]}
               >
                 Đăng ký trực tuyến siêu tốc chỉ trong 1 phút
@@ -227,9 +237,9 @@ export default function RegisterScreen({ navigation }: any) {
             <View
               style={[
                 styles.termsNoteBox,
-                themeColor === 'amber' && {
-                  backgroundColor: 'rgba(251, 191, 36, 0.15)',
-                  borderColor: 'rgba(251, 191, 36, 0.3)',
+                isThemedBg && {
+                  backgroundColor: themeColor === 'purple' ? 'rgba(192, 132, 252, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                  borderColor: themeColor === 'purple' ? 'rgba(192, 132, 252, 0.3)' : 'rgba(251, 191, 36, 0.3)',
                 },
               ]}
             >
@@ -243,14 +253,14 @@ export default function RegisterScreen({ navigation }: any) {
               <AppText
                 style={[
                   styles.termsNoteText,
-                  themeColor === 'amber' && { color: 'rgba(255, 255, 255, 0.9)' },
+                  isThemedBg && { color: 'rgba(255, 255, 255, 0.9)' },
                 ]}
               >
                 Bằng việc nhấn "Tiếp tục", bạn xác nhận đã đọc và đồng ý vô điều kiện với{' '}
                 <AppText
                   style={[
                     styles.termsLinkText,
-                    themeColor === 'amber' && { color: colors.primaryGlow },
+                    isThemedBg && { color: colors.primaryGlow },
                   ]}
                   onPress={() => navigation.navigate('TermsOfService')}
                 >
@@ -289,13 +299,13 @@ export default function RegisterScreen({ navigation }: any) {
               <AppText
                 style={[
                   styles.loginLinkText,
-                  themeColor === 'amber' && { color: 'rgba(255, 255, 255, 0.85)' },
+                  isThemedBg && { color: 'rgba(255, 255, 255, 0.85)' },
                 ]}
               >
                 Đã có tài khoản?{' '}
                 <AppText
                   style={{
-                    color: themeColor === 'amber' ? colors.primaryGlow : colors.primaryDeep,
+                    color: isThemedBg ? colors.primaryGlow : colors.primaryDeep,
                     fontWeight: '800',
                   }}
                 >
@@ -304,8 +314,61 @@ export default function RegisterScreen({ navigation }: any) {
               </AppText>
             </TouchableOpacity>
 
-            {/* DUMMY SPACER ĐỂ KÉO DÀI MÀN HÌNH GIÚP TRƯỢT LÊN KHỎI BÀN PHÍM */}
-            <View style={{ height: Platform.OS === 'ios' ? 40 : 250 }} />
+            {/* 4. ĐẶC QUYỀN THÀNH VIÊN MỚI (Kéo dài màn hình khi cuộn xuống) */}
+            <View style={styles.benefitsContainer}>
+              <AppText style={[styles.benefitsSectionTitle, isThemedBg && { color: '#FFFFFF' }]}>
+                Đặc quyền thành viên mới
+              </AppText>
+
+              {/* Bento Grid 2 Columns */}
+              <View style={styles.bentoRow}>
+                <View style={styles.bentoCol}>
+                  <View style={[styles.bentoCard, isThemedBg ? styles.bentoCardAmber : styles.bentoCardLight]}>
+                    <MaterialCommunityIcons name="shield-check" size={28} color={isThemedBg ? (themeColor === 'purple' ? '#C084FC' : '#FBBF24') : colors.primary} />
+                    <AppText style={[styles.bentoCardTitle, isThemedBg && { color: '#FFFFFF' }]}>
+                      Miễn phí 100%
+                    </AppText>
+                    <AppText style={[styles.bentoCardSub, isThemedBg && { color: 'rgba(255,255,255,0.75)' }]}>
+                      Chuyển khoản 24/7 & phí duy trì 0đ trọn đời
+                    </AppText>
+                  </View>
+
+                  <View style={[styles.bentoCard, isThemedBg ? styles.bentoCardAmber : styles.bentoCardLight, { marginTop: 12 }]}>
+                    <MaterialCommunityIcons name="star-shooting" size={28} color={isThemedBg ? (themeColor === 'purple' ? '#C084FC' : '#FBBF24') : colors.primary} />
+                    <AppText style={[styles.bentoCardTitle, isThemedBg && { color: '#FFFFFF' }]}>
+                      Tài khoản số đẹp
+                    </AppText>
+                    <AppText style={[styles.bentoCardSub, isThemedBg && { color: 'rgba(255,255,255,0.75)' }]}>
+                      Chọn số phong thủy, ngày sinh hoàn toàn miễn phí
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.bentoCol}>
+                  <View style={[styles.bentoCard, isThemedBg ? styles.bentoCardAmber : styles.bentoCardLight]}>
+                    <MaterialCommunityIcons name="credit-card-refund" size={28} color={isThemedBg ? (themeColor === 'purple' ? '#C084FC' : '#FBBF24') : colors.primary} />
+                    <AppText style={[styles.bentoCardTitle, isThemedBg && { color: '#FFFFFF' }]}>
+                      Hoàn tiền 5%
+                    </AppText>
+                    <AppText style={[styles.bentoCardSub, isThemedBg && { color: 'rgba(255,255,255,0.75)' }]}>
+                      Ưu đãi hoàn tiền ăn uống, mua sắm khi chi tiêu thẻ
+                    </AppText>
+                  </View>
+
+                  <View style={[styles.bentoCard, isThemedBg ? styles.bentoCardAmber : styles.bentoCardLight, { marginTop: 12 }]}>
+                    <MaterialCommunityIcons name="gift-outline" size={28} color={isThemedBg ? (themeColor === 'purple' ? '#C084FC' : '#FBBF24') : colors.primary} />
+                    <AppText style={[styles.bentoCardTitle, isThemedBg && { color: '#FFFFFF' }]}>
+                      Voucher 500k
+                    </AppText>
+                    <AppText style={[styles.bentoCardSub, isThemedBg && { color: 'rgba(255,255,255,0.75)' }]}>
+                      Gói quà tặng chào mừng bạn mới ngay khi kích hoạt
+                    </AppText>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ height: Platform.OS === 'ios' ? 40 : 60 }} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -456,5 +519,58 @@ const getStyles = createThemedStyles((colors: ThemeColors) => ({
     fontSize: 14,
     color: colors.textSecondary,
     fontWeight: '600',
+  },
+  benefitsContainer: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  benefitsSectionTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: colors.primaryDeep,
+    marginBottom: 14,
+    textAlign: 'center',
+    letterSpacing: -0.3,
+  },
+  bentoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  bentoCol: {
+    width: '48.5%',
+  },
+  bentoCard: {
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 140,
+    justifyContent: 'space-between',
+  },
+  bentoCardAmber: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+  },
+  bentoCardLight: {
+    backgroundColor: colors.cardBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  bentoCardTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginTop: 8,
+  },
+  bentoCardSub: {
+    fontSize: 11.5,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginTop: 2,
   },
 }));
